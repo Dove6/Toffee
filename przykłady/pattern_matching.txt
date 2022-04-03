@@ -1,0 +1,15 @@
+init a = 5, b = 10, c;
+
+init const matchingExample = functi(var) {
+    match(var) {
+        is null:           "Wartość null";
+        is 5:              "Dokładnie pięć";
+        is int and is > 8: "Liczba całkowita większa od 8";
+        default:           "Brak dopasowania";
+    };
+}
+
+print(a);  // "Dokładnie pięć"
+print(b);  // "Liczba całkowita większa od 8"
+print(c);  // "Wartość null"
+print("5");  // "Brak dopasowania"

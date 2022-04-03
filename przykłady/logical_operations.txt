@@ -1,0 +1,14 @@
+init const t = true, const f = false, const five = 5, const nine = 9;
+init boolVar = true, numVar = 8, i;
+
+i = t == true;  // true, operator porównania ma większy priorytet
+i = five == nine;  // false
+
+// łańcuch operatorów porównania operuje na wartościach zmiennych, nie na wynikowych wartościach logicznych
+i = five <= numVar <= nine;  // true
+i = (five <= numVar) <= nine;  /* również true, ale z innego powodu...
+    ^^^^^^^^^^^^^^^^ - wynikowa wartość logiczna wyrażenia (true) porównywana jest następnie z liczbą 9,
+    co powoduje niejawną promocję typu bool do int */
+i = 5;
+i = five == 5 == five;  // analogicznie true
+i = !five;  // false: niejawne rzutowanie do typu logicznego (true), a następnie negacja
