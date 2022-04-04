@@ -3,7 +3,7 @@
 | Pierwszeństwo | Operator | Opis                      | Arność  | Pozycja | Łączność     |
 |---------------|----------|---------------------------|---------|---------|--------------|
 |       1       | ()       | wywołanie funkcji         | unarny  | sufiks  | lewostronna  |
-|               | .        | dostęp do przestrzeni     | binarny | sufiks  | lewostronna  |
+|               | .        | dostęp do przestrzeni     | binarny | infiks  | lewostronna  |
 |               | ?.       | bezpieczny dostęp         | binarny | infiks  | lewostronna  |
 |               | !        | wykluczenie opcjonalności | unarny  | sufiks  | lewostronna  |
 |       2       | ^        | potęgowanie               | binarny | infiks  | prawostronna |
@@ -23,14 +23,30 @@
 |       8       | ==       | porównanie                | binarny | infiks  | lewostronna  |
 |               | !=       | porównanie                | binarny | infiks  | lewostronna  |
 |       9       | &&       | koniunkcja                | binarny | infiks  | lewostronna  |
-|               | \|\|     | altenatywa                | binarny | infiks  | lewostronna  |
-|      10       | ??       | null coalescing           | binarny | infiks  | lewostronna  |
-|      11       | =        | przypisanie               | binarny | infiks  | prawostronna |
+|      10       | \|\|     | altenatywa                | binarny | infiks  | lewostronna  |
+|      11       | ??       | null coalescing           | binarny | infiks  | lewostronna  |
+|      12       | =        | przypisanie               | binarny | infiks  | prawostronna |
 |               | +=       | przypisanie sumy          | binarny | infiks  | prawostronna |
 |               | -=       | przypisanie różnicy       | binarny | infiks  | prawostronna |
 |               | *=       | przypisanie iloczynu      | binarny | infiks  | prawostronna |
 |               | /=       | przypisanie ilorazu       | binarny | infiks  | prawostronna |
 |               | %=       | przypisanie reszty        | binarny | infiks  | prawostronna |
+
+
+## Operatory dopasowywania wzorca
+
+| Pierwszeństwo | Operator | Opis                      | Arność  | Pozycja | Łączność     |
+|---------------|----------|---------------------------|---------|---------|--------------|
+|       1       | <        | porównanie                | unarny  | prefiks | brak         |
+|               | <=       | porównanie                | unarny  | prefiks | brak         |
+|               | >        | porównanie                | unarny  | prefiks | brak         |
+|               | >=       | porównanie                | unarny  | prefiks | brak         |
+|               | is       | porównanie                | unarny  | prefiks | brak         |
+|               | is not   | porównanie                | unarny  | prefiks | brak         |
+|       2       | not      | negacja                   | unarny  | prefiks | prawostronna |
+|       3       | and      | koniunkcja                | binarny | infiks  | lewostronna  |
+|       4       | or       | altenatywa                | binarny | infiks  | lewostronna  |
+
 
 ### Notki
 
