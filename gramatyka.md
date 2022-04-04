@@ -34,10 +34,9 @@ pattern_spec          = pattern_expr, COLON, expression, SEMICOLON;
 pattern_expr          = ptrn_expr_disjunction
                       | KW_DEFAULT;
 ptrn_expr_disjunction = ptrn_expr_conjunction, { KW_OR, ptrn_expr_conjunction };
-ptrn_expr_conjunction = ptrn_expr_eq_comparison, { KW_AND, ptrn_expr_eq_comparison };
-ptrn_expr_unary       = KW_NOT, ptrn_expr_unary
-                      | ptrn_expr_non_assoc;
-ptrn_expr_non_assoc   = [ OP_REL_COMPARISON | KW_IS, [ KW_NOT ] ], ptrn_expr_primary;
+ptrn_expr_conjunction = ptrn_expr_non_assoc, { KW_AND, ptrn_expr_non_assoc };
+ptrn_expr_non_assoc   = ( OP_REL_COMPARISON | KW_IS, [ KW_NOT ] ), ptrn_expr_primary
+                      | OP_LEFT_PAREN, ptrn_expr_disjunction, OP_RIGHT_PAREN;
 ptrn_expr_primary     = LITERAL
                       | TYPE;
 assignment            = null_coalescing, { OP_ASSIGNMENTS,  null_coalescing };
@@ -49,7 +48,7 @@ relational_comparison = concatenation, { OP_REL_COMPARISON, concatenation };
 concatenation         = term, { OP_CONCATENATION, term };
 term                  = factor, { OP_ADDITIVE, factor };
 factor                = unary_prefixed, { OP_MULTIPLICATIVE, unary_prefixed };
-unary_prefixed        = [ OP_UNARY_PREFIX ], unary_prefixed
+unary_prefixed        = OP_UNARY_PREFIX, unary_prefixed
                       | exponentiation;
 exponentiation        = suffixed_expr, { OP_EXPONENTIATION, suffixed_expr };
 suffixed_expr         = primary_expr, [ function_call | namespace_access ];

@@ -43,7 +43,6 @@
 |               | >=       | porównanie                | unarny  | prefiks | brak         |
 |               | is       | porównanie                | unarny  | prefiks | brak         |
 |               | is not   | porównanie                | unarny  | prefiks | brak         |
-|       2       | not      | negacja                   | unarny  | prefiks | prawostronna |
 |       3       | and      | koniunkcja                | binarny | infiks  | lewostronna  |
 |       4       | or       | altenatywa                | binarny | infiks  | lewostronna  |
 
