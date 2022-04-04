@@ -67,15 +67,15 @@ primary_expr          = LITERAL
 ```ebnf
 TYPE                   = "int" | "float" | "string" | "bool";
 LITERAL                = STRING | NUMBER | BOOL | NULL;
-STRING                 = "\"", ? łańcuch znaków wspierający sekwencje ucieczki ?, "\"";
+STRING                 = /"(\\\\|\\"|[\s\S])*?"/;
 NUMBER                 = INTEGER | FLOAT;
-INTEGER                = ? ?;
-FLOAT                  = ? ?;
+INTEGER                = /0x[0-9a-fA-F]+|0c[0-7]+|0b[01]+|[0-9]+/;
+FLOAT                  = /((\.[0-9]+)|[0-9]+(\.[0-9]*)?)(e[-+]?[0-9]+)?/i;
 BOOL                   = KW_FALSE | KW_TRUE;
 NULL                   = KW_NULL;
 COMMENT                = LINE_COMMENT | MULTILINE_COMMENT;
-LINE_COMMENT           = "//", ? ?;
-MULTILINE_COMMENT      = "/*", ? ?, "*/";
+LINE_COMMENT           = /\/\/[^\r\n\x1e]*/;
+MULTILINE_COMMENT      = /\/\*[\s\S]*?\*\//;
 KEYWORD                = KW_INIT | KW_CONST | KW_PULL | KW_IF | KW_ELIF | KW_ELSE | KW_WHILE | KW_FOR | KW_FUNCTI
                        | KW_MATCH | KW_AND | KW_OR | KW_IS | KW_NOT | KW_DEFAULT;
 KW_INIT                = "init";
@@ -140,5 +140,5 @@ OP_MINUS_ASSIGNMENT    = "-=";
 OP_ASTERISK_ASSIGNMENT = "*=";
 OP_SLASH_ASSIGNMENT    = "/=";
 OP_PERCENT_ASSIGNMENT  = "%=";
-IDENTIFIER             = ? ?;
+IDENTIFIER             = /[\pL_][\pL_\pN]*/;
 ```
