@@ -23,6 +23,15 @@ konkretne instancje, podział, wyświetlanie
 
 ## Sposób uruchomienia, IO
 
+[TODO]
+
+## Architektura
+
+[TODO]
+
+## Testowanie
+
+[TODO]
 
 # notes
 
@@ -33,3 +42,4 @@ expressions ftw
 structs (literally just lists of names), lists (the only "mutable" thing here?) & tuples
 anon functions only
 ~pattern matching function parameters
+string interpolation
