@@ -39,7 +39,8 @@ ptrn_expr_non_assoc   = ( OP_REL_COMPARISON | KW_IS, [ KW_NOT ] ), ptrn_expr_pri
                       | OP_LEFT_PAREN, ptrn_expr_disjunction, OP_RIGHT_PAREN;
 ptrn_expr_primary     = LITERAL
                       | TYPE;
-assignment            = null_coalescing, { OP_ASSIGNMENTS,  null_coalescing };
+assignment            = IDENTIFIER, OP_ASSIGNMENTS, assignment
+                      | null_coalescing;
 null_coalescing       = disjunction, { OP_NULL_COALESCING, disjunction };
 disjunction           = conjunction, { OP_LOGICAL_OR, conjunction };
 conjunction           = equality_comparison, { OP_LOGICAL_AND, equality_comparison };
@@ -63,79 +64,81 @@ primary_expr          = LITERAL
 
 ## Leksemy
 
-```
-TYPE
-LITERAL
-    STRING
-    NUMBER
-        INTEGER
-        FLOAT
-    BOOLEAN
-    NULL
-COMMENT
-KEYWORD
-    KW_INIT
-    KW_CONST
-    KW_PULL
-    KW_IF
-    KW_ELIF
-    KW_ELSE
-    KW_WHILE
-    KW_FOR
-    KW_FUNCTI
-    KW_MATCH
-    KW_TRUTH_FUNCTIONAL
-        KW_AND
-        KW_OR
-    KW_EQ_COMPARISON
-        KW_IS
-        KW_NOT
-    KW_DEFAULT
-COMMA
-COLON
-OPERATOR
-    OP_NAMESPACE
-        OP_DOT
-        OP_QUESTION_DOT
-    OP_PARENTHESES
-        OP_LEFT_PAREN
-        OP_RIGHT_PAREN
-        OP_LEFT_BRACKET
-        OP_RIGHT_BRACKET
-        OP_LEFT_BRACE
-        OP_RIGHT_BRACE
-    OP_EXPONENTIATION
-    OP_UNARY_PREFIX
-        OP_PLUS
-        OP_MINUS
-        OP_BANG
-    OP_MULTIPLICATIVE
-        OP_ASTERISK
-        OP_SLASH
-        OP_PERCENT
-    OP_ADDITIVE
-        OP_PLUS
-        OP_MINUS
-    OP_CONCATENATION
-    OP_REL_COMPARISON
-        OP_LESSER
-        OP_LESSER_EQUAL
-        OP_GREATER
-        OP_GREATER_EQUAL
-    OP_EQ_COMPARISON
-        OP_EQUAL
-        OP_NOT_EQUAL
-    OP_TRUTH_FUNCTIONAL
-        OP_LOGICAL_AND
-        OP_LOGICAL_OR
-    OP_NULL_COALESCING
-    OP_ASSIGNMENTS
-        OP_ASSIGNMENT
-        OP_PLUS_ASSIGNMENT
-        OP_MINUS_ASSIGNMENT
-        OP_ASTERISK_ASSIGNMENT
-        OP_SLASH_ASSIGNMENT
-        OP_PERCENT_ASSIGNMENT
-SEMICOLON
-IDENTIFIER
+```ebnf
+TYPE                   = "int" | "float" | "string" | "bool";
+LITERAL                = STRING | NUMBER | BOOL | NULL;
+STRING                 = "\"", ? łańcuch znaków wspierający sekwencje ucieczki ?, "\"";
+NUMBER                 = INTEGER | FLOAT;
+INTEGER                = ? ?;
+FLOAT                  = ? ?;
+BOOL                   = KW_FALSE | KW_TRUE;
+NULL                   = KW_NULL;
+COMMENT                = LINE_COMMENT | MULTILINE_COMMENT;
+LINE_COMMENT           = "//", ? ?;
+MULTILINE_COMMENT      = "/*", ? ?, "*/";
+KEYWORD                = KW_INIT | KW_CONST | KW_PULL | KW_IF | KW_ELIF | KW_ELSE | KW_WHILE | KW_FOR | KW_FUNCTI
+                       | KW_MATCH | KW_AND | KW_OR | KW_IS | KW_NOT | KW_DEFAULT;
+KW_INIT                = "init";
+KW_CONST               = "const";
+KW_PULL                = "pull"
+KW_IF                  = "if";
+KW_ELIF                = "elif"
+KW_ELSE                = "else";
+KW_WHILE               = "while";
+KW_FOR                 = "for";
+KW_FUNCTI              = "functi";
+KW_MATCH               = "match";
+KW_AND                 = "and";
+KW_OR                  = "or";
+KW_IS                  = "is";
+KW_NOT                 = "not";
+KW_DEFAULT             = "default";
+COMMA                  = ",";
+COLON                  = ":";
+SEMICOLON              = ";";
+OPERATOR               = OP_NAMESPACE | OP_PARENTHESES | OP_EXPONENTIATION | OP_UNARY_PREFIX | OP_MULTIPLICATIVE | OP_ADDITIVE
+                       | OP_CONCATENATION | OP_REL_COMPARISON | OP_LOGICAL_AND | OP_LOGICAL_OR | OP_NULL_COALESCING | OP_ASSIGNMENTS;
+OP_NAMESPACE           = OP_DOT | OP_QUESTION_DOT;
+OP_PARENTHESES         = OP_LEFT_PAREN | OP_RIGHT_PAREN | OP_LEFT_BRACKET | OP_RIGHT_BRACKET | OP_LEFT_BRACE | OP_RIGHT_BRACE;
+OP_UNARY_PREFIX        = OP_PLUS | OP_MINUS | OP_BANG;
+OP_MULTIPLICATIVE      = OP_ASTERISK | OP_SLASH | OP_PERCENT;
+OP_ADDITIVE            = OP_PLUS | OP_MINUS;
+OP_REL_COMPARISON      = OP_LESSER | OP_LESSER_EQUAL | OP_GREATER | OP_GREATER_EQUAL;
+OP_EQ_COMPARISON       = OP_EQUAL | OP_NOT_EQUAL;
+OP_ASSIGNMENTS         = OP_ASSIGNMENT | OP_PLUS_ASSIGNMENT | OP_MINUS_ASSIGNMENT | OP_ASTERISK_ASSIGNMENT | OP_SLASH_ASSIGNMENT
+                       | OP_PERCENT_ASSIGNMENT;
+OP_DOT                 = ".";
+OP_QUESTION_DOT        = "?.";
+OP_LEFT_PAREN          = "(";
+OP_RIGHT_PAREN         = ")";
+OP_LEFT_BRACKET        = "[";
+OP_RIGHT_BRACKET       = "]";
+OP_LEFT_BRACE          = "{";
+OP_RIGHT_BRACE         = "}";
+OP_EXPONENTIATION      = "^";
+OP_PLUS                = "+";
+OP_MINUS               = "-";
+OP_BANG                = "!";
+OP_ASTERISK            = "*";
+OP_SLASH               = "/";
+OP_PERCENT             = "%";
+OP_PLUS                = "+";
+OP_MINUS               = "-";
+OP_CONCATENATION       = "..";
+OP_LESSER              = "<";
+OP_LESSER_EQUAL        = "<=";
+OP_GREATER             = ">";
+OP_GREATER_EQUAL       = ">=";
+OP_EQUAL               = "==";
+OP_NOT_EQUAL           = "!=";
+OP_LOGICAL_AND         = "&&";
+OP_LOGICAL_OR          = "||";
+OP_NULL_COALESCING     = "??";
+OP_ASSIGNMENT          = "=";
+OP_PLUS_ASSIGNMENT     = "+=";
+OP_MINUS_ASSIGNMENT    = "-=";
+OP_ASTERISK_ASSIGNMENT = "*=";
+OP_SLASH_ASSIGNMENT    = "/=";
+OP_PERCENT_ASSIGNMENT  = "%=";
+IDENTIFIER             = ? ?;
 ```
