@@ -1,11 +1,11 @@
 # Toffee
 
-Interpreter docelowo prostego i przyjemnego w użyciu języka skryptowego o roboczej nazwie Toffee.  
+Interpreter docelowo prostego i przyjemnego w użyciu języka skryptowego ogólnego przeznaczenia o roboczej nazwie Toffee.  
 Język implementacji: C#.
 
 Głównymi założeniami projektowanego języka są:
 * wykorzystanie dynamicznego, słabego typowania,
-* domyślna opcjonalność i mutowalność zmiennych,
+* opcjonalność i domyślna mutowalność zmiennych,
 * implementacja dopasowywania wzorca.
 
 Przeważająca większość konstruktów językowych to wyrażenia, co ma uczynić pracę z językiem wygodniejszą.    
@@ -23,21 +23,69 @@ Planowane jest wprowadzenie jakiejś struktury danych typu lista lub krotka (prz
 
 ## Formalna specyfikacja i składnia
 
-Gramatyka realizowanego języka opisana jest w pliku [gramatyka.md](gramatyka.md).
+Gramatyka realizowanego języka opisana jest w pliku [gramatyka.md](gramatyka.md). Reguły dotyczące operatorów są zgodne z tabelami z pliku [operatory.md](operatory.md).
 
 Nie przewiduje się na razie konfiguracji zachowania interpretera poprzez specjalne pliki.
 
 Możliwe jest importowanie zawartości innych skryptów za pomocą instrukcji `pull`. Rolę biblioteki standardowej pełni przestrzeń nazw `std`. Zdefiniowane w "dociąganym" skrypcie elementy są wprowadzanie do przestrzeni nazw skryptu głównego, a w wypadku konfliktu nazw można odwołać się do nich z użyciem pełnej ścieżki (np. `std.io.print`).
 
+## Wymaganie funkcjonalne
+1. obsługa operacji liczbowych
+    * dwa typy podstawowe: liczby całkowite ze znakiem (`int`, od $`-2^{63}`$ do $`2^{63}-1`$) i liczby zmiennoprzecinkowe (`float`, IEEE 754 binary64)
+    * obsługa literałów całkowitoliczbowych w formie dziesiętnej (np. `3424`), szesnastkowej (np. `0xaf`), ósemkowej (np. `0x644`) oraz dwójkowej (`0b101011`)
+    * obsługa literałów zmiennoprzecinkowych z opcjonalną częścią całkowitą (np. `.1234`) lub ułamkową (np. `25.`) oraz wsparciem dla notacji naukowej bez znormalizowanej mantysy (np. `12.34e15`)
+    * operatory: znaku (`+`, `-`), dodawania (`+`), odejmowania (`-`), mnożenia (`*`), dzielenia (`/`), reszty z dzielenia (`%`), potęgowania (`^`)
+2. obsługa operacji znakowych
+    * typ `string`
+    * wieloliniowe literały ograniczone cudzysłowami wspierające sekwencje ucieczki z wykorzystanie znaku `\`
+        * dosłowne sekwencje nowej linii w treści zamieniane są na znaki `\n`
+        * zakładane wsparcie dla standardowych dla języków z rodziny C znaków ucieczki (m.in. `\r`, `\n`, `\t`, `\0`)
+    * operatory: konkatenacji (`..`)
+3. obsługa komentarzy
+    * jednoliniowych od sekwencji `//`
+    * wieloliniowych od sekwencji `/*` do sekwencji `*/` (bez zagnieżdżeń)
+4. tworzenie zmiennych
+    * semantyka obsługi zmiennych: typowanie dynamiczne, słabe; opcjonalność; domyślna mutowalność
+    * słowo kluczowe `init` rozpoczynające listę deklaracji oraz `const` wskazujące stałą
+    * deklaracja oznacza inicjalizację - jeśli nie określono przypisania, zmienna przyjmuje wartość `null` (nie dotyczy stałych)
+    * obsługa zakresów widoczności zmiennych ze wsparciem dla domknięć (wartość przechwyconych zmiennych nie może być zmieniana przez domknięcie)
+5. instrukcje warunkowe
+    * instrukcja warunkowa `if`
+        * opcjonalne części `elif` (wiele wystąpień) oraz `else` (jedno wystąpienie)
+        * dla `if` oraz `elif` wymagane jest zdefiniowanie warunku w nawiasach
+6. instrukcje pętli
+    * instrukcja pętli zakresowej `for`
+        * posiada niejawnie zadeklarowany niemutowalny licznik `_i_` inkrementowany wedle specyfikacji zakresu (zasięg - najbliższa pętla `for`)
+        * specyfikacja zakresu umieszczona jest w nawiasach po słowie kluczowym `for`, działa analogicznie do konstrukcji `range` z języka Python: możliwe jest określenie tylko górnej granicy (np. `5`), wartości startowej i górnej granicy (np. `0:5`) lub wartości startowej, górnej granicy i kroku inkrementacji (np. `0:5:2`)
+    * instrukcja pętli warunkowej `while`
+        * "klasyczna" postać - wymaga podania w nawiasach po słowie kluczowym `while` jakiegoś warunku ewaluowanego przed każdą iteracją
+7. funkcje
+    * defiowanie funkcji anonimowych z użyciem słowa kluczowego `functi`, po którym następuje lista parametrów i ciało funkcji
+    * funkcje anonimowe mogą być przypisane do zmiennej/stałej
+    * funkcje anonimowe mogą przechwytywać zmienne (mechanizm domknięć), ale nie mogą ich modyfikować
+    * wywołanie funkcji możliwe jest z użyciem nawiasów, w których podane są argumenty, możliwe rekursywne wywołania
+    * proste typy danych (liczbowe, logiczne) są przekazywane do funkcji przez kopię, natomiast łańcuchy znaków (których zawartość jest niezmienna) poprzez referencję
+    * możliwe jest wymuszenie sprawdzenia nieopcjonalności parametru z użyciem operatora sufiksowego `!`
+8. obsługa błędów
+    * z użyciem domyślnej implementacji: wypisywanie błędów w określonym formacie (zawierającym pozycję, oznaczenie błędu i dodatkowe dane) na standardowy strumień błędów `stderr` na każdym etapie działania aplikacji (błędy znakowe, składniowe, semantyczne, czasu uruchomienia)
+    * przykładowe błędy:
+        * znakowe - nieoczekiwany znak (w szczególności ETX)
+        * składniowe - nieprawidłowa instrukcja, nieoczekiwany token (w szczególności ETX), przekroczenie zakresu literału
+        * semantyczne - przypisanie wartości do zdefiniowanej wcześniej stałej, nieznany identyfikator, brak przypisania przy definicji stałej
+        * czasu uruchomienia - dzielenie przez zero, `null` podany w miejsce parametru nieopcjonalnego, przekroczenie zakresu zmiennej, brak wymaganej przestrzeni nazw
+    * wystąpienie błędu oznacza przerwanie działania bieżącego programu (w przypadku trybu REPL nie powinno to kończyć działania interperetera)
+        * w przypadku błędów składniowych należy pominąć wszelkie tokeny aż do rozpoczęcia następnej instrukcji i kontynuować sprawdzanie, by użytkownik mógł zapoznać się z możliwie pełną liczbą błędów od razu
+    * wygodny byłby mechanizm wyjątków z użyciem słów kluczowych `try` i `catch` z możliwością definiowania własnych klas błędów, nie jest to jednak obecnie zaplanowane (wiązałoby się z potencjalnym wprowadzeniem mechanizmu dziedziczenia, wsparcia dla OOP, itd.)
+9. obsługa operacji logicznych
+    * typ `bool`
+    * obsługa literałów: `true`, `false`
+    * operatory: negacja (`!`), iloczyn logiczny (`&&`), alternatywa (`||`)
+    * porównanie wartości (`<`, `<=`, `>`, `>=`, `==`, `!=`) działa jak w języku Python - do momentu zamknięcia wyrażenie będącego ciągiem porównań, wykorzystywana jest porównywana wartość zmiennych, literałów, itp., po zamknięciu wynik stanowi wartość logiczna stanowiąca iloczyn logiczny wyników wszystkich składowych porównań
+
 ## Wymagania niefunkcjonalne
+
 1. Lekser i parser powinny działać na tyle szybko i sprawnie, by możliwe było wyświetlanie informacji np. o błędach składniowych na żywo w trakcie pisania programu.
 2. Interpreter powinien być odporny na błędy - nie zawieszać się, nie przerywać nagle działania.
-
-## Obsługa błędów
-
-Dzięki śledzeniu pozycji w strumieniu, możliwe będzie logowanie użytkownikowi dokładnej pozycji błędu w linii.
-
-W przypadku wystąpienia jakiegokolwiek błędu przerwanie bieżącego skryptu lub kawałka kodu zostanie przerwane (a dane zostaną bezpiecznie uprzątnięte).
 
 ## Sposób uruchomienia
 
@@ -45,16 +93,18 @@ Interpreter będzie dostarczony w postaci programu konsolowego. Uruchomiony bez 
 
 ## Architektura
 
-System składał się będzie z klas: analizatora leksykalnego, analizatora składniowego oraz interpretera wygenerowanego drzewa.
+System składał się będzie z następujących warstw:
+* skaner znaków (leniwa generacja znaków) - śledzenie pozycji, unifikacja znaków nowej linii,
+* analizator leksykalny (leniwa generacja tokenów),
+* analizator składniowy - parser typu RD generujący hierarchię obiektów,
+* interpreter wygenerowanego drzewa.
 
-Przepływ informacji między systemami będzie jednokierunkowy - lekser pobierał będzie z wejścia kolejne znaki i podawał je analizatorowi składniowemu na żądanie. Ten z kolei będzie generował hierarchię obiektów nadającą się do wykonania przez interpreter.
-
-Dla ułatwienia pracy zaimplementowane zostaną również klasy skanera (który będzie konwertował różne znaki nowej linii na jednolity format oraz śledził pozycję w strumieniu wejściowym) oraz potencjalnie różne klasy do obsługi błędów, logowania, itp.
+Dodatkowo zaimplementowane będą różne klasy do obsługi błędów, logowania, itp.
 
 ## Testowanie
 
 Analizator leksykalny oraz składniowy pracują na zasadzie konsumpcji kolejnych znaków (lub tokenów) i generowania rezultatu, który powinien być deterministyczny, a więc i możliwy do sprawdzenia pod kątem poprawności (np. poprzez proste porównanie sekwencji).
 
-Komponenty systemu testowane będą jednostkowo, niezależnie dzięki wykorzystaniu podejścia obiektowego (możliwe podstawienie obiektu np. leksera z użyciem atrapy).
+Komponenty systemu testowane będą jednostkowo, niezależnie dzięki wykorzystaniu w implementacji podejścia obiektowego (możliwe będzie podstawienie obiektu np. leksera z użyciem atrapy).
 
-Oczywiście testowane będą, poza przykłądami mającymi zadziałać poprawnie, przypadki brzegowe, np. nagłe przerwanie strumienia wejściowego, dzielenie przez zero i inne.
+Oczywiście testowane będą, poza przykładami mającymi zadziałać poprawnie, przypadki brzegowe, np. nagłe przerwanie strumienia wejściowego, dzielenie przez zero i wszelkie błędy, zaproponowane wyżej lub nie.

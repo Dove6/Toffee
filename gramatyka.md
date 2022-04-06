@@ -2,7 +2,7 @@
 
 ```ebnf
 program
-    = { statement }, EOF;
+    = { statement }, ETX;
 statement
     = namespace_import_statement
     | variable_initialization_statement
@@ -189,6 +189,8 @@ OP_ASSIGNMENTS
     | OP_ASTERISK_ASSIGNMENT
     | OP_SLASH_ASSIGNMENT
     | OP_PERCENT_ASSIGNMENT;
+ETX
+    = ? symboliczny koniec strumienia ?;
 ```
 
 Definicje z użyciem wyrażeń regularnych:
@@ -196,7 +198,7 @@ Definicje z użyciem wyrażeń regularnych:
 TYPE                   = /int|float|string|bool/;
 STRING                 = /"(\\\\|\\"|[\s\S])*?"/;
 INTEGER                = /0x[0-9a-fA-F]+|0c[0-7]+|0b[01]+|[0-9]+/;
-FLOAT                  = /((\.[0-9]+)|[0-9]+(\.[0-9]*)?)(e[-+]?[0-9]+)?/i;
+FLOAT                  = /((\.[0-9]+)|[0-9]+\.[0-9]*)(e[-+]?[0-9]+)?/i;
 LINE_COMMENT           = /\/\/[^\r\n\x1e]*/;
 MULTILINE_COMMENT      = /\/\*[\s\S]*?\*\//;
 KW_INIT                = /init/;
