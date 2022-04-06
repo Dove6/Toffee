@@ -1,0 +1,8 @@
+// komentarz jednoliniowy
+/* komentarz
+   wieloliniowy */
+
+/* komentarz wieloliniowy nie obługuje zagnieżdżeń
+/*
+/*
+*/  // <--- zamknięcie

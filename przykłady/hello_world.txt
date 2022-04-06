@@ -1,0 +1,7 @@
+pull std.io;
+
+print("Hello, world!");
+
+// albo
+
+std.io.print("Hello, world!");

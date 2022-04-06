@@ -1,0 +1,22 @@
+// wszystkie funkcje są potencjalnymi domknięciami, można również definiować funkcje wyższego rzędu
+
+init add = functi(a, b) a + b;
+print(add(3, 8));  // 11
+
+init const fib = functi(n) {
+    if (n < 0)
+        return null;
+    if (n == 0)
+        return(0);
+    if (n == 1)
+        return(1);
+    fib(n - 2) + fib(n - 1);
+};
+print(fib(4));  // 3
+
+// funkcja ze sprawdzaniem, czy argument nie jest nullem
+init printRequired = functi(x!) {
+    print(x);
+};
+printRequired(5);  // 5 - OK
+printRequired(null);  // błąd!
