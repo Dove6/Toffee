@@ -21,7 +21,10 @@ expression
     | conditional_expression
     | for_loop_expression
     | while_loop_expression
+    | break_expression
+    | break_if_expression
     | function_definition
+    | return_expression
     | pattern_matching;
 variable_initialization_list
     = variable_initialization, { COMMA, variable_initialization };
@@ -29,28 +32,34 @@ variable_initialization
     = [ KW_CONST ], IDENTIFIER, OP_ASSIGNMENT, expression;
 block
     = OP_LEFT_BRACE, { variable_initialization_statement | expression_statement }, OP_RIGHT_BRACE;
-parenthesized_condition
-    = OP_LEFT_PARENTHESIS, expression, OP_RIGHT_PARENTHESIS;
 conditional_expression
-    = KW_IF, parenthesized_condition, expression, { conditional_elif_part }, [ conditional_else_part ];
+    = KW_IF, parenthesized_expression, expression, { conditional_elif_part }, [ conditional_else_part ];
 conditional_elif_part
-    = KW_ELIF, parenthesized_condition, expression;
+    = KW_ELIF, parenthesized_expression, expression;
 conditional_else_part
     = KW_ELSE, expression;
-while_loop_expression
-    = KW_WHILE, parenthesized_condition, expression;
 for_loop_expression
     = KW_FOR, OP_LEFT_PARENTHESIS, [for_counter_declaration], for_range_specification, OP_RIGHT_PARENTHESIS, expression;
 for_counter_declaration
     = IDENTIFIER, COMMA;
 for_range_specification
     = NUMBER, [ COLON, NUMBER, [ COLON, NUMBER ] ];
+while_loop_expression
+    = KW_WHILE, parenthesized_expression, expression;
+break_expression
+    = KW_BREAK;
+break_if_expression
+    = KW_BREAK_IF, parenthesized_expression;
+parenthesized_expression
+    = OP_LEFT_PARENTHESIS, expression, OP_RIGHT_PARENTHESIS;
 function_definition
     = KW_FUNCTI, OP_LEFT_PARENTHESIS, parameter_list, OP_RIGHT_PARENTHESIS, expression;
 parameter_list
     = [ parameter, { COMMA, parameter } ];
 parameter
     = [ KW_CONST ], IDENTIFIER;
+return_expression
+    = KW_RETURN, expression;
 pattern_matching
     = KW_MATCH, OP_LEFT_PARENTHESIS, expression, OP_RIGHT_PARENTHESIS, OP_LEFT_BRACE, { pattern_specification }, OP_RIGHT_BRACE;
 pattern_specification
@@ -207,7 +216,10 @@ KW_ELIF                = /elif/
 KW_ELSE                = /else/;
 KW_WHILE               = /while/;
 KW_FOR                 = /for/;
+KW_BREAK               = /break/;
+KW_BREAK_IF            = /break_if/;
 KW_FUNCTI              = /functi/;
+KW_RETURN              = /return/;
 KW_MATCH               = /match/;
 KW_AND                 = /and/;
 KW_OR                  = /or/;

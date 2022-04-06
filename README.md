@@ -57,6 +57,9 @@ Możliwe jest importowanie zawartości innych skryptów za pomocą instrukcji `p
         * specyfikacja zakresu umieszczona jest w nawiasach po słowie kluczowym `for`, działa analogicznie do konstrukcji `range` z języka Python: możliwe jest określenie tylko górnej granicy (np. `5`), wartości startowej i górnej granicy (np. `0:5`) lub wartości startowej, górnej granicy i kroku inkrementacji (np. `0:5:2`)
     * instrukcja pętli warunkowej `while`
         * "klasyczna" postać - wymaga podania w nawiasach po słowie kluczowym `while` jakiegoś warunku ewaluowanego przed każdą iteracją
+    * przerwanie wykonania
+        * słowo kluczowe `break` pozwala na bezwarunkowe przerwanie wykonania obu typów pętli
+        * słowo kluczowe `break_if` pozwala na warunkowe przerwanie wykonania obu typów pętli - warunek należy podać w nawiasach
 7. funkcje
     * defiowanie funkcji anonimowych z użyciem słowa kluczowego `functi`, po którym następuje lista parametrów i ciało funkcji
     * funkcje anonimowe mogą być przypisane do zmiennej/stałej
@@ -65,6 +68,7 @@ Możliwe jest importowanie zawartości innych skryptów za pomocą instrukcji `p
     * proste typy danych (liczbowe, logiczne) są przekazywane do funkcji przez kopię, natomiast łańcuchy znaków (których zawartość jest niezmienna) poprzez referencję
     * możliwe jest wymuszenie sprawdzenia nieopcjonalności parametru z użyciem operatora sufiksowego `!`
     * parametry funkcji można określić słowem kluczowym `const` - nie będzie się dało wtedy modyfikować ich wartości (domyślnie są mutowalne)
+    * przerwanie wykonania funkcji można wymusić z użyciem słowa kluczowe `return`, po którym następić może wyrażenie stanowiące wartość zwrotną
 8. obsługa błędów
     * z użyciem domyślnej implementacji: wypisywanie błędów w określonym formacie (zawierającym pozycję, oznaczenie błędu i dodatkowe dane) na standardowy strumień błędów `stderr` na każdym etapie działania aplikacji (błędy znakowe, składniowe, semantyczne, czasu uruchomienia)
     * przykładowe błędy:

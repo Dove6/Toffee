@@ -60,16 +60,15 @@ while (true) {
 };
 // działa "zwyczajnie", w roli wyrażenia zwraca wartość sprawdzanego warunku
 
-// break ma opcjonalny warunek, dzięki czemu możliwe jest pominięcie stosowania ifa
-// domyślnie (dla braku warunku) jest to wartość true
-// break jako wyrażenie zwraca wartość wyrażenia logicznego służącego mu za warunek
+// break istnieje w dwóch wersjach: zwykłej (break) oraz warunkowej (break_if)
+// break jako wyrażenie zwraca null, a break_if wartość wyrażenia logicznego służącego mu za warunek
 while (true) {
     i = break;
-    j = break();
+    j = break_if(true);
 };
-// i ma teraz wartość true, j bez zmian (przypisanie nie zostało wykonane ze względu na przerwanie pętli)
+// i ma teraz wartość null, j bez zmian (przypisanie nie zostało wykonane ze względu na przerwanie pętli)
 for (digit, 10) {
     print(digit);
-    break(digit >= 5);
+    break_if(digit >= 5);
 };
 // licznik zostanie wypisany tylko 5 razy
