@@ -45,10 +45,3 @@
 |               | is not   | porównanie                | unarny  | prefiks | brak         |
 |       3       | and      | koniunkcja                | binarny | infiks  | lewostronna  |
 |       4       | or       | altenatywa                | binarny | infiks  | lewostronna  |
-
-
-### Notki
-
-A co z operatorem `:` definiującym zakres pętli `for`?
-
-Opcjonalne rozszerzenia 1: `[]`, `{}`, `?[]`, `?{}`.

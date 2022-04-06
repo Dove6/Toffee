@@ -2,10 +2,10 @@ init a = 5, b = 10, c;
 
 init const matchingExample = functi(var) {
     match(var) {
-        is null:           "Wartość null";
-        is 5:              "Dokładnie pięć";
+        is null:        "Wartość null";
+        is 5:           "Dokładnie pięć";
         is int and > 8: "Liczba całkowita większa od 8";
-        default:           "Brak dopasowania";
+        default:        "Brak dopasowania";
     };
 }
 

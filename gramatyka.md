@@ -36,7 +36,7 @@ conditional_expression
 conditional_elif_part
     = KW_ELIF, parenthesized_condition, expression;
 conditional_else_part
-    = KW_ELSE, parenthesized_condition, expression;
+    = KW_ELSE, expression;
 while_loop_expression
     = KW_WHILE, parenthesized_condition, expression;
 for_loop_expression
@@ -48,7 +48,7 @@ function_definition
 parameter_list
     = [ parameter, { COMMA, parameter } ];
 parameter
-    = IDENTIFIER;
+    = [ KW_CONST ], IDENTIFIER;
 pattern_matching
     = KW_MATCH, OP_LEFT_PARENTHESIS, expression, OP_RIGHT_PARENTHESIS, OP_LEFT_BRACE, { pattern_specification }, OP_RIGHT_BRACE;
 pattern_specification
@@ -61,11 +61,9 @@ pattern_expression_disjunction
 pattern_expression_conjunction
     = pattern_expression_non_associative, { KW_AND, pattern_expression_non_associative };
 pattern_expression_non_associative
-    = ( OP_RELATION_COMPARISON | KW_IS, [ KW_NOT ] ), pattern_expression_primary
+    = OP_RELATION_COMPARISON, LITERAL
+    | KW_IS, [ KW_NOT ], (TYPE | LITERAL)
     | OP_LEFT_PARENTHESIS, pattern_expression_disjunction, OP_RIGHT_PARENTHESIS;
-pattern_expression_primary
-    = LITERAL
-    | TYPE;
 assignment
     = null_coalescing, [ OP_ASSIGNMENTS, assignment ];
 null_coalescing

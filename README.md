@@ -18,8 +18,6 @@ Język implementuje funkcje anonimowe i pozwala na przypisywanie ich do zmiennyc
 
 Podstawowe typy danych będą przekazywane do funkcji przez kopię, natomiast łańcuchy znaków (których zawartość jest niezmienna) poprzez referencję.
 
-Planowane jest wprowadzenie jakiejś struktury danych typu lista lub krotka (przykłady zamieszczone są w plikach tekstowych).
-
 
 ## Formalna specyfikacja i składnia
 
@@ -66,6 +64,7 @@ Możliwe jest importowanie zawartości innych skryptów za pomocą instrukcji `p
     * wywołanie funkcji możliwe jest z użyciem nawiasów, w których podane są argumenty, możliwe rekursywne wywołania
     * proste typy danych (liczbowe, logiczne) są przekazywane do funkcji przez kopię, natomiast łańcuchy znaków (których zawartość jest niezmienna) poprzez referencję
     * możliwe jest wymuszenie sprawdzenia nieopcjonalności parametru z użyciem operatora sufiksowego `!`
+    * parametry funkcji można określić słowem kluczowym `const` - nie będzie się dało wtedy modyfikować ich wartości (domyślnie są mutowalne)
 8. obsługa błędów
     * z użyciem domyślnej implementacji: wypisywanie błędów w określonym formacie (zawierającym pozycję, oznaczenie błędu i dodatkowe dane) na standardowy strumień błędów `stderr` na każdym etapie działania aplikacji (błędy znakowe, składniowe, semantyczne, czasu uruchomienia)
     * przykładowe błędy:

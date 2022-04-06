@@ -2,7 +2,3 @@ int(), unary +, unary -
 float(), unary +, unary -
 string(), ..
 bool(), unary !
-list()
-tuple()
-dict()
-record()

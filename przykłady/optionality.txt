@@ -4,6 +4,3 @@ init a = 5, b;
 print(a ?? b);  // 5, nie ma potrzeby
 print(b);  // null
 print(b ?? "Default value");  // Default value
-
-// "bezpieczny" dostęp
-print(b?[2]);  // null
