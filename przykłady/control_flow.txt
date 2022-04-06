@@ -1,0 +1,75 @@
+pull std.io;
+
+init const one = 1, const two = 2, const three = 3, i, j;
+
+if (one + two == three) {
+    print("Matematyka działa");
+} elif (one + two != three) {  // elify są opcjonalne
+    print("Matematyka nie działa");
+} else {  // else też są opcjonalne
+    print("Natrafiono na niepokojący błąd w interpreterze...")
+};
+
+if (true) {
+    print("Zawsze zadziała");
+};
+if (true) print("Zawsze zadziała");  // to samo, ale w formie wyrażenia
+// możliwe jest użycie również else oraz elseif w wyrażeniu
+if (i != null) print("i nie jest nullem") else print("i jest nullem");
+// przypisanie wyniku if
+i = if (two < three) 5 else 8;
+i = (if (two < three) 5) + 10;  // brakuje else - w przypadku niespełnienia warunku zostanie zwrócona wartość null
+//  ^------------------^------ wymagane nawiasy, aby "+ 10" nie zostało "podłączone" do "5"
+
+// każdy blok zwraca wartość ostatniej instrukcji
+i = {
+    one + two;
+    print("Ten tekst zostanie wypisany.");  // nie istnieją funkcje typu void, można jednak zwrócić null
+    j = 5;  // wyrażenie przypisania
+};
+// w tym miejscu obie zmienne (i oraz j) mają wartość 5
+
+// poniżej zaprezentowana jest pętla for, gdzie rolę licznika pełni zapewniona przez interpreter zmienna _i_
+// podobnie jak if/elif/else, również pętlę for można zapisać w formie skróconej
+// parametrem pętle jest zakres, po którym dokonuje się iteracji
+// zakres może mieć trzy formy ze względu na opcjonalną wartość początkową (domyślnie 0) oraz krok (domyślnie 1)
+// wartość początkowa jest podawana włącznie, a końcowa nie
+for (5) {
+    print(_i_);  // niejawne rzutowanie na typ string, pętla wypisuje w kolejnych liniach cyfry 0, 1, 2, 3, i 4
+};
+for (0:5) print(_i_);  // to samo, co powyżej
+for (4:-1:-1) {
+    init k = _i_;  // odpowiedź na potencjalne pytanie "Jak dostać się do licznika pętli zewnętrznej?"
+    for (3) {
+        print("Liczniki:");
+        print(k);
+        print(_i_);
+    };
+};
+// pętla for potraktowana jako wyrażenie zwraca wartość licznika w momencie jej zakończenia
+// może to być przydatne w przypadku wymuszonego zatrzymania pętli (break)
+j = for (5) {
+    print(_i_);
+};
+// j ma teraz wartość 4
+
+// pętla while
+while (true) {
+    print("Ten tekst zostanie wypisany jednokrotnie.")
+    break;
+};
+// działa "zwyczajnie", w roli wyrażenia zwraca wartość sprawdzanego warunku
+
+// break ma opcjonalny warunek, dzięki czemu możliwe jest pominięcie stosowania ifa
+// domyślnie (dla braku warunku) jest to wartość true
+// break jako wyrażenie zwraca wartość wyrażenia logicznego służącego mu za warunek
+while (true) {
+    i = break;
+    j = break();
+};
+// i ma teraz wartość true, j bez zmian (przypisanie nie zostało wykonane ze względu na przerwanie pętli)
+for (10) {
+    print(_i_);
+    break(_i_ >= 5);
+};
+// licznik zostanie wypisany tylko 5 razy
