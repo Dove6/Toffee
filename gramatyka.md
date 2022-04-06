@@ -2,7 +2,7 @@
 
 ```ebnf
 program
-    = { statement }, ETX;
+    = { statement };
 statement
     = namespace_import_statement
     | variable_initialization_statement
@@ -189,8 +189,6 @@ OP_ASSIGNMENTS
     | OP_ASTERISK_ASSIGNMENT
     | OP_SLASH_ASSIGNMENT
     | OP_PERCENT_ASSIGNMENT;
-ETX
-    = ? symboliczny koniec strumienia ?;
 ```
 
 Definicje z użyciem wyrażeń regularnych:
