@@ -53,7 +53,7 @@ Możliwe jest importowanie zawartości innych skryptów za pomocą instrukcji `p
         * dla `if` oraz `elif` wymagane jest zdefiniowanie warunku w nawiasach
 6. instrukcje pętli
     * instrukcja pętli zakresowej `for`
-        * posiada niejawnie zadeklarowany niemutowalny licznik `_i_` inkrementowany wedle specyfikacji zakresu (zasięg - najbliższa pętla `for`)
+        * pozwala na zadeklarowanie niemutowalnego licznika (o wybranej nazwie) inkrementowanego wedle specyfikacji zakresu; deklaracja ta jest opcjonalna (pętla wykona się poprawną ilość razy bez konieczności deklaracji)
         * specyfikacja zakresu umieszczona jest w nawiasach po słowie kluczowym `for`, działa analogicznie do konstrukcji `range` z języka Python: możliwe jest określenie tylko górnej granicy (np. `5`), wartości startowej i górnej granicy (np. `0:5`) lub wartości startowej, górnej granicy i kroku inkrementacji (np. `0:5:2`)
     * instrukcja pętli warunkowej `while`
         * "klasyczna" postać - wymaga podania w nawiasach po słowie kluczowym `while` jakiegoś warunku ewaluowanego przed każdą iteracją

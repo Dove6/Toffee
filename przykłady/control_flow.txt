@@ -29,27 +29,27 @@ i = {
 };
 // w tym miejscu obie zmienne (i oraz j) mają wartość 5
 
-// poniżej zaprezentowana jest pętla for, gdzie rolę licznika pełni zapewniona przez interpreter zmienna _i_
+// poniżej zaprezentowana jest pętla for z opcjonalną deklaracją licznika
 // podobnie jak if/elif/else, również pętlę for można zapisać w formie skróconej
-// parametrem pętle jest zakres, po którym dokonuje się iteracji
+// parametrem pętli jest opcjonalnie nazwa zmiennej, a obowiązkowo zakres, po którym dokonuje się iteracji
 // zakres może mieć trzy formy ze względu na opcjonalną wartość początkową (domyślnie 0) oraz krok (domyślnie 1)
 // wartość początkowa jest podawana włącznie, a końcowa nie
 for (5) {
-    print(_i_);  // niejawne rzutowanie na typ string, pętla wypisuje w kolejnych liniach cyfry 0, 1, 2, 3, i 4
+    print("i");  // wypisanie pięć razy wartości "i"
 };
-for (0:5) print(_i_);  // to samo, co powyżej
-for (4:-1:-1) {
-    init k = _i_;  // odpowiedź na potencjalne pytanie "Jak dostać się do licznika pętli zewnętrznej?"
-    for (3) {
+for (i, 0:5) print(i);  // pętla wypisuje w kolejnych liniach cyfry 0, 1, 2, 3, i 4
+//   ^ licznik przykrywa deklarację i z przestrzeni globalnej
+for (outer, 4:-1:-1) {
+    outer = 5;  // błąd - licznik jest stałą w danej iteracji
+    for (inner, 3) {
         print("Liczniki:");
-        print(k);
-        print(_i_);
+        print(outer .. "/" .. inner);
     };
 };
-// pętla for potraktowana jako wyrażenie zwraca wartość licznika w momencie jej zakończenia
+// pętla for potraktowana jako wyrażenie zwraca wartość licznika w momencie jej zakończenia (nawet, jeśli nie został on zadeklarowany)
 // może to być przydatne w przypadku wymuszonego zatrzymania pętli (break)
 j = for (5) {
-    print(_i_);
+    print("iteration");
 };
 // j ma teraz wartość 4
 
@@ -68,8 +68,8 @@ while (true) {
     j = break();
 };
 // i ma teraz wartość true, j bez zmian (przypisanie nie zostało wykonane ze względu na przerwanie pętli)
-for (10) {
-    print(_i_);
-    break(_i_ >= 5);
+for (digit, 10) {
+    print(digit);
+    break(digit >= 5);
 };
 // licznik zostanie wypisany tylko 5 razy

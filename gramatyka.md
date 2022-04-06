@@ -40,8 +40,10 @@ conditional_else_part
 while_loop_expression
     = KW_WHILE, parenthesized_condition, expression;
 for_loop_expression
-    = KW_FOR, OP_LEFT_PARENTHESIS, range_specification, OP_RIGHT_PARENTHESIS, expression;
-range_specification
+    = KW_FOR, OP_LEFT_PARENTHESIS, [for_counter_declaration], for_range_specification, OP_RIGHT_PARENTHESIS, expression;
+for_counter_declaration
+    = IDENTIFIER, COMMA;
+for_range_specification
     = NUMBER, [ COLON, NUMBER, [ COLON, NUMBER ] ];
 function_definition
     = KW_FUNCTI, OP_LEFT_PARENTHESIS, parameter_list, OP_RIGHT_PARENTHESIS, expression;
