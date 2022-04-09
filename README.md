@@ -84,6 +84,12 @@ Możliwe jest importowanie zawartości innych skryptów za pomocą instrukcji `p
     * obsługa literałów: `true`, `false`
     * operatory: negacja (`!`), iloczyn logiczny (`&&`), alternatywa (`||`)
     * porównanie wartości (`<`, `<=`, `>`, `>=`, `==`, `!=`) działa jak w języku Python - do momentu zamknięcia wyrażenie będącego ciągiem porównań, wykorzystywana jest porównywana wartość zmiennych, literałów, itp., po zamknięciu wynik stanowi wartość logiczna stanowiąca iloczyn logiczny wyników wszystkich składowych porównań
+10. dopasowanie wzorca
+    * z pattern matchingu można skorzystać przy pomocy słowa kluczowego `match`
+    * obsługiwane dopasowania:
+        * sprawdzenie typu (operatory `is`, `is not`)
+        * porównanie z literałem (operatory `is`, `is not`, `<`, `<=`, `>`, `>=`)
+        * spełnienie predykatu (poprzez podanie nazwy jednoargumentowej funkcji)
 
 ## Wymagania niefunkcjonalne
 

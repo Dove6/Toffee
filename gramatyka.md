@@ -72,6 +72,7 @@ pattern_expression_conjunction
 pattern_expression_non_associative
     = OP_RELATION_COMPARISON, LITERAL
     | KW_IS, [ KW_NOT ], ( TYPE | LITERAL )
+    | IDENTIFIER
     | OP_LEFT_PARENTHESIS, pattern_expression_disjunction, OP_RIGHT_PARENTHESIS;
 assignment
     = null_coalescing, [ OP_ASSIGNMENTS, assignment ];
