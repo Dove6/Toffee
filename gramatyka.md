@@ -4,52 +4,52 @@
 program
     = { statement };
 statement
-    = namespace_import_statement
-    | variable_initialization_statement
-    | expression_statement;
-namespace_import_statement
-    = KW_PULL, namespace, SEMICOLON;
+    = unterminated_statement, SEMICOLON, { SEMICOLON };
+unterminated_statement
+    = namespace_import
+    | variable_initialization_list
+    | break
+    | break_if
+    | return
+    | expression;
+namespace_import
+    = KW_PULL, namespace;
 namespace
     = IDENTIFIER, { OP_DOT, IDENTIFIER };
-variable_initialization_statement
-    = KW_INIT, variable_initialization_list, SEMICOLON;
-expression_statement
-    = expression, SEMICOLON;
+variable_initialization_list
+    = KW_INIT, variable_initialization, { COMMA, variable_initialization };
+variable_initialization
+    = [ KW_CONST ], IDENTIFIER, [ OP_ASSIGNMENT, expression ];
+break
+    = KW_BREAK;
+break_if
+    = KW_BREAK_IF, parenthesized_expression;
+return
+    = KW_RETURN, expression;
 expression
     = assignment
     | block
     | conditional_expression
     | for_loop_expression
     | while_loop_expression
-    | break_expression
-    | break_if_expression
     | function_definition
-    | return_expression
     | pattern_matching;
-variable_initialization_list
-    = variable_initialization, { COMMA, variable_initialization };
-variable_initialization
-    = [ KW_CONST ], IDENTIFIER, OP_ASSIGNMENT, expression;
 block
-    = OP_LEFT_BRACE, { variable_initialization_statement | expression_statement }, OP_RIGHT_BRACE;
+    = OP_LEFT_BRACE, { statement }, [ unterminated_statement ], OP_RIGHT_BRACE;
 conditional_expression
-    = KW_IF, parenthesized_expression, expression, { conditional_elif_part }, [ conditional_else_part ];
+    = KW_IF, parenthesized_expression, unterminated_statement, { conditional_elif_part }, [ conditional_else_part ];
 conditional_elif_part
-    = KW_ELIF, parenthesized_expression, expression;
+    = KW_ELIF, parenthesized_expression, unterminated_statement;
 conditional_else_part
-    = KW_ELSE, expression;
+    = KW_ELSE, unterminated_statement;
 for_loop_expression
-    = KW_FOR, OP_LEFT_PARENTHESIS, [for_counter_declaration], for_range_specification, OP_RIGHT_PARENTHESIS, expression;
-for_counter_declaration
-    = IDENTIFIER, COMMA;
-for_range_specification
+    = KW_FOR, for_loop_specification, unterminated_statement;
+for_loop_specification
+    = OP_LEFT_PARENTHESIS, [ IDENTIFIER, COMMA ], for_loop_range, OP_RIGHT_PARENTHESIS;
+for_loop_range
     = NUMBER, [ COLON, NUMBER, [ COLON, NUMBER ] ];
 while_loop_expression
-    = KW_WHILE, parenthesized_expression, expression;
-break_expression
-    = KW_BREAK;
-break_if_expression
-    = KW_BREAK_IF, parenthesized_expression;
+    = KW_WHILE, parenthesized_expression, unterminated_statement;
 parenthesized_expression
     = OP_LEFT_PARENTHESIS, expression, OP_RIGHT_PARENTHESIS;
 function_definition
@@ -58,8 +58,6 @@ parameter_list
     = [ parameter, { COMMA, parameter } ];
 parameter
     = [ KW_CONST ], IDENTIFIER;
-return_expression
-    = KW_RETURN, expression;
 pattern_matching
     = KW_MATCH, OP_LEFT_PARENTHESIS, expression, OP_RIGHT_PARENTHESIS, OP_LEFT_BRACE, { pattern_specification }, OP_RIGHT_BRACE;
 pattern_specification
@@ -73,7 +71,7 @@ pattern_expression_conjunction
     = pattern_expression_non_associative, { KW_AND, pattern_expression_non_associative };
 pattern_expression_non_associative
     = OP_RELATION_COMPARISON, LITERAL
-    | KW_IS, [ KW_NOT ], (TYPE | LITERAL)
+    | KW_IS, [ KW_NOT ], ( TYPE | LITERAL )
     | OP_LEFT_PARENTHESIS, pattern_expression_disjunction, OP_RIGHT_PARENTHESIS;
 assignment
     = null_coalescing, [ OP_ASSIGNMENTS, assignment ];
@@ -82,11 +80,9 @@ null_coalescing
 disjunction
     = conjunction, { OP_LOGICAL_OR, conjunction };
 conjunction
-    = equality_comparison, { OP_LOGICAL_AND, equality_comparison };
-equality_comparison
-    = relational_comparison, { OP_EQUALITY_COMPARISON, relational_comparison };
-relational_comparison
-    = concatenation, { OP_RELATION_COMPARISON, concatenation };
+    = comparison, { OP_LOGICAL_AND, comparison };
+comparison
+    = concatenation, { OP_COMPARISON, concatenation };
 concatenation
     = term, { OP_DOUBLE_DOT, term };
 term
@@ -183,6 +179,9 @@ OP_MULTIPLICATIVE
 OP_ADDITIVE
     = OP_PLUS
     | OP_MINUS;
+OP_COMPARISON
+    = OP_RELATION_COMPARISON
+    | OP_EQUALITY_COMPARISON;
 OP_RELATION_COMPARISON
     = OP_LESSER
     | OP_LESSER_EQUAL

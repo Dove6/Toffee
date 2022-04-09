@@ -1,6 +1,6 @@
 pull std.io;
 
-init const one = 1, const two = 2, const three = 3, i, j;
+init const one = 1, const two = 2, const three = 3, i, j;;;;;;;;;;  // postawienie kilku średników nie jest błędem
 
 if (one + two == three) {
     print("Matematyka działa");
@@ -21,11 +21,12 @@ i = if (two < three) 5 else 8;
 i = (if (two < three) 5) + 10;  // brakuje else - w przypadku niespełnienia warunku zostanie zwrócona wartość null
 //  ^------------------^------ wymagane nawiasy, aby "+ 10" nie zostało "podłączone" do "5"
 
-// każdy blok zwraca wartość ostatniej instrukcji
+// każdy blok zwraca wartość ostatniej instrukcji, jeśli średnik po niej został pominięty
+// (i jeśli istnieje jakaś sensowna wartość do zwrócenia, w przeciwnym wypadku zwracany jest null)
 i = {
     one + two;
     print("Ten tekst zostanie wypisany.");  // nie istnieją funkcje typu void, można jednak zwrócić null
-    j = 5;  // wyrażenie przypisania
+    j = 5  // wyrażenie przypisania
 };
 // w tym miejscu obie zmienne (i oraz j) mają wartość 5
 
@@ -60,11 +61,12 @@ while (true) {
 };
 // działa "zwyczajnie", w roli wyrażenia zwraca wartość sprawdzanego warunku
 
-// break istnieje w dwóch wersjach: zwykłej (break) oraz warunkowej (break_if)
-// break jako wyrażenie zwraca null, a break_if wartość wyrażenia logicznego służącego mu za warunek
+// instrukcja break istnieje w dwóch wersjach: zwykłej (break) oraz warunkowej (break_if)
 while (true) {
-    i = break;
-    j = break_if(true);
+    i = null;
+    break;
+    j = 5;
+    break_if(true);
 };
 // i ma teraz wartość null, j bez zmian (przypisanie nie zostało wykonane ze względu na przerwanie pętli)
 for (digit, 10) {
