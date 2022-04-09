@@ -77,7 +77,9 @@ pattern_expression_non_associative
 assignment
     = null_coalescing, [ OP_ASSIGNMENTS, assignment ];
 null_coalescing
-    = disjunction, { OP_NULL_COALESCING, disjunction };
+    = nullsafe_pipe, { OP_NULL_COALESCING, nullsafe_pipe };
+nullsafe_pipe
+    = disjunction, { OP_NULLSAFE_PIPE, disjunction };
 disjunction
     = conjunction, { OP_LOGICAL_OR, conjunction };
 conjunction
@@ -254,6 +256,7 @@ OP_NOT_EQUAL           = /!=/;
 OP_LOGICAL_AND         = /&&/;
 OP_LOGICAL_OR          = /\|\|/;
 OP_NULL_COALESCING     = /\?\?/;
+OP_NULLSAFE_PIPE       = /\?>/;
 OP_ASSIGNMENT          = /=/;
 OP_PLUS_ASSIGNMENT     = /+=/;
 OP_MINUS_ASSIGNMENT    = /-=/;

@@ -90,6 +90,10 @@ Możliwe jest importowanie zawartości innych skryptów za pomocą instrukcji `p
         * sprawdzenie typu (operatory `is`, `is not`)
         * porównanie z literałem (operatory `is`, `is not`, `<`, `<=`, `>`, `>=`)
         * spełnienie predykatu (poprzez podanie nazwy jednoargumentowej funkcji)
+11. obsługa opcjonalności
+    * każda zmienna może przyjąć wartość `null` (`null` jest osobnego typu)
+    * najprostszą operacją możliwą do przeprowadzenia na wartości opcjonalnej jest dostarczenie w wyrażeniu wartości "awaryjnej" na wypadek wystąpienia nulla za pomoca operatora binarnego `??`
+    * możliwa jest również wykonywanie szeregu operacji, dopóki wartość nie stanie się nullem, za pomocą operatora potoku `?>`
 
 ## Wymagania niefunkcjonalne
 
