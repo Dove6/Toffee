@@ -205,7 +205,7 @@ OP_ASSIGNMENTS
 
 Definicje z użyciem wyrażeń regularnych:
 ```js
-TYPE                   = /int|float|string|bool|null/;
+TYPE                   = /int|float|string|bool|function|null/;
 STRING                 = /"(\\\\|\\"|[\s\S])*?"/;
 INTEGER                = /0x[0-9a-fA-F]+|0c[0-7]+|0b[01]+|[0-9]+/;
 FLOAT                  = /((\.[0-9]+)|[0-9]+\.[0-9]*)(e[-+]?[0-9]+)?/i;
