@@ -88,12 +88,14 @@ Możliwe jest importowanie zawartości innych skryptów za pomocą instrukcji `p
     * z pattern matchingu można skorzystać przy pomocy słowa kluczowego `match`
     * obsługiwane dopasowania:
         * sprawdzenie typu (operatory `is`, `is not`)
-        * porównanie z literałem (operatory `is`, `is not`, `<`, `<=`, `>`, `>=`)
+        * porównanie z literałem (operatory `==`, `!=`, `<`, `<=`, `>`, `>=`)
         * spełnienie predykatu (poprzez podanie nazwy jednoargumentowej funkcji)
 11. obsługa opcjonalności
     * każda zmienna może przyjąć wartość `null` (`null` jest osobnego typu)
-    * najprostszą operacją możliwą do przeprowadzenia na wartości opcjonalnej jest dostarczenie w wyrażeniu wartości "awaryjnej" na wypadek wystąpienia nulla za pomoca operatora binarnego `??`
+    * najprostszą operacją możliwą do przeprowadzenia na wartości opcjonalnej jest dostarczenie w wyrażeniu wartości "awaryjnej" na wypadek wystąpienia nulla za pomocą operatora binarnego `??`
     * możliwa jest również wykonywanie szeregu operacji, dopóki wartość nie stanie się nullem, za pomocą operatora potoku `?>`
+12. sprawdzanie typu
+    * typ wyrażenia można sprawdzić z użyciem operatorów: `is`, `is not`
 
 ## Wymagania niefunkcjonalne
 

@@ -70,9 +70,9 @@ pattern_expression_disjunction
 pattern_expression_conjunction
     = pattern_expression_non_associative, { KW_AND, pattern_expression_non_associative };
 pattern_expression_non_associative
-    = OP_RELATION_COMPARISON, LITERAL
-    | KW_IS, [ KW_NOT ], ( TYPE | LITERAL )
-    | IDENTIFIER
+    = OP_COMPARISON, LITERAL
+    | OP_TYPE_CHECK, TYPE
+    | expression
     | OP_LEFT_PARENTHESIS, pattern_expression_disjunction, OP_RIGHT_PARENTHESIS;
 assignment
     = null_coalescing, [ OP_ASSIGNMENTS, assignment ];
@@ -83,7 +83,9 @@ nullsafe_pipe
 disjunction
     = conjunction, { OP_LOGICAL_OR, conjunction };
 conjunction
-    = comparison, { OP_LOGICAL_AND, comparison };
+    = type_check, { OP_LOGICAL_AND, type_check };
+type_check
+    = comparison, { OP_TYPE_CHECK, TYPE };
 comparison
     = concatenation, { OP_COMPARISON, concatenation };
 concatenation
@@ -156,7 +158,8 @@ OPERATOR
     | OP_MULTIPLICATIVE
     | OP_ADDITIVE
     | OP_DOUBLE_DOT
-    | OP_RELATION_COMPARISON
+    | OP_COMPARISON
+    | OP_TYPE_CHECK
     | OP_LOGICAL_AND
     | OP_LOGICAL_OR
     | OP_NULL_COALESCING
@@ -183,16 +186,14 @@ OP_ADDITIVE
     = OP_PLUS
     | OP_MINUS;
 OP_COMPARISON
-    = OP_RELATION_COMPARISON
-    | OP_EQUALITY_COMPARISON;
-OP_RELATION_COMPARISON
     = OP_LESSER
     | OP_LESSER_EQUAL
     | OP_GREATER
-    | OP_GREATER_EQUAL;
-OP_EQUALITY_COMPARISON
-    = OP_EQUAL
+    | OP_GREATER_EQUAL
+    | OP_EQUAL
     | OP_NOT_EQUAL;
+OP_TYPE_CHECK
+    = KW_IS, [ KW_NOT ];
 OP_ASSIGNMENTS
     = OP_ASSIGNMENT
     | OP_PLUS_ASSIGNMENT
@@ -204,7 +205,7 @@ OP_ASSIGNMENTS
 
 Definicje z użyciem wyrażeń regularnych:
 ```js
-TYPE                   = /int|float|string|bool/;
+TYPE                   = /int|float|string|bool|null/;
 STRING                 = /"(\\\\|\\"|[\s\S])*?"/;
 INTEGER                = /0x[0-9a-fA-F]+|0c[0-7]+|0b[01]+|[0-9]+/;
 FLOAT                  = /((\.[0-9]+)|[0-9]+\.[0-9]*)(e[-+]?[0-9]+)?/i;

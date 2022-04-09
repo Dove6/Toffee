@@ -22,11 +22,13 @@
 |               | >=       | porównanie                | binarny | infiks  | lewostronna  |
 |       8       | ==       | porównanie                | binarny | infiks  | lewostronna  |
 |               | !=       | porównanie                | binarny | infiks  | lewostronna  |
-|       9       | &&       | koniunkcja                | binarny | infiks  | lewostronna  |
-|      10       | \|\|     | alternatywa               | binarny | infiks  | lewostronna  |
-|      11       | ?>       | null-safe pipe            | binarny | infiks  | lewostronna  |
-|      12       | ??       | null coalescing           | binarny | infiks  | lewostronna  |
-|      13       | =        | przypisanie               | binarny | infiks  | prawostronna |
+|       9       | is       | sprawdzenie typu          | binarny | infiks  | lewostronna  |
+|               | is not   | sprawdzenie typu          | binarny | infiks  | lewostronna  |
+|      10       | &&       | koniunkcja                | binarny | infiks  | lewostronna  |
+|      11       | \|\|     | alternatywa               | binarny | infiks  | lewostronna  |
+|      12       | ?>       | null-safe pipe            | binarny | infiks  | lewostronna  |
+|      13       | ??       | null coalescing           | binarny | infiks  | lewostronna  |
+|      14       | =        | przypisanie               | binarny | infiks  | prawostronna |
 |               | +=       | przypisanie sumy          | binarny | infiks  | prawostronna |
 |               | -=       | przypisanie różnicy       | binarny | infiks  | prawostronna |
 |               | *=       | przypisanie iloczynu      | binarny | infiks  | prawostronna |
@@ -42,7 +44,9 @@
 |               | <=       | porównanie                | unarny  | prefiks | brak         |
 |               | >        | porównanie                | unarny  | prefiks | brak         |
 |               | >=       | porównanie                | unarny  | prefiks | brak         |
-|               | is       | porównanie                | unarny  | prefiks | brak         |
-|               | is not   | porównanie                | unarny  | prefiks | brak         |
+|               | ==       | porównanie                | unarny  | prefiks | brak         |
+|               | !=       | porównanie                | unarny  | prefiks | brak         |
+|       2       | is       | sprawdzenie typu          | unarny  | prefiks | brak         |
+|               | is not   | sprawdzenie typu          | unarny  | prefiks | brak         |
 |       3       | and      | koniunkcja                | binarny | infiks  | lewostronna  |
 |       4       | or       | altenatywa                | binarny | infiks  | lewostronna  |
