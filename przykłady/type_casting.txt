@@ -1,8 +1,104 @@
-int(), unary +, unary -
-float(), unary +, unary -
-string(), ..
-bool(), unary !
-list()
-tuple()
-dict()
-record()
+// literały - brak potrzeby rzutowania
+init const integer = 5, const floatingPoint = 5., const charString = "5", const boolean = true;
+
+//typy specjalne: null, funkcja
+init const nothing = null, function = functi() null;
+
+// konwersje jawne za pomocą funkcji
+
+// do typu całkowitoliczbowego
+int(true);  // --> 1
+int(false);  // --> 0
+int(5.0);  // --> 5
+int(3.14);  // --> 3 (obcięcie)
+int("5");  // --> 5
+int("39d");  // --> null
+int("5.0e5);  // --> 500000
+int(functi(a) a + 2);  // --> null
+int(null);  // --> null
+
+// do typu zmiennoprzecinkowego
+float(true);  // --> 1.0
+float(false);  // --> 0.0
+float(5);  // --> 5.0
+float("5");  // --> 5.0
+float("39d");  // --> null
+float("5.0e5);  // --> 500000.0
+float(functi(a) a + 2);  // --> null
+float(null);  // --> null
+
+// do typu znakowego
+string(true);  // --> "true"
+string(false);  // --> "false"
+string(5.0);  // --> "5.0"
+string(3.14);  // --> "3.14"
+string(5);  // --> "5"
+string(functi(a) a + 2);  // --> null
+string(null);  // --> null
+
+// do typu logicznego
+bool(0);  // --> false
+bool(1);  // --> true
+bool(-1);  // --> true
+bool(5);  // --> true
+bool(0.0);  // --> false
+bool(5.0);  // --> true
+bool(3.14);  // --> true
+bool("5");  // --> null
+bool("39d");  // --> null
+bool("5.0e5);  // --> null
+bool("true");  // --> true
+bool("false");  // --> false
+bool("True");  // --> null
+bool("faLSe");  // --> null
+bool(functi(a) a + 2);  // --> null
+bool(null);  // --> null
+
+
+// konwersje jawne za pomocą operatorów
+
+// unarny +
++true;  // --> 1
++false;  // --> 0
++3.14;  // --> 3.14 (bez zmian)
++5;  // --> 5 (bez zmian)
++"39d";  // --> null
++"5";  // --> 5
++"5.0e5;  // --> 500000.0
++functi(a) a + 2;  // --> null
++null;  // --> null
+
+// unarny -
+--true;  // --> 1
+--false;  // --> 0
+--3.14;  // --> 3.14 (bez zmian)
+--5;  // --> 5 (bez zmian, uwaga na overflow)
+--"39d";  // --> null
+--"5";  // --> 5
+--"5.0e5;  // --> 500000.0
+--functi(a) a + 2;  // --> null
+--null;  // --> null
+
+// binarny .. (konkatenacja)
+"" .. true;  // --> "true"
+"" .. false;  // --> "false"
+"" .. 3.14;  // --> "3.14"
+"" .. 5;  // --> "5"
+"" .. functi(a) a + 2;  // --> null
+"" .. null;  // --> null
+
+// unarny !
+!!true;  // --> true (bez zmian)
+!!false;  // --> false (bez zmian)
+!!0.0;  // --> false
+!!3.14;  // --> true
+!!0;  // --> false
+!!5;  // --> true
+!!"39d";  // --> null
+!!"5";  // --> null
+!!"5.0e5;  // --> null
+!!"true";  // --> true
+!!"false";  // --> false
+!!"TRUE";  // --> null
+!!functi(a) a + 2;  // --> null
+!!null;  // --> null

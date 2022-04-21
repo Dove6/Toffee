@@ -5,5 +5,9 @@ print(a ?? b);  // 5, nie ma potrzeby
 print(b);  // null
 print(b ?? "Default value");  // Default value
 
-// "bezpieczny" dostęp
-print(b?[2]);  // null
+// null-safe piping
+// kontynuuje wykonywanie operacji tylko dla wartości niebędących nullem
+init const multiplyByTwo = functi(num) num * 2, const returnNull = functi(num) null;
+a ?> multiplyByTwo ?> print;  // wypisuje 10
+a ?> returnNull ?> print;  // nic nie wypisuje
+b ?> multiplyByTwo ?> print;  // nic nie wypisuje
