@@ -6,11 +6,13 @@ stages:
 
 build:
   stage: build
+  needs: []
   script:
     - 'dotnet build'
 
 test:
   stage: test
+  needs: []
   script:
     - 'dotnet test --test-adapter-path:. --logger:"junit;LogFilePath=..\artifacts\{assembly}-test-result.xml;MethodFormat=Class;FailureBodyFormat=Verbose"'
   artifacts:
