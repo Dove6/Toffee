@@ -122,20 +122,19 @@ LITERAL
     = STRING
     | NUMBER
     | BOOL
-    | NULL;
+    | KW_NULL;
 NUMBER
     = INTEGER
     | FLOAT;
 BOOL
     = KW_FALSE
     | KW_TRUE;
-NULL
-    = KW_NULL;
 COMMENT
     = LINE_COMMENT
     | MULTILINE_COMMENT;
 KEYWORD
-    = KW_INIT
+    = TYPE
+    | KW_INIT
     | KW_CONST
     | KW_PULL
     | KW_IF
@@ -150,6 +149,13 @@ KEYWORD
     | KW_IS
     | KW_NOT
     | KW_DEFAULT;
+TYPE
+    = KW_INT
+    | KW_FLOAT
+    | KW_STRING
+    | KW_BOOL
+    | KW_FUNCTION
+    | KW_NULL;
 OPERATOR
     = OP_NAMESPACE_ACCESS
     | OP_PARENTHESES
@@ -205,12 +211,17 @@ OP_ASSIGNMENTS
 
 Definicje z użyciem wyrażeń regularnych:
 ```js
-TYPE                   = /int|float|string|bool|function|null/;
 STRING                 = /"(\\\\|\\"|[\s\S])*?"/;
 INTEGER                = /0x[0-9a-fA-F]+|0c[0-7]+|0b[01]+|[0-9]+/;
 FLOAT                  = /((\.[0-9]+)|[0-9]+\.[0-9]*)(e[-+]?[0-9]+)?/i;
 LINE_COMMENT           = /\/\/[^\r\n\x1e]*/;
 MULTILINE_COMMENT      = /\/\*[\s\S]*?\*\//;
+KW_INT                 = /int/;
+KW_FLOAT               = /float/;
+KW_STRING              = /string/;
+KW_BOOL                = /bool/;
+KW_FUNCTION            = /function/;
+KW_NULL                = /null/;
 KW_INIT                = /init/;
 KW_CONST               = /const/;
 KW_PULL                = /pull/
