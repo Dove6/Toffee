@@ -99,6 +99,7 @@ Możliwe jest importowanie zawartości innych skryptów za pomocą instrukcji `p
         * sprawdzenie typu (operatory `is`, `is not`)
         * porównanie z literałem (operatory `==`, `!=`, `<`, `<=`, `>`, `>=`)
         * spełnienie predykatu (poprzez podanie nazwy jednoargumentowej funkcji)
+    * warunki można grupować za pomocą nawaisów oraz słów kluczowych: `and`, `or`
 12. obsługa opcjonalności
     * każda zmienna może przyjąć wartość `null` (`null` jest osobnego typu)
     * najprostszą operacją możliwą do przeprowadzenia na wartości opcjonalnej jest dostarczenie w wyrażeniu wartości "awaryjnej" na wypadek wystąpienia nulla za pomocą operatora binarnego `??`

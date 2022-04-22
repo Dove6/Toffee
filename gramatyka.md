@@ -19,7 +19,7 @@ namespace
 variable_initialization_list
     = KW_INIT, variable_initialization, { COMMA, variable_initialization };
 variable_initialization
-    = [ KW_CONST ], IDENTIFIER, [ OP_ASSIGNMENT, expression ];
+    = [ KW_CONST ], IDENTIFIER, [ OP_EQUALS, expression ];
 break
     = KW_BREAK;
 break_if
@@ -35,7 +35,7 @@ expression
     | function_definition
     | pattern_matching;
 block
-    = OP_LEFT_BRACE, { statement }, [ unterminated_statement ], OP_RIGHT_BRACE;
+    = LEFT_BRACE, { statement }, [ unterminated_statement ], RIGHT_BRACE;
 conditional_expression
     = KW_IF, parenthesized_expression, unterminated_statement, { conditional_elif_part }, [ conditional_else_part ];
 conditional_elif_part
@@ -45,21 +45,21 @@ conditional_else_part
 for_loop_expression
     = KW_FOR, for_loop_specification, unterminated_statement;
 for_loop_specification
-    = OP_LEFT_PARENTHESIS, [ IDENTIFIER, COMMA ], for_loop_range, OP_RIGHT_PARENTHESIS;
+    = LEFT_PARENTHESIS, [ IDENTIFIER, COMMA ], for_loop_range, RIGHT_PARENTHESIS;
 for_loop_range
     = NUMBER, [ COLON, NUMBER, [ COLON, NUMBER ] ];
 while_loop_expression
     = KW_WHILE, parenthesized_expression, unterminated_statement;
 parenthesized_expression
-    = OP_LEFT_PARENTHESIS, expression, OP_RIGHT_PARENTHESIS;
+    = LEFT_PARENTHESIS, expression, RIGHT_PARENTHESIS;
 function_definition
-    = KW_FUNCTI, OP_LEFT_PARENTHESIS, parameter_list, OP_RIGHT_PARENTHESIS, expression;
+    = KW_FUNCTI, LEFT_PARENTHESIS, parameter_list, RIGHT_PARENTHESIS, expression;
 parameter_list
     = [ parameter, { COMMA, parameter } ];
 parameter
-    = [ KW_CONST ], IDENTIFIER;
+    = [ KW_CONST ], IDENTIFIER, [ OP_BANG ];
 pattern_matching
-    = KW_MATCH, OP_LEFT_PARENTHESIS, expression, OP_RIGHT_PARENTHESIS, OP_LEFT_BRACE, { pattern_specification }, OP_RIGHT_BRACE;
+    = KW_MATCH, LEFT_PARENTHESIS, expression, RIGHT_PARENTHESIS, LEFT_BRACE, { pattern_specification }, RIGHT_BRACE;
 pattern_specification
     = pattern_expression, COLON, expression, SEMICOLON;
 pattern_expression
@@ -73,23 +73,23 @@ pattern_expression_non_associative
     = OP_COMPARISON, LITERAL
     | OP_TYPE_CHECK, TYPE
     | expression
-    | OP_LEFT_PARENTHESIS, pattern_expression_disjunction, OP_RIGHT_PARENTHESIS;
+    | LEFT_PARENTHESIS, pattern_expression_disjunction, RIGHT_PARENTHESIS;
 assignment
-    = null_coalescing, [ OP_ASSIGNMENTS, assignment ];
+    = null_coalescing, [ OP_ASSIGNMENT, assignment ];
 null_coalescing
-    = nullsafe_pipe, { OP_NULL_COALESCING, nullsafe_pipe };
+    = nullsafe_pipe, { OP_QUERY_QUERY, nullsafe_pipe };
 nullsafe_pipe
-    = disjunction, { OP_NULLSAFE_PIPE, disjunction };
+    = disjunction, { OP_QUERY_GREATER, disjunction };
 disjunction
-    = conjunction, { OP_LOGICAL_OR, conjunction };
+    = conjunction, { OP_OR_OR, conjunction };
 conjunction
-    = type_check, { OP_LOGICAL_AND, type_check };
+    = type_check, { OP_AND_AND, type_check };
 type_check
     = comparison, { OP_TYPE_CHECK, TYPE };
 comparison
     = concatenation, { OP_COMPARISON, concatenation };
 concatenation
-    = term, { OP_DOUBLE_DOT, term };
+    = term, { OP_DOT_DOT, term };
 term
     = factor, { OP_ADDITIVE, factor };
 factor
@@ -98,11 +98,11 @@ unary_prefixed
     = OP_UNARY_PREFIX, unary_prefixed
     | exponentiation;
 exponentiation
-    = suffixed_expression, { OP_EXPONENTIATION, suffixed_expression };
+    = suffixed_expression, { OP_CARET, suffixed_expression };
 suffixed_expression
     = primary_expression, [ function_call | namespace_access ];
 function_call
-    = OP_LEFT_PARENTHESIS, arguments_list, OP_RIGHT_PARENTHESIS;
+    = LEFT_PARENTHESIS, arguments_list, RIGHT_PARENTHESIS;
 arguments_list
     = [ argument, { COMMA, argument } ];
 argument
@@ -112,7 +112,7 @@ namespace_access
 primary_expression
     = LITERAL
     | IDENTIFIER
-    | OP_LEFT_PARENTHESIS, expression, OP_RIGHT_PARENTHESIS;
+    | LEFT_PARENTHESIS, expression, RIGHT_PARENTHESIS;
 ```
 
 ## Leksemy
@@ -148,7 +148,9 @@ KEYWORD
     | KW_OR
     | KW_IS
     | KW_NOT
-    | KW_DEFAULT;
+    | KW_DEFAULT
+    | KW_FALSE
+    | KW_TRUE;
 TYPE
     = KW_INT
     | KW_FLOAT
@@ -158,55 +160,51 @@ TYPE
     | KW_NULL;
 OPERATOR
     = OP_NAMESPACE_ACCESS
-    | OP_PARENTHESES
-    | OP_EXPONENTIATION
+    | OP_CARET
     | OP_UNARY_PREFIX
     | OP_MULTIPLICATIVE
-    | OP_ADDITIVE
-    | OP_DOUBLE_DOT
+    | OP_DOT_DOT
     | OP_COMPARISON
     | OP_TYPE_CHECK
-    | OP_LOGICAL_AND
-    | OP_LOGICAL_OR
-    | OP_NULL_COALESCING
-    | OP_ASSIGNMENTS;
+    | OP_AND_AND
+    | OP_OR_OR
+    | OP_QUERY_QUERY
+    | OP_QUERY_GREATER
+    | OP_ASSIGNMENT;
 OP_NAMESPACE_ACCESS
     = OP_DOT
-    | OP_QUESTION_DOT;
-OP_PARENTHESES
-    = OP_NAMESPACE_ACCESS
-    | OP_RIGHT_PARENTHESIS
-    | OP_LEFT_BRACKET
-    | OP_RIGHT_BRACKET
-    | OP_LEFT_BRACE
-    | OP_RIGHT_BRACE;
+    | OP_QUERY_DOT;
+PARENTHESES
+    = LEFT_PARENTHESIS
+    | RIGHT_PARENTHESIS
+    | LEFT_BRACE
+    | RIGHT_BRACE;
 OP_UNARY_PREFIX
-    = OP_PLUS
-    | OP_MINUS
+    = OP_ADDITIVE
     | OP_BANG;
+OP_ADDITIVE
+    = OP_PLUS
+    | OP_MINUS;
 OP_MULTIPLICATIVE
     = OP_ASTERISK
     | OP_SLASH
     | OP_PERCENT;
-OP_ADDITIVE
-    = OP_PLUS
-    | OP_MINUS;
 OP_COMPARISON
-    = OP_LESSER
-    | OP_LESSER_EQUAL
+    = OP_LESS
+    | OP_LESS_EQUALS
     | OP_GREATER
-    | OP_GREATER_EQUAL
-    | OP_EQUAL
-    | OP_NOT_EQUAL;
+    | OP_GREATER_EQUALS
+    | OP_EQUALS_EQUALS
+    | OP_BANG_EQUALS;
 OP_TYPE_CHECK
     = KW_IS, [ KW_NOT ];
-OP_ASSIGNMENTS
-    = OP_ASSIGNMENT
-    | OP_PLUS_ASSIGNMENT
-    | OP_MINUS_ASSIGNMENT
-    | OP_ASTERISK_ASSIGNMENT
-    | OP_SLASH_ASSIGNMENT
-    | OP_PERCENT_ASSIGNMENT;
+OP_ASSIGNMENT
+    = OP_EQUALS
+    | OP_PLUS_EQUALS
+    | OP_MINUS_EQUALS
+    | OP_ASTERISK_EQUALS
+    | OP_SLASH_EQUALS
+    | OP_PERCENT_EQUALS;
 ```
 
 Definicje z użyciem wyrażeń regularnych:
@@ -240,40 +238,42 @@ KW_OR                  = /or/;
 KW_IS                  = /is/;
 KW_NOT                 = /not/;
 KW_DEFAULT             = /default/;
+KW_FALSE               = /false/;
+KW_TRUE                = /true/;
 COMMA                  = /,/;
 COLON                  = /:/;
 SEMICOLON              = /;/;
 OP_DOT                 = /\./;
-OP_QUESTION_DOT        = /\?\./;
-OP_NAMESPACE_ACCESS    = /\(/;
-OP_RIGHT_PARENTHESIS   = /\)/;
-OP_LEFT_BRACKET        = /\[/;
-OP_RIGHT_BRACKET       = /\]/;
-OP_LEFT_BRACE          = /{/;
-OP_RIGHT_BRACE         = /}/;
-OP_EXPONENTIATION      = /\^/;
+OP_QUERY_DOT           = /\?\./;
+LEFT_PARENTHESIS       = /\(/;
+RIGHT_PARENTHESIS      = /\)/;
+LEFT_BRACKET           = /\[/;
+RIGHT_BRACKET          = /\]/;
+LEFT_BRACE             = /{/;
+RIGHT_BRACE            = /}/;
+OP_CARET               = /\^/;
 OP_PLUS                = /\+/;
 OP_MINUS               = /-/;
 OP_BANG                = /!/;
 OP_ASTERISK            = /\*/;
 OP_SLASH               = /\//;
 OP_PERCENT             = /%/;
-OP_DOUBLE_DOT          = /\.\./;
-OP_LESSER              = /</;
-OP_LESSER_EQUAL        = /<=/;
+OP_DOT_DOT             = /\.\./;
+OP_LESS                = /</;
+OP_LESS_EQUALS         = /<=/;
 OP_GREATER             = />/;
-OP_GREATER_EQUAL       = />=/;
-OP_EQUAL               = /==/;
-OP_NOT_EQUAL           = /!=/;
-OP_LOGICAL_AND         = /&&/;
-OP_LOGICAL_OR          = /\|\|/;
-OP_NULL_COALESCING     = /\?\?/;
-OP_NULLSAFE_PIPE       = /\?>/;
-OP_ASSIGNMENT          = /=/;
-OP_PLUS_ASSIGNMENT     = /+=/;
-OP_MINUS_ASSIGNMENT    = /-=/;
-OP_ASTERISK_ASSIGNMENT = /\*=/;
-OP_SLASH_ASSIGNMENT    = /\/=/;
-OP_PERCENT_ASSIGNMENT  = /%=/;
+OP_GREATER_EQUALS      = />=/;
+OP_EQUALS_EQUALS       = /==/;
+OP_BANG_EQUALS         = /!=/;
+OP_AND_AND             = /&&/;
+OP_OR_OR               = /\|\|/;
+OP_QUERY_QUERY         = /\?\?/;
+OP_QUERY_GREATER       = /\?>/;
+OP_EQUALS              = /=/;
+OP_PLUS_EQUALS         = /+=/;
+OP_MINUS_EQUALS        = /-=/;
+OP_ASTERISK_EQUALS     = /\*=/;
+OP_SLASH_EQUALS        = /\/=/;
+OP_PERCENT_EQUALS      = /%=/;
 IDENTIFIER             = /[\pL_][\pL_\pN]*/;
 ```
