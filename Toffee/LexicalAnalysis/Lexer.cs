@@ -35,7 +35,7 @@ public class Lexer : ILexer
 
         if (!IsSymbol(_scanner.CurrentCharacter))
             return null;
-        var symbolString = "";
+        var symbolString = "";  // TODO: limit length
 
         while (IsSymbol(_scanner.CurrentCharacter) && CanExtend(symbolString, _scanner.CurrentCharacter!.Value))
         {
@@ -54,6 +54,7 @@ public class Lexer : ILexer
 
     private Token ContinueMatchingComment(TokenType commentType)
     {
+        // TODO: limit length
         var contentBuilder = new StringBuilder();
         if (commentType == TokenType.BlockComment)
         {
@@ -87,6 +88,7 @@ public class Lexer : ILexer
 
     private Token? MatchKeywordOrIdentifier()
     {
+        // TODO: limit length
         static bool IsPartOfIdentifier(char? c) => c is not null && (char.IsLetterOrDigit(c.Value) || c is '_');
         if (_scanner.CurrentCharacter is null || !char.IsLetter(_scanner.CurrentCharacter.Value))
             return null;
@@ -162,6 +164,7 @@ public class Lexer : ILexer
     private Token? MatchString()
     {
         // TODO: escaping
+        // TODO: limit length
         if (_scanner.CurrentCharacter is not '"')
             return null;
         _scanner.Advance();

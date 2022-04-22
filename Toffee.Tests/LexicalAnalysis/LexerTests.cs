@@ -58,4 +58,49 @@ public class LexerTests
 
         Assert.Equal(expectedTokenType, lexer.CurrentToken.Type);
     }
+
+    [Theory]
+    [InlineData("//", false, "")]
+    [InlineData("// ", false, " ")]
+    [InlineData("// example content", false, " example content")]
+    [InlineData("// example\nmultiline\ncontent", false, " example")]
+    [InlineData("///**/", false, "/**/")]
+    [InlineData("/*", true, "")]
+    [InlineData("/**/", true, "")]
+    [InlineData("/* */", true, " ")]
+    [InlineData("/* example content */", true, " example content ")]
+    [InlineData("/* example\nmultiline\ncontent */", true, " example\nmultiline\ncontent ")]
+    [InlineData("/*///* /**/", true, "///* /*")]
+    public void ContentOfCommentsShouldBePreservedProperly(string input, bool isBlock, string expectedContent)
+    {
+        var scannerMock = new ScannerMock(input);
+        var lexer = new Lexer(scannerMock);
+
+        Assert.Equal(isBlock ? TokenType.BlockComment : TokenType.LineComment, lexer.CurrentToken.Type);
+        Assert.Equal(expectedContent, lexer.CurrentToken.Content);
+    }
+
+    [Fact]
+    public void EmptyInputShouldResultInEtxToken()
+    {
+        var scannerMock = new ScannerMock("");
+        var lexer = new Lexer(scannerMock);
+
+        Assert.Equal(TokenType.EndOfText, lexer.CurrentToken.Type);
+
+        lexer.Advance();
+        Assert.Equal(TokenType.EndOfText, lexer.CurrentToken.Type);
+    }
+
+    [Theory]
+    [InlineData(" ")]
+    [InlineData(" \t\v")]
+    [InlineData("\n")]
+    public void WhiteSpacesShouldBeSkipped(string input)
+    {
+        var scannerMock = new ScannerMock(input);
+        var lexer = new Lexer(scannerMock);
+
+        Assert.Equal(TokenType.EndOfText, lexer.CurrentToken.Type);
+    }
 }
