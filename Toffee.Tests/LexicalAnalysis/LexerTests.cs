@@ -132,7 +132,6 @@ public class LexerTests
     [Theory]
     [InlineData("1.", 1.0)]
     [InlineData("0.", 0.0)]
-    [InlineData(".0", 0.0)]
     [InlineData("1.2345", 1.2345)]
     [InlineData("000000.1", 0.1)]
     [InlineData("1.7976931348623157E+308", 1.7976931348623157e308)]
@@ -140,7 +139,8 @@ public class LexerTests
     [InlineData("2.2e-1", 0.22)]
     [InlineData("2.2e+1", 22.0)]
     [InlineData("002.e1", 20.0)]
-    [InlineData(".2e1", 2.0)]
+    [InlineData("0.0e0", 0.0)]
+    [InlineData("2.E-0", 2.0)]
     public void FloatsShouldBeRecognizedCorrectly(string input, double expectedContent)
     {
         var scannerMock = new ScannerMock(input);

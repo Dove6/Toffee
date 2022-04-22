@@ -40,7 +40,7 @@ Możliwe jest importowanie zawartości innych skryptów za pomocą instrukcji `p
 2. obsługa operacji liczbowych
     * dwa typy podstawowe: liczby całkowite ze znakiem (`int`, od $`-2^{63}`$ do $`2^{63}-1`$) i liczby zmiennoprzecinkowe (`float`, IEEE 754 binary64)
     * obsługa literałów całkowitoliczbowych w formie dziesiętnej (np. `3424`), szesnastkowej (np. `0xaf`), ósemkowej (np. `0x644`) oraz dwójkowej (`0b101011`)
-    * obsługa literałów zmiennoprzecinkowych z opcjonalną częścią całkowitą (np. `.1234`) lub ułamkową (np. `25.`) oraz wsparciem dla notacji naukowej bez znormalizowanej mantysy (np. `12.34e15`)
+    * obsługa literałów zmiennoprzecinkowych z opcjonalną częścią ułamkową, ale nie całkowitą (np. `25.`, ale nie `.1234`) oraz wsparciem dla notacji naukowej bez znormalizowanej mantysy (np. `12.34e15`)
     * operatory: znaku (`+`, `-`), dodawania (`+`), odejmowania (`-`), mnożenia (`*`), dzielenia (`/`), reszty z dzielenia (`%`), potęgowania (`^`)
 3. obsługa operacji znakowych
     * typ `string`

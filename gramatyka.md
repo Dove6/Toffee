@@ -211,7 +211,7 @@ Definicje z użyciem wyrażeń regularnych:
 ```js
 STRING                 = /"(\\\\|\\"|[\s\S])*?"/;
 INTEGER                = /0x[0-9a-fA-F]+|0c[0-7]+|0b[01]+|[0-9]+/;
-FLOAT                  = /((\.[0-9]+)|[0-9]+\.[0-9]*)(e[-+]?[0-9]+)?/i;
+FLOAT                  = /[0-9]+\.[0-9]*(e[-+]?[0-9]+)?/i;
 LINE_COMMENT           = /\/\/[^\r\n\x1e]*/;
 MULTILINE_COMMENT      = /\/\*[\s\S]*?\*\//;
 KW_INT                 = /int/;
