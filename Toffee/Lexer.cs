@@ -18,9 +18,6 @@ public class Lexer
 
         _matchers = new List<MatchDelegate>
         {
-            MatchKeywordOrIdentifier,
-            MatchComment,
-            MatchSymbol,
             MatchNumber,
             MatchString
         };
@@ -28,92 +25,10 @@ public class Lexer
         Advance();
     }
 
-    private Token? MatchKeywordOrIdentifier()
-    {
-        if (!_scanner.CurrentCharacter.HasValue)
-            return null;
-        if (!char.IsLetter(_scanner.CurrentCharacter.Value))
-            return null;
-        var nameBuilder = new StringBuilder($"{_scanner.CurrentCharacter.Value}");
-        bool IsPartOfIdentifier(char c) => char.IsLetterOrDigit(c) || c == '_';
-        while (_scanner.NextCharacter is not null && IsPartOfIdentifier(_scanner.NextCharacter.Value))
-        {
-            _scanner.Advance();
-            nameBuilder.Append(_scanner.CurrentCharacter.Value);
-        }
-        var name = nameBuilder.ToString();
-        return new Token(KeywordMapper.TellKeywordFromIdentifier(name), name);
-    }
-
-    private Token? MatchSymbol()
-    {
-        var matchedToken = (_scanner.CurrentCharacter, _scanner.NextCharacter) switch
-        {
-            ('+', _)   => new Token(TokenType.OperatorPlus, "+"),
-            ('-', _)   => new Token(TokenType.OperatorMinus, "-"),
-            ('*', _)   => new Token(TokenType.OperatorAsterisk, "*"),
-            ('/', _)   => new Token(TokenType.OperatorSlash, "/"),
-            ('!', '=') => new Token(TokenType.OperatorBangEqual, "!="),
-            ('!', _)   => new Token(TokenType.OperatorBang, "!"),
-            ('=', '=') => new Token(TokenType.OperatorEqualEqual, "=="),
-            ('=', _)   => new Token(TokenType.OperatorEqual, "="),
-            ('<', '=') => new Token(TokenType.OperatorLessEqual, "<="),
-            ('<', _)   => new Token(TokenType.OperatorLess, "<"),
-            ('>', '=') => new Token(TokenType.OperatorGreaterEqual, ">="),
-            ('>', _)   => new Token(TokenType.OperatorGreater, ">"),
-            ('.', _)   => new Token(TokenType.OperatorDot, "."),
-            (',', _)   => new Token(TokenType.OperatorComma, ","),
-            (';', _)   => new Token(TokenType.Semicolon, ";"),
-            ('(', _)   => new Token(TokenType.OpeningParenthesis, "("),
-            (')', _)   => new Token(TokenType.ClosingParenthesis, ")"),
-            ('[', _)   => new Token(TokenType.OpeningBracket, "["),
-            (']', _)   => new Token(TokenType.ClosingBracket, "]"),
-            ('{', _)   => new Token(TokenType.OpeningBrace, "{"),
-            ('}', _)   => new Token(TokenType.ClosingBrace, "}"),
-            (_, _)     => (Token?)null
-        };
-        for (var i = 1; i < (matchedToken?.Content as string)?.Length; i++)
-            _scanner.Advance();
-        return matchedToken;
-    }
-
-    private Token? MatchComment()
-    {
-        if ((_scanner.CurrentCharacter, _scanner.NextCharacter) is not (('/', '/') or ('/', '*')))
-            return null;
-        var isBlock = _scanner.NextCharacter == '*';
-        _scanner.Advance();
-        var contentBuilder = new StringBuilder();
-        if (isBlock)
-        {
-            var matchedEnd = false;
-            while (_scanner.NextCharacter is not null)
-            {
-                _scanner.Advance();
-                if ((_scanner.CurrentCharacter, _scanner.NextCharacter) is ('*', '/'))
-                {
-                    matchedEnd = true;
-                    _scanner.Advance();
-                    break;
-                }
-                contentBuilder.Append(_scanner.CurrentCharacter.Value);
-            }
-            if (!matchedEnd)
-                _logger.LogError(_scanner.CurrentPosition, "Unexpected end of input");
-        }
-        else
-        {
-            while (_scanner.NextCharacter is not (null or '\n'))
-            {
-                _scanner.Advance();
-                contentBuilder.Append(_scanner.CurrentCharacter.Value);
-            }
-        }
-        return new Token { Type = TokenType.Comment, Content = contentBuilder.ToString() };
-    }
-
     private Token? MatchNumber()
     {
+        // TODO: 0x, 0c, 0b literals
+        // TODO: scientific notation
         bool IsDigit(char? c) => c is >= '0' and <= '9';
         long CharToDigit(char c) => c - '0';
         if (!IsDigit(_scanner.CurrentCharacter))
