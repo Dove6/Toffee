@@ -87,6 +87,7 @@ public static class OperatorMapper
         CommentMap.Keys.All(x => x != currentContent) &&
         OperatorMap.Keys.Concat(CommentMap.Keys).Any(x => x.StartsWith(currentContent + input));
 
-    public static Token MapToToken(string content) =>
-        new(OperatorMap.GetValueOrDefault(content, TokenType.UnknownOperator), content);
+    public static Token MapToToken(string content) => CommentMap.ContainsKey(content)
+        ? new Token(CommentMap[content])
+        : new Token(OperatorMap.GetValueOrDefault(content, TokenType.UnknownOperator), content);
 }

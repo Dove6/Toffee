@@ -2,7 +2,7 @@ using System.IO;
 using Toffee.Scanning;
 using Xunit;
 
-namespace Toffee.Tests;
+namespace Toffee.Tests.Scanning;
 
 public class ScannerTests
 {

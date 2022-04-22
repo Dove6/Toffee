@@ -30,7 +30,7 @@ public class Lexer : ILexer
 
     private Token? MatchOperatorOrComment()
     {
-        static bool IsSymbol(char? c) => c is not null && char.IsSymbol(c.Value);
+        static bool IsSymbol(char? c) => c is not null && (char.IsSymbol(c.Value) || char.IsPunctuation(c.Value));
         static bool CanExtend(string s, char c) => OperatorMapper.IsTransitionExistent(s, c);
 
         if (!IsSymbol(_scanner.CurrentCharacter))
