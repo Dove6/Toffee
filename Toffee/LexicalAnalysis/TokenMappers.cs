@@ -1,84 +1,6 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 
-namespace Toffee;
-
-public enum TokenType
-{
-    EndOfText,
-    Unknown,
-
-    LineComment,
-    BlockComment,
-
-    LiteralString,
-    LiteralInteger,
-    LiteralFloat,
-
-    UnknownOperator,
-    OperatorDot,
-    OperatorQueryDot,
-    OperatorCaret,
-    OperatorPlus,
-    OperatorMinus,
-    OperatorBang,
-    OperatorAsterisk,
-    OperatorSlash,
-    OperatorPercent,
-    OperatorDotDot,
-    OperatorLess,
-    OperatorLessEquals,
-    OperatorGreater,
-    OperatorGreaterEquals,
-    OperatorEqualsEquals,
-    OperatorBangEquals,
-    OperatorAndAnd,
-    OperatorOrOr,
-    OperatorQueryQuery,
-    OperatorQueryGreater,
-    OperatorEquals,
-    OperatorPlusEquals,
-    OperatorMinusEquals,
-    OperatorAsteriskEquals,
-    OperatorSlashEquals,
-    OperatorPercentEquals,
-
-    LeftParenthesis,
-    RightParenthesis,
-    LeftBrace,
-    RightBrace,
-    Comma,
-    Colon,
-    Semicolon,
-
-    KeywordInt,
-    KeywordFloat,
-    KeywordString,
-    KeywordBool,
-    KeywordFunction,
-    KeywordNull,
-    KeywordInit,
-    KeywordConst,
-    KeywordPull,
-    KeywordIf,
-    KeywordElif,
-    KeywordElse,
-    KeywordWhile,
-    KeywordFor,
-    KeywordBreak,
-    KeywordBreakIf,
-    KeywordFuncti,
-    KeywordReturn,
-    KeywordMatch,
-    KeywordAnd,
-    KeywordOr,
-    KeywordIs,
-    KeywordNot,
-    KeywordDefault,
-    KeywordFalse,
-    KeywordTrue,
-
-    Identifier
-}
+namespace Toffee.LexicalAnalysis;
 
 public static class KeywordOrIdentifierMapper
 {
@@ -145,8 +67,25 @@ public static class OperatorMapper
         { "-=", TokenType.OperatorMinusEquals },
         { "*=", TokenType.OperatorAsteriskEquals },
         { "/=", TokenType.OperatorSlashEquals },
-        { "%=", TokenType.OperatorPercentEquals }
+        { "%=", TokenType.OperatorPercentEquals },
+        { "(", TokenType.LeftParenthesis },
+        { ")", TokenType.RightParenthesis },
+        { "{", TokenType.LeftBrace },
+        { "}", TokenType.RightBrace },
+        { ",", TokenType.Comma },
+        { ":", TokenType.Colon },
+        { ";", TokenType.Semicolon }
     });
+
+    private static readonly ReadOnlyDictionary<string, TokenType> CommentMap = new(new Dictionary<string, TokenType>
+    {
+        { "//", TokenType.LineComment },
+        { "/*", TokenType.BlockComment }
+    });
+
+    public static bool IsTransitionExistent(string currentContent, char input) =>
+        CommentMap.Keys.All(x => x != currentContent) &&
+        OperatorMap.Keys.Concat(CommentMap.Keys).Any(x => x.StartsWith(currentContent + input));
 
     public static Token MapToToken(string content) =>
         new(OperatorMap.GetValueOrDefault(content, TokenType.UnknownOperator), content);

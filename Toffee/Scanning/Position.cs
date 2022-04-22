@@ -1,4 +1,4 @@
-﻿namespace Toffee;
+﻿namespace Toffee.Scanning;
 
 public readonly record struct Position(uint Character, uint Line, uint Column)
 {

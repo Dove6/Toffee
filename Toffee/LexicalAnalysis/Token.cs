@@ -1,4 +1,6 @@
-﻿namespace Toffee;
+﻿using Toffee.Scanning;
+
+namespace Toffee.LexicalAnalysis;
 
 public readonly record struct Token(TokenType Type, object? Content, Position Position)
 {

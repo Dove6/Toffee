@@ -1,4 +1,4 @@
-﻿using Toffee;
+﻿using Toffee.Running;
 
 if (args.Length > 1)
 {

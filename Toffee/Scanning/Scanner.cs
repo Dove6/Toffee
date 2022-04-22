@@ -1,6 +1,6 @@
-﻿namespace Toffee;
+﻿namespace Toffee.Scanning;
 
-public class Scanner
+public class Scanner : IScanner
 {
     private readonly TextReader _reader;
 

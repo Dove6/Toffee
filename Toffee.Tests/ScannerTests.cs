@@ -1,4 +1,5 @@
 using System.IO;
+using Toffee.Scanning;
 using Xunit;
 
 namespace Toffee.Tests;

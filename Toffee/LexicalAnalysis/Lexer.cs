@@ -1,10 +1,11 @@
 ﻿using System.Text;
+using Toffee.Scanning;
 
-namespace Toffee;
+namespace Toffee.LexicalAnalysis;
 
-public class Lexer
+public class Lexer : ILexer
 {
-    private readonly Scanner _scanner;
+    private readonly IScanner _scanner;
 
     private Position _tokenStartPosition;
     public Token CurrentToken { get; private set; }
@@ -12,7 +13,7 @@ public class Lexer
     private delegate Token? MatchDelegate();
     private readonly List<MatchDelegate> _matchers;
 
-    public Lexer(Scanner scanner)
+    public Lexer(IScanner scanner)
     {
         _scanner = scanner;
 
@@ -30,27 +31,31 @@ public class Lexer
     private Token? MatchOperatorOrComment()
     {
         static bool IsSymbol(char? c) => c is not null && char.IsSymbol(c.Value);
-        static bool IsCommentOpening(string s) => s is "//" or "/*";
+        static bool CanExtend(string s, char c) => OperatorMapper.IsTransitionExistent(s, c);
 
         if (!IsSymbol(_scanner.CurrentCharacter))
             return null;
-        var operatorBuilder = new StringBuilder();
+        var symbolString = "";
 
-        while (IsSymbol(_scanner.CurrentCharacter))
+        while (IsSymbol(_scanner.CurrentCharacter) && CanExtend(symbolString, _scanner.CurrentCharacter!.Value))
         {
-            operatorBuilder.Append(_scanner.CurrentCharacter!.Value);
+            symbolString += _scanner.CurrentCharacter!.Value;
             _scanner.Advance();
-            if (operatorBuilder.Length == 2 && IsCommentOpening(operatorBuilder.ToString()))
-                return ContinueMatchingComment(operatorBuilder.ToString() is "/*");
         }
 
-        return OperatorMapper.MapToToken(operatorBuilder.ToString());
+        var resultingToken = OperatorMapper.MapToToken(symbolString);
+        if (resultingToken.Type is TokenType.LineComment or TokenType.BlockComment)
+            return ContinueMatchingComment(resultingToken.Type);
+        if (resultingToken.Type is TokenType.UnknownOperator)
+            new string("Unknown token");  // TODO: error
+
+        return resultingToken;
     }
 
-    private Token ContinueMatchingComment(bool isBlock)
+    private Token ContinueMatchingComment(TokenType commentType)
     {
         var contentBuilder = new StringBuilder();
-        if (isBlock)
+        if (commentType == TokenType.BlockComment)
         {
             var matchedEnd = false;
             while (_scanner.CurrentCharacter is not null)
@@ -70,37 +75,39 @@ public class Lexer
         }
         else
         {
+            commentType = TokenType.LineComment;  // just in case
             while (_scanner.CurrentCharacter is not (null or '\n'))
             {
                 contentBuilder.Append(_scanner.CurrentCharacter.Value);
                 _scanner.Advance();
             }
         }
-        return new Token(isBlock ? TokenType.BlockComment : TokenType.LineComment, contentBuilder.ToString());
+        return new Token(commentType, contentBuilder.ToString());
     }
 
     private Token? MatchKeywordOrIdentifier()
     {
+        static bool IsPartOfIdentifier(char? c) => c is not null && (char.IsLetterOrDigit(c.Value) || c is '_');
         if (_scanner.CurrentCharacter is null || !char.IsLetter(_scanner.CurrentCharacter.Value))
             return null;
+
         var nameBuilder = new StringBuilder($"{_scanner.CurrentCharacter.Value}");
         _scanner.Advance();
-        bool IsPartOfIdentifier(char? c) => c is not null && (char.IsLetterOrDigit(c.Value) || c is '_');
         while (IsPartOfIdentifier(_scanner.CurrentCharacter))
         {
             nameBuilder.Append(_scanner.CurrentCharacter.Value);
             _scanner.Advance();
         }
-        var name = nameBuilder.ToString();
-        return KeywordOrIdentifierMapper.MapToKeywordOrIdentifier(name);
+        return KeywordOrIdentifierMapper.MapToKeywordOrIdentifier(nameBuilder.ToString());
     }
 
     private Token? MatchNumber()
     {
         // TODO: 0x, 0c, 0b literals
         // TODO: scientific notation
-        bool IsDigit(char? c) => c is >= '0' and <= '9';
-        long CharToDigit(char c) => c - '0';
+        static bool IsDigit(char? c) => c is >= '0' and <= '9';
+        static long CharToDigit(char c) => c - '0';
+
         if (!IsDigit(_scanner.CurrentCharacter))
             return null;
         var integralPart = CharToDigit(_scanner.CurrentCharacter!.Value);
@@ -128,6 +135,7 @@ public class Lexer
         if (_scanner.CurrentCharacter is not '.')
             // no fractional part
             return new Token { Type = TokenType.LiteralInteger, Content = integralPart };
+
         _scanner.Advance();
         var fractionalPart = 0L;
         var fractionalPartLength = 0;
