@@ -105,20 +105,41 @@ public class Lexer : ILexer
 
     private Token? MatchNumber()
     {
-        // TODO: 0x, 0c, 0b literals
         // TODO: scientific notation
-        static bool IsDigit(char? c) => c is >= '0' and <= '9';
-        static long CharToDigit(char c) => c - '0';
+        var radix = 10;
+
+        bool IsDigit(char? c) => radix switch
+        {
+            16 => c is >= '0' and <= '9' or >= 'A' and <= 'F' or >= 'a' and <= 'f',
+            8 => c is >= '0' and <= '7',
+            2 => c is '0' or '1',
+            _ => c is >= '0' and <= '9',
+        };
+        static long CharToDigit(char c) => c >= 'a'
+            ? c - 'a' + 10
+            : c >= 'A'
+                ? c - 'A' + 10
+                : c - '0';
 
         if (!IsDigit(_scanner.CurrentCharacter))
             return null;
         var integralPart = CharToDigit(_scanner.CurrentCharacter!.Value);
         _scanner.Advance();
+        if (integralPart == 0 && _scanner.CurrentCharacter is 'x' or 'c' or 'b')
+        {
+            radix = _scanner.CurrentCharacter switch
+            {
+                'x' => 16,
+                'c' => 8,
+                'b' => 2
+            };
+            _scanner.Advance();
+        }
         try
         {
             while (IsDigit(_scanner.CurrentCharacter))
             {
-                integralPart = checked(10 * integralPart + CharToDigit(_scanner.CurrentCharacter.Value));
+                integralPart = checked(radix * integralPart + CharToDigit(_scanner.CurrentCharacter.Value));
                 _scanner.Advance();
             }
         }
@@ -127,16 +148,16 @@ public class Lexer : ILexer
             // TODO: error
             while (IsDigit(_scanner.CurrentCharacter))
                 _scanner.Advance();
-            if (_scanner.CurrentCharacter is not '.')
-                return new Token { Type = TokenType.LiteralInteger };
+            if (_scanner.CurrentCharacter is not '.' || radix != 10)
+                return new Token(TokenType.LiteralInteger);
             _scanner.Advance();
             while (IsDigit(_scanner.CurrentCharacter))
                 _scanner.Advance();
-            return new Token { Type = TokenType.LiteralFloat };
+            return new Token(TokenType.LiteralFloat);
         }
-        if (_scanner.CurrentCharacter is not '.')
+        if (_scanner.CurrentCharacter is not '.' || radix != 10)
             // no fractional part
-            return new Token { Type = TokenType.LiteralInteger, Content = integralPart };
+            return new Token(TokenType.LiteralInteger, integralPart);
 
         _scanner.Advance();
         var fractionalPart = 0L;
@@ -145,7 +166,7 @@ public class Lexer : ILexer
         {
             while (IsDigit(_scanner.CurrentCharacter))
             {
-                fractionalPart = checked(10 * fractionalPart + CharToDigit(_scanner.CurrentCharacter.Value));
+                fractionalPart = checked(radix * fractionalPart + CharToDigit(_scanner.CurrentCharacter.Value));
                 fractionalPartLength++;
                 _scanner.Advance();
             }
@@ -155,10 +176,10 @@ public class Lexer : ILexer
             // TODO: error
             while (IsDigit(_scanner.CurrentCharacter))
                 _scanner.Advance();
-            return new Token { Type = TokenType.LiteralFloat };
+            return new Token(TokenType.LiteralFloat);
         }
-        var joinedNumber = integralPart + fractionalPart / Math.Pow(10, fractionalPartLength);
-        return new Token { Type = TokenType.LiteralFloat, Content = joinedNumber };
+        var joinedNumber = integralPart + fractionalPart / Math.Pow(radix, fractionalPartLength);
+        return new Token(TokenType.LiteralFloat, joinedNumber);
     }
 
     private Token? MatchString()
@@ -178,12 +199,12 @@ public class Lexer : ILexer
             _scanner.Advance();
         else
             new string("Unexpected ETX");  // TODO: error
-        return new Token { Type = TokenType.LiteralString, Content = contentBuilder.ToString() };
+        return new Token(TokenType.LiteralString, contentBuilder.ToString());
     }
 
     private bool TryMatchToken(out Token matchedToken)
     {
-        matchedToken = new Token { Type = TokenType.Unknown };
+        matchedToken = new Token(TokenType.Unknown);
         foreach (var matcher in _matchers)
         {
             var matcherResult = matcher();
@@ -208,11 +229,10 @@ public class Lexer : ILexer
         SkipWhitespaces();
 
         if (_scanner.CurrentCharacter is null)
-            CurrentToken = new Token { Type = TokenType.EndOfText, Content = "ETX", Position = _tokenStartPosition };
+            CurrentToken = new Token(TokenType.EndOfText, "ETX", _tokenStartPosition);
         else if (TryMatchToken(out var matchedToken))
             CurrentToken = matchedToken with { Position = _tokenStartPosition };
         else  // TODO: error
-            CurrentToken = new Token
-                { Type = TokenType.Unknown, Content = _scanner.CurrentCharacter, Position = _tokenStartPosition };
+            CurrentToken = new Token(TokenType.Unknown, _scanner.CurrentCharacter, _tokenStartPosition);
     }
 }

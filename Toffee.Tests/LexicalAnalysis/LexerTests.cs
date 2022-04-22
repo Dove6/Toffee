@@ -5,6 +5,8 @@ namespace Toffee.Tests.LexicalAnalysis;
 
 public class LexerTests
 {
+    // TODO: negative tests
+
     [Theory]
     [InlineData(".", TokenType.OperatorDot)]
     [InlineData("?.", TokenType.OperatorQueryDot)]
@@ -102,5 +104,49 @@ public class LexerTests
         var lexer = new Lexer(scannerMock);
 
         Assert.Equal(TokenType.EndOfText, lexer.CurrentToken.Type);
+    }
+
+    [Theory]
+    [InlineData("1", 1L)]
+    [InlineData("0", 0L)]
+    [InlineData("9223372036854775807", 9223372036854775807L)]
+    [InlineData("0000001", 1L)]
+    [InlineData("0x1", 1L)]
+    [InlineData("0x001", 1L)]
+    [InlineData("0xabCD", 43981L)]
+    [InlineData("0c1", 1L)]
+    [InlineData("0c001", 1L)]
+    [InlineData("0c741", 481L)]
+    [InlineData("0b1", 1L)]
+    [InlineData("0b0001", 1L)]
+    [InlineData("0b1011", 11L)]
+    public void IntegersShouldBeRecognizedCorrectly(string input, long expectedContent)
+    {
+        var scannerMock = new ScannerMock(input);
+        var lexer = new Lexer(scannerMock);
+
+        Assert.Equal(TokenType.LiteralInteger, lexer.CurrentToken.Type);
+        Assert.Equal(expectedContent, lexer.CurrentToken.Content);
+    }
+
+    [Theory]
+    [InlineData("1.", 1.0)]
+    [InlineData("0.", 0.0)]
+    [InlineData(".0", 0.0)]
+    [InlineData("1.2345", 1.2345)]
+    [InlineData("000000.1", 0.1)]
+    [InlineData("1.7976931348623157E+308", 1.7976931348623157e308)]
+    [InlineData("2.2e1", 22.0)]
+    [InlineData("2.2e-1", 0.22)]
+    [InlineData("2.2e+1", 22.0)]
+    [InlineData("002.e1", 20.0)]
+    [InlineData(".2e1", 2.0)]
+    public void FloatsShouldBeRecognizedCorrectly(string input, double expectedContent)
+    {
+        var scannerMock = new ScannerMock(input);
+        var lexer = new Lexer(scannerMock);
+
+        Assert.Equal(TokenType.LiteralFloat, lexer.CurrentToken.Type);
+        Assert.Equal(expectedContent, lexer.CurrentToken.Content);
     }
 }
