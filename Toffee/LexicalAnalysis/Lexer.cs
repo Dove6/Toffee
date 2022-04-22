@@ -105,7 +105,6 @@ public class Lexer : ILexer
 
     private Token? MatchNumber()
     {
-        // TODO: scientific notation
         var radix = 10;
 
         bool IsDigit(char? c) => radix switch
@@ -131,7 +130,8 @@ public class Lexer : ILexer
             {
                 'x' => 16,
                 'c' => 8,
-                'b' => 2
+                'b' => 2,
+                _   => 10
             };
             _scanner.Advance();
         }
@@ -143,7 +143,7 @@ public class Lexer : ILexer
                 _scanner.Advance();
             }
         }
-        catch (OverflowException e)
+        catch (OverflowException)
         {
             // TODO: error
             while (IsDigit(_scanner.CurrentCharacter))
@@ -171,15 +171,30 @@ public class Lexer : ILexer
                 _scanner.Advance();
             }
         }
-        catch (OverflowException e)
+        catch (OverflowException)
         {
             // TODO: error
             while (IsDigit(_scanner.CurrentCharacter))
                 _scanner.Advance();
             return new Token(TokenType.LiteralFloat);
         }
-        var joinedNumber = integralPart + fractionalPart / Math.Pow(radix, fractionalPartLength);
-        return new Token(TokenType.LiteralFloat, joinedNumber);
+        if (_scanner.CurrentCharacter is not ('e' or 'E'))
+            // no exponential part
+            return new Token(TokenType.LiteralFloat, integralPart + fractionalPart / Math.Pow(radix, fractionalPartLength));
+
+        _scanner.Advance();
+        var exponentialPart = 0L;
+        var exponentSign = _scanner.CurrentCharacter is '-' ? -1 : 1;
+        if (_scanner.CurrentCharacter is '-' or '+')
+            _scanner.Advance();
+        while (IsDigit(_scanner.CurrentCharacter))
+        {
+            exponentialPart = checked(radix * exponentialPart + CharToDigit(_scanner.CurrentCharacter.Value));
+            _scanner.Advance();
+        }
+        var exponentiatedNumber = integralPart * Math.Pow(10, exponentSign * exponentialPart)
+            + fractionalPart * Math.Pow(10, exponentSign * exponentialPart - fractionalPartLength);
+        return new Token(TokenType.LiteralFloat, exponentiatedNumber);
     }
 
     private Token? MatchString()
