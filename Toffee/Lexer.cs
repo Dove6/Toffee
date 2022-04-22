@@ -18,11 +18,81 @@ public class Lexer
 
         _matchers = new List<MatchDelegate>
         {
+            MatchOperatorOrComment,
+            MatchKeywordOrIdentifier,
             MatchNumber,
             MatchString
         };
 
         Advance();
+    }
+
+    private Token? MatchOperatorOrComment()
+    {
+        static bool IsSymbol(char? c) => c is not null && char.IsSymbol(c.Value);
+        static bool IsCommentOpening(string s) => s is "//" or "/*";
+
+        if (!IsSymbol(_scanner.CurrentCharacter))
+            return null;
+        var operatorBuilder = new StringBuilder();
+
+        while (IsSymbol(_scanner.CurrentCharacter))
+        {
+            operatorBuilder.Append(_scanner.CurrentCharacter!.Value);
+            _scanner.Advance();
+            if (operatorBuilder.Length == 2 && IsCommentOpening(operatorBuilder.ToString()))
+                return ContinueMatchingComment(operatorBuilder.ToString() is "/*");
+        }
+
+        return OperatorMapper.MapToToken(operatorBuilder.ToString());
+    }
+
+    private Token ContinueMatchingComment(bool isBlock)
+    {
+        var contentBuilder = new StringBuilder();
+        if (isBlock)
+        {
+            var matchedEnd = false;
+            while (_scanner.CurrentCharacter is not null)
+            {
+                var buffer = _scanner.CurrentCharacter.Value;
+                _scanner.Advance();
+                if ((buffer, _scanner.CurrentCharacter) is ('*', '/'))
+                {
+                    matchedEnd = true;
+                    _scanner.Advance();
+                    break;
+                }
+                contentBuilder.Append(buffer);
+            }
+            if (!matchedEnd)
+                new string("Unexpected ETX");  // TODO: error
+        }
+        else
+        {
+            while (_scanner.CurrentCharacter is not (null or '\n'))
+            {
+                contentBuilder.Append(_scanner.CurrentCharacter.Value);
+                _scanner.Advance();
+            }
+        }
+        return new Token(isBlock ? TokenType.BlockComment : TokenType.LineComment, contentBuilder.ToString());
+    }
+
+    private Token? MatchKeywordOrIdentifier()
+    {
+        if (_scanner.CurrentCharacter is null || !char.IsLetter(_scanner.CurrentCharacter.Value))
+            return null;
+        var nameBuilder = new StringBuilder($"{_scanner.CurrentCharacter.Value}");
+        _scanner.Advance();
+        bool IsPartOfIdentifier(char? c) => c is not null && (char.IsLetterOrDigit(c.Value) || c is '_');
+        while (IsPartOfIdentifier(_scanner.CurrentCharacter))
+        {
+            nameBuilder.Append(_scanner.CurrentCharacter.Value);
+            _scanner.Advance();
+        }
+        var name = nameBuilder.ToString();
+        return KeywordOrIdentifierMapper.MapToKeywordOrIdentifier(name);
     }
 
     private Token? MatchNumber()
@@ -96,7 +166,7 @@ public class Lexer
         if (_scanner.CurrentCharacter is '"')
             _scanner.Advance();
         else
-            new string("Unexpected ETX");  // TODO: error 
+            new string("Unexpected ETX");  // TODO: error
         return new Token { Type = TokenType.LiteralString, Content = contentBuilder.ToString() };
     }
 

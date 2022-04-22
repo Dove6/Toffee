@@ -1,4 +1,6 @@
-﻿namespace Toffee;
+﻿using System.Collections.ObjectModel;
+
+namespace Toffee;
 
 public enum TokenType
 {
@@ -6,12 +8,13 @@ public enum TokenType
     Unknown,
 
     LineComment,
-    MultilineComment,
+    BlockComment,
 
     LiteralString,
     LiteralInteger,
     LiteralFloat,
 
+    UnknownOperator,
     OperatorDot,
     OperatorQueryDot,
     OperatorCaret,
@@ -32,6 +35,12 @@ public enum TokenType
     OperatorOrOr,
     OperatorQueryQuery,
     OperatorQueryGreater,
+    OperatorEquals,
+    OperatorPlusEquals,
+    OperatorMinusEquals,
+    OperatorAsteriskEquals,
+    OperatorSlashEquals,
+    OperatorPercentEquals,
 
     LeftParenthesis,
     RightParenthesis,
@@ -71,9 +80,9 @@ public enum TokenType
     Identifier
 }
 
-public static class KeywordMapper
+public static class KeywordOrIdentifierMapper
 {
-    private static readonly Dictionary<string, TokenType> KeywordMap = new()
+    private static readonly ReadOnlyDictionary<string, TokenType> KeywordMap = new(new Dictionary<string, TokenType>
     {
         { "int", TokenType.KeywordInt },
         { "float", TokenType.KeywordFloat },
@@ -101,8 +110,44 @@ public static class KeywordMapper
         { "default", TokenType.KeywordDefault },
         { "false", TokenType.KeywordFalse },
         { "true", TokenType.KeywordTrue }
-    };
+    });
 
-    public static TokenType TellKeywordFromIdentifier(string name) =>
-        KeywordMap.TryGetValue(name, out var keywordType) ? keywordType : TokenType.Identifier;
+    public static Token MapToKeywordOrIdentifier(string name) =>
+        new(KeywordMap.GetValueOrDefault(name, TokenType.Identifier), name);
+}
+
+public static class OperatorMapper
+{
+    private static readonly ReadOnlyDictionary<string, TokenType> OperatorMap = new(new Dictionary<string, TokenType>
+    {
+        { ".", TokenType.OperatorDot },
+        { "?.", TokenType.OperatorQueryDot },
+        { "^", TokenType.OperatorCaret },
+        { "+", TokenType.OperatorPlus },
+        { "-", TokenType.OperatorMinus },
+        { "!", TokenType.OperatorBang },
+        { "*", TokenType.OperatorAsterisk },
+        { "/", TokenType.OperatorSlash },
+        { "%", TokenType.OperatorPercent },
+        { "..", TokenType.OperatorDotDot },
+        { "<", TokenType.OperatorLess },
+        { "<=", TokenType.OperatorLessEquals },
+        { ">", TokenType.OperatorGreater },
+        { ">=", TokenType.OperatorGreaterEquals },
+        { "==", TokenType.OperatorEqualsEquals },
+        { "!=", TokenType.OperatorBangEquals },
+        { "&&", TokenType.OperatorAndAnd },
+        { "||", TokenType.OperatorOrOr },
+        { "??", TokenType.OperatorQueryQuery },
+        { "?>", TokenType.OperatorQueryGreater },
+        { "=", TokenType.OperatorEquals },
+        { "+=", TokenType.OperatorPlusEquals },
+        { "-=", TokenType.OperatorMinusEquals },
+        { "*=", TokenType.OperatorAsteriskEquals },
+        { "/=", TokenType.OperatorSlashEquals },
+        { "%=", TokenType.OperatorPercentEquals }
+    });
+
+    public static Token MapToToken(string content) =>
+        new(OperatorMap.GetValueOrDefault(content, TokenType.UnknownOperator), content);
 }
