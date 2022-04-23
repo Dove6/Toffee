@@ -22,45 +22,47 @@ public partial class Lexer
         }
 
         var resultingToken = OperatorMapper.MapToToken(symbolString);
-        if (resultingToken.Type is TokenType.LineComment or TokenType.BlockComment)
-            return ContinueMatchingComment(resultingToken.Type);
+        if (resultingToken.Type is TokenType.LineComment)
+            return ContinueMatchingLineComment();
+        if (resultingToken.Type is TokenType.BlockComment)
+            return ContinueMatchingBlockComment();
         if (resultingToken.Type is TokenType.UnknownOperator)
             new string("Unknown token"); // TODO: error
 
         return resultingToken;
     }
 
-    private Token ContinueMatchingComment(TokenType commentType)
+    private Token ContinueMatchingBlockComment()
     {
         // TODO: limit length
         var contentBuilder = new StringBuilder();
-        if (commentType == TokenType.BlockComment)
+        var matchedEnd = false;
+        while (_scanner.CurrentCharacter is not null)
         {
-            var matchedEnd = false;
-            while (_scanner.CurrentCharacter is not null)
+            var buffer = _scanner.CurrentCharacter.Value;
+            _scanner.Advance();
+            if ((buffer, _scanner.CurrentCharacter) is ('*', '/'))
             {
-                var buffer = _scanner.CurrentCharacter.Value;
+                matchedEnd = true;
                 _scanner.Advance();
-                if ((buffer, _scanner.CurrentCharacter) is ('*', '/'))
-                {
-                    matchedEnd = true;
-                    _scanner.Advance();
-                    break;
-                }
-                contentBuilder.Append(buffer);
+                break;
             }
-            if (!matchedEnd)
-                new string("Unexpected ETX"); // TODO: error
+            contentBuilder.Append(buffer);
         }
-        else
+        if (!matchedEnd)
+            new string("Unexpected ETX"); // TODO: error
+        return new Token(TokenType.BlockComment, contentBuilder.ToString());
+    }
+
+    private Token ContinueMatchingLineComment()
+    {
+        // TODO: limit length
+        var contentBuilder = new StringBuilder();
+        while (_scanner.CurrentCharacter is not (null or '\n'))
         {
-            commentType = TokenType.LineComment; // just in case
-            while (_scanner.CurrentCharacter is not (null or '\n'))
-            {
-                contentBuilder.Append(_scanner.CurrentCharacter.Value);
-                _scanner.Advance();
-            }
+            contentBuilder.Append(_scanner.CurrentCharacter.Value);
+            _scanner.Advance();
         }
-        return new Token(commentType, contentBuilder.ToString());
+        return new Token(TokenType.LineComment, contentBuilder.ToString());
     }
 }
