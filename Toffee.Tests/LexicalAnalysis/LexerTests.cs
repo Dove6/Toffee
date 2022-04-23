@@ -111,6 +111,7 @@ public class LexerTests
     [InlineData("0", 0L)]
     [InlineData("9223372036854775807", 9223372036854775807L)]
     [InlineData("0000001", 1L)]
+    [InlineData("01", 1L)]
     [InlineData("0x1", 1L)]
     [InlineData("0x001", 1L)]
     [InlineData("0xabCD", 43981L)]

@@ -103,84 +103,90 @@ public class Lexer : ILexer
         return KeywordOrIdentifierMapper.MapToKeywordOrIdentifier(nameBuilder.ToString());
     }
 
+    private static bool IsDigitGivenRadix(int radix, char? c) => radix switch
+    {
+        16 => c is >= '0' and <= '9' or >= 'A' and <= 'F' or >= 'a' and <= 'f',
+        10 => c is >= '0' and <= '9',
+        8  => c is >= '0' and <= '7',
+        2  => c is '0' or '1',
+        _ => throw new ArgumentOutOfRangeException(nameof(radix), radix, "Radix not supported")
+    };
+
+    private static int CharToDigit(char c) => c >= 'a'
+        ? c - 'a' + 10
+        : c >= 'A'
+            ? c - 'A' + 10
+            : c - '0';
+
+    private static (long, OverflowException?) AppendDigitGivenRadix(int radix, long buffer, char digit)
+    {
+        try
+        {
+            return (checked(radix * buffer + CharToDigit(digit)), null);
+        }
+        catch (OverflowException e)
+        {
+            return (buffer, e);
+        }
+    }
+
     private Token? MatchNumber()
     {
         var radix = 10;
-
-        bool IsDigit(char? c) => radix switch
-        {
-            16 => c is >= '0' and <= '9' or >= 'A' and <= 'F' or >= 'a' and <= 'f',
-            8 => c is >= '0' and <= '7',
-            2 => c is '0' or '1',
-            _ => c is >= '0' and <= '9',
-        };
-        static long CharToDigit(char c) => c >= 'a'
-            ? c - 'a' + 10
-            : c >= 'A'
-                ? c - 'A' + 10
-                : c - '0';
-
-        if (!IsDigit(_scanner.CurrentCharacter))
+        if (!IsDigitGivenRadix(radix, _scanner.CurrentCharacter))
             return null;
-        var integralPart = CharToDigit(_scanner.CurrentCharacter!.Value);
+
+        var initialD = _scanner.CurrentCharacter!.Value;
         _scanner.Advance();
-        if (integralPart == 0 && _scanner.CurrentCharacter is 'x' or 'c' or 'b')
+        if ((initialD, _scanner.CurrentCharacter) is ('0', 'x') or ('0', 'c') or ('0', 'b'))
         {
+#pragma warning disable CS8509
             radix = _scanner.CurrentCharacter switch
             {
                 'x' => 16,
                 'c' => 8,
-                'b' => 2,
-                _   => 10
+                'b' => 2
             };
+#pragma warning restore CS8509
             _scanner.Advance();
         }
-        try
+        return radix == 10
+            ? ContinueMatchingDecimalNumber(initialD)
+            : ContinueMatchingNonDecimalInteger(radix);
+    }
+
+    private Token ContinueMatchingDecimalNumber(char initialDigit)
+    {
+        static bool IsDigit(char? c) => IsDigitGivenRadix(10, c);
+        static (long, OverflowException?) AppendDigit(long buffer, char digit) =>
+            AppendDigitGivenRadix(10, buffer, digit);
+
+        OverflowException? overflowException = null;  // TODO: handle this
+        var integralPart = (long)CharToDigit(initialDigit);
+        while (IsDigit(_scanner.CurrentCharacter))
         {
-            while (IsDigit(_scanner.CurrentCharacter))
-            {
-                integralPart = checked(radix * integralPart + CharToDigit(_scanner.CurrentCharacter.Value));
-                _scanner.Advance();
-            }
-        }
-        catch (OverflowException)
-        {
-            // TODO: error
-            while (IsDigit(_scanner.CurrentCharacter))
-                _scanner.Advance();
-            if (_scanner.CurrentCharacter is not '.' || radix != 10)
-                return new Token(TokenType.LiteralInteger);
+            if (overflowException is null)
+                (integralPart, overflowException) = AppendDigit(integralPart, _scanner.CurrentCharacter!.Value);
             _scanner.Advance();
-            while (IsDigit(_scanner.CurrentCharacter))
-                _scanner.Advance();
-            return new Token(TokenType.LiteralFloat);
         }
-        if (_scanner.CurrentCharacter is not '.' || radix != 10)
+        if (_scanner.CurrentCharacter is not '.')
             // no fractional part
             return new Token(TokenType.LiteralInteger, integralPart);
 
         _scanner.Advance();
         var fractionalPart = 0L;
         var fractionalPartLength = 0;
-        try
+        while (IsDigit(_scanner.CurrentCharacter))
         {
-            while (IsDigit(_scanner.CurrentCharacter))
-            {
-                fractionalPart = checked(radix * fractionalPart + CharToDigit(_scanner.CurrentCharacter.Value));
+            if (overflowException is null)
+                (fractionalPart, overflowException) = AppendDigit(fractionalPart, _scanner.CurrentCharacter.Value);
+            if (overflowException is null)
                 fractionalPartLength++;
-                _scanner.Advance();
-            }
-        }
-        catch (OverflowException)
-        {
-            // TODO: error
-            while (IsDigit(_scanner.CurrentCharacter))
-                _scanner.Advance();
-            return new Token(TokenType.LiteralFloat);
+            _scanner.Advance();
         }
         if (_scanner.CurrentCharacter is not ('e' or 'E'))
             // no exponential part
-            return new Token(TokenType.LiteralFloat, integralPart + fractionalPart / Math.Pow(radix, fractionalPartLength));
+            return new Token(TokenType.LiteralFloat, integralPart + fractionalPart / Math.Pow(10, fractionalPartLength));
 
         _scanner.Advance();
         var exponentialPart = 0L;
@@ -189,22 +195,39 @@ public class Lexer : ILexer
             _scanner.Advance();
         while (IsDigit(_scanner.CurrentCharacter))
         {
-            exponentialPart = checked(radix * exponentialPart + CharToDigit(_scanner.CurrentCharacter.Value));
+            if (overflowException is null)
+                (exponentialPart, overflowException) = AppendDigit(exponentialPart, _scanner.CurrentCharacter.Value);
             _scanner.Advance();
         }
         var exponentiatedNumber = integralPart * Math.Pow(10, exponentSign * exponentialPart)
-            + fractionalPart * Math.Pow(10, exponentSign * exponentialPart - fractionalPartLength);
+                                  + fractionalPart * Math.Pow(10, exponentSign * exponentialPart - fractionalPartLength);
         return new Token(TokenType.LiteralFloat, exponentiatedNumber);
+    }
+
+    private Token ContinueMatchingNonDecimalInteger(int radix)
+    {
+        bool IsDigit(char? c) => IsDigitGivenRadix(radix, c);
+        (long, OverflowException?) AppendDigit(long buffer, char digit) =>
+            AppendDigitGivenRadix(radix, buffer, digit);
+
+        if (!IsDigit(_scanner.CurrentCharacter))
+            new string("Expected digits");  // TODO: error
+
+        OverflowException? overflowException = null;  // TODO: handle this
+        var integralPart = (long)CharToDigit(_scanner.CurrentCharacter!.Value);
+        _scanner.Advance();
+        while (IsDigit(_scanner.CurrentCharacter))
+        {
+            if (overflowException is null)
+                (integralPart, overflowException) = AppendDigit(integralPart, _scanner.CurrentCharacter.Value);
+            _scanner.Advance();
+        }
+        return new Token(TokenType.LiteralInteger, integralPart);
     }
 
     private Token? MatchString()
     {
-        static bool IsHexDigit(char? c) => c is >= '0' and <= '9' or >= 'A' and <= 'F' or >= 'a' and <= 'f';
-        static long CharToDigit(char c) => c >= 'a'
-            ? c - 'a' + 10
-            : c >= 'A'
-                ? c - 'A' + 10
-                : c - '0';
+        static bool IsHexDigit(char? c) => IsDigitGivenRadix(16, c);
 
         // TODO: limit length
         if (_scanner.CurrentCharacter is not '"')
