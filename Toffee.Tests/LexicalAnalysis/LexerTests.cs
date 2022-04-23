@@ -149,4 +149,19 @@ public class LexerTests
         Assert.Equal(TokenType.LiteralFloat, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
     }
+
+    [Theory]
+    [InlineData("\"\"", "")]
+    [InlineData("\" \"", " ")]
+    [InlineData("\"abcd1234\"", "abcd1234")]
+    [InlineData("\"aąаαáåあア汉漢👨‍💻\"", "aąаαáåあア汉漢👨‍💻")]
+    [InlineData(@"""\a\b\f\n\r\t\v\\\""\0\xD\xff""", "\a\b\f\n\r\t\v\\\"\0\xD\xff")]
+    public void StringsShouldBeRecognizedCorrectly(string input, string expectedContent)
+    {
+        var scannerMock = new ScannerMock(input);
+        var lexer = new Lexer(scannerMock);
+
+        Assert.Equal(TokenType.LiteralString, lexer.CurrentToken.Type);
+        Assert.Equal(expectedContent, lexer.CurrentToken.Content);
+    }
 }
