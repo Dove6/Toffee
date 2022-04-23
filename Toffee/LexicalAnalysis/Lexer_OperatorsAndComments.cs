@@ -8,7 +8,6 @@ public partial class Lexer
     {
         static bool IsSymbol(char? c) =>
             c is not (null or '"') && (char.IsSymbol(c.Value) || char.IsPunctuation(c.Value));
-
         static bool CanExtend(string s, char c) => OperatorMapper.IsTransitionExistent(s, c);
 
         if (!IsSymbol(_scanner.CurrentCharacter))

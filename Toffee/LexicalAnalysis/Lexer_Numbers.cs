@@ -30,7 +30,6 @@ public partial class Lexer
     private Token ContinueMatchingDecimalNumber(char initialDigit)
     {
         static bool IsDigit(char? c) => IsDigitGivenRadix(10, c);
-
         static (long, OverflowException?) AppendDigit(long buffer, char digit) =>
             AppendDigitGivenRadix(10, buffer, digit);
 
@@ -82,7 +81,6 @@ public partial class Lexer
     private Token ContinueMatchingNonDecimalInteger(int radix)
     {
         bool IsDigit(char? c) => IsDigitGivenRadix(radix, c);
-
         (long, OverflowException?) AppendDigit(long buffer, char digit) =>
             AppendDigitGivenRadix(radix, buffer, digit);
 

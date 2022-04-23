@@ -6,8 +6,6 @@ public partial class Lexer
 {
     private Token? MatchString()
     {
-        static bool IsHexDigit(char? c) => IsDigitGivenRadix(16, c);
-
         // TODO: limit length
         if (_scanner.CurrentCharacter is not '"')
             return null;
@@ -19,40 +17,12 @@ public partial class Lexer
             if (escaping)
             {
                 escaping = false;
-                if (_scanner.CurrentCharacter is 'x')
-                {
-                    // TODO: support 2-byte chars
-                    // TODO: use BitConverter
-                    _scanner.Advance();
-                    if (!IsHexDigit(_scanner.CurrentCharacter))
-                        new string("Missing hex byte specification"); // TODO: error
-                    var escapedByte = (byte)CharToDigit(_scanner.CurrentCharacter.Value);
-                    _scanner.Advance();
-                    if (IsHexDigit(_scanner.CurrentCharacter))
-                    {
-                        escapedByte = (byte)(16 * escapedByte + CharToDigit(_scanner.CurrentCharacter.Value));
-                        _scanner.Advance();
-                    }
-                    contentBuilder.Append((char)escapedByte);
-                }
+                var specifier = _scanner.CurrentCharacter.Value;
+                _scanner.Advance();
+                if (TryMatchEscapeSequence(specifier, out var matchedChar))
+                    contentBuilder.Append(matchedChar);
                 else
-                {
-                    contentBuilder.Append(_scanner.CurrentCharacter switch
-                    {
-                        'a' => '\a',
-                        'b' => '\b',
-                        'f' => '\f',
-                        'n' => '\n',
-                        'r' => '\r',
-                        't' => '\t',
-                        'v' => '\v',
-                        '\\' => '\\',
-                        '"' => '"',
-                        '0' => '\0',
-                        _ => _scanner.CurrentCharacter.Value // TODO: error
-                    });
-                    _scanner.Advance();
-                }
+                    new string("Invalid escape sequence");  // TODO: error
             }
             else
             {
@@ -70,5 +40,53 @@ public partial class Lexer
         else
             new string("Unexpected ETX"); // TODO: error
         return new Token(TokenType.LiteralString, contentBuilder.ToString());
+    }
+
+    private bool TryMatchEscapeSequence(char specifier, out char result)
+    {
+        result = '\0';
+        if (specifier is 'x')
+        {
+            var matchedChar = MatchEscapedHexChar();
+            result = matchedChar ?? result;
+            return matchedChar.HasValue;
+        }
+        result = specifier switch
+        {
+            'a' => '\a',
+            'b' => '\b',
+            'f' => '\f',
+            'n' => '\n',
+            'r' => '\r',
+            't' => '\t',
+            'v' => '\v',
+            '\\' => '\\',
+            '"' => '"',
+            '0' => '\0',
+            _ => specifier // TODO: error
+        };
+        return true;
+    }
+
+    private char? MatchEscapedHexChar()
+    {
+        const int maxHexCodeLength = 4;
+        static bool IsHexDigit(char? c) => IsDigitGivenRadix(16, c);
+
+        var digitBuffer = "";
+        for (var i = 0; i < maxHexCodeLength && IsHexDigit(_scanner.CurrentCharacter); i++)
+        {
+            digitBuffer += _scanner.CurrentCharacter!.Value;
+            _scanner.Advance();
+        }
+        if (digitBuffer.Length == 0)
+            new string("Missing hex code"); // TODO: error
+
+        var bytes = Convert.FromHexString(digitBuffer.PadLeft(maxHexCodeLength, '0'));
+        // BitConverter converts data according to the endianness of the running environment.
+        // However the hex code is always big-endian. Thus, the array is reversed conditionally.
+        if (BitConverter.IsLittleEndian)
+            Array.Reverse(bytes);
+        return BitConverter.ToChar(bytes);
     }
 }
