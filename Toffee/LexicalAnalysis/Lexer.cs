@@ -118,9 +118,9 @@ public sealed partial class Lexer : LexerBase
 
     public override void Advance()
     {
-        _tokenStartPosition = _scanner.CurrentPosition;
-
         SkipWhitespaces();
+
+        _tokenStartPosition = _scanner.CurrentPosition;
 
         if (_scanner.CurrentCharacter is null)
             CurrentToken = new Token(TokenType.EndOfText, "ETX", _tokenStartPosition);
