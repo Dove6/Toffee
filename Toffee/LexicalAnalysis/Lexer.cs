@@ -46,15 +46,19 @@ public sealed partial class Lexer : LexerBase
             ? c - 'A' + 10
             : c - '0';
 
-    private static (long, OverflowException?) AppendDigitGivenRadix(int radix, long buffer, char digit)
+    private void AppendDigitConsideringOverflowGivenRadix(int radix, ref long buffer, char digit, ref bool overflowOccurred, uint? offset = null)
     {
-        try
+        if (!overflowOccurred)
         {
-            return (checked(radix * buffer + CharToDigit(digit)), null);
-        }
-        catch (OverflowException e)
-        {
-            return (buffer, e);
+            try
+            {
+                buffer = checked(radix * buffer + CharToDigit(digit));
+            }
+            catch (OverflowException)
+            {
+                overflowOccurred = true;
+                EmitError(new NumberLiteralTooLarge(offset ?? CurrentOffset));
+            }
         }
     }
 
