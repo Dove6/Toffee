@@ -12,7 +12,7 @@ public sealed partial class Lexer
 
         if (!IsSymbol(_scanner.CurrentCharacter))
             return null;
-        var symbolString = ""; // TODO: limit length
+        var symbolString = "";
 
         while (IsSymbol(_scanner.CurrentCharacter) && CanExtend(symbolString, _scanner.CurrentCharacter!.Value))
         {
@@ -33,8 +33,9 @@ public sealed partial class Lexer
 
     private Token ContinueMatchingBlockComment()
     {
-        // TODO: limit length
+        // TODO: OoM exception
         var contentBuilder = new StringBuilder();
+        var maxLengthExceeded = false;
         var matchedEnd = false;
         while (_scanner.CurrentCharacter is not null)
         {
@@ -46,7 +47,7 @@ public sealed partial class Lexer
                 _scanner.Advance();
                 break;
             }
-            contentBuilder.Append(buffer);
+            AppendCharConsideringLengthLimit(contentBuilder, buffer, ref maxLengthExceeded, CurrentOffset - 1);
         }
         if (!matchedEnd)
             EmitError(new UnexpectedEndOfText(CurrentOffset));
@@ -55,11 +56,12 @@ public sealed partial class Lexer
 
     private Token ContinueMatchingLineComment()
     {
-        // TODO: limit length
+        // TODO: OoM exception
         var contentBuilder = new StringBuilder();
+        var maxLengthExceeded = false;
         while (_scanner.CurrentCharacter is not (null or '\n'))
         {
-            contentBuilder.Append(_scanner.CurrentCharacter.Value);
+            AppendCharConsideringLengthLimit(contentBuilder, _scanner.CurrentCharacter, ref maxLengthExceeded);
             _scanner.Advance();
         }
         return new Token(TokenType.LineComment, contentBuilder.ToString());

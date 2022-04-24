@@ -6,20 +6,23 @@ public sealed partial class Lexer
 {
     private Token? MatchString()
     {
-        // TODO: limit length
+        // TODO: OoM exception
         if (_scanner.CurrentCharacter is not '"')
             return null;
         _scanner.Advance();
         var contentBuilder = new StringBuilder();
+        var maxLengthExceeded = false;
         var escaping = false;
         while (_scanner.CurrentCharacter is not null)
         {
             if (escaping)
             {
                 escaping = false;
+                var escapeSequenceOffset = CurrentOffset - 1;
                 var specifier = _scanner.CurrentCharacter.Value;
                 _scanner.Advance();
-                contentBuilder.Append(MatchEscapeSequence(specifier));
+                var matchedEscapeSequence = MatchEscapeSequence(specifier);
+                AppendCharConsideringLengthLimit(contentBuilder, matchedEscapeSequence, ref maxLengthExceeded, escapeSequenceOffset);
             }
             else
             {
@@ -28,7 +31,7 @@ public sealed partial class Lexer
                 if (_scanner.CurrentCharacter is '\\')
                     escaping = true;
                 else
-                    contentBuilder.Append(_scanner.CurrentCharacter.Value);
+                    AppendCharConsideringLengthLimit(contentBuilder, _scanner.CurrentCharacter, ref maxLengthExceeded);
                 _scanner.Advance();
             }
         }

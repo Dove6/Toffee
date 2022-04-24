@@ -1,4 +1,5 @@
-﻿using Toffee.Logging;
+﻿using System.Text;
+using Toffee.Logging;
 using Toffee.Scanning;
 
 namespace Toffee.LexicalAnalysis;
@@ -14,7 +15,7 @@ public sealed partial class Lexer : LexerBase
     private delegate Token? MatchDelegate();
     private readonly List<MatchDelegate> _matchers;
 
-    public Lexer(IScanner scanner, Logger? logger = null)
+    public Lexer(IScanner scanner, Logger? logger = null, int maxLexemeLength = int.MaxValue) : base(maxLexemeLength)
     {
         _scanner = scanner;
         _logger = logger;
@@ -55,6 +56,19 @@ public sealed partial class Lexer : LexerBase
         {
             return (buffer, e);
         }
+    }
+
+    private void AppendCharConsideringLengthLimit(StringBuilder buffer, char? c, ref bool maxLengthExceeded, uint? offset = null)
+    {
+        if (maxLengthExceeded)
+            return;
+        if (buffer.Length >= MaxLexemeLength)
+        {
+            maxLengthExceeded = true;
+            EmitError(new MaxLexemeLengthExceeded(offset ?? CurrentOffset));
+        }
+        else
+            buffer.Append(c);
     }
 
     private void EmitError(LexerError error)

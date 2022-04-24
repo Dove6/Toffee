@@ -2,9 +2,26 @@
 
 public abstract class LexerBase
 {
+    private int _maxLexemeLength;
+    public int MaxLexemeLength
+    {
+        get => _maxLexemeLength;
+        set
+        {
+            if (value < 1)
+                throw new ArgumentOutOfRangeException(nameof(MaxLexemeLength), MaxLexemeLength, null);
+            _maxLexemeLength = value;
+        }
+    }
+
     public bool HadError { get; protected set; }
     public Token CurrentToken { get; protected set; }
     public LexerError? CurrentError { get; protected set; }
+
+    protected LexerBase(int maxLexemeLength = int.MaxValue)
+    {
+        MaxLexemeLength = maxLexemeLength;
+    }
 
     public abstract void Advance();
 

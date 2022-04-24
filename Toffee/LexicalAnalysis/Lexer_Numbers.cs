@@ -74,7 +74,7 @@ public sealed partial class Lexer
             'x' => 16,
             'c' => 8,
             'b' => 2,
-            _ => throw new ArgumentOutOfRangeException(nameof(prefix), prefix, null)
+            _ => throw new ArgumentOutOfRangeException(nameof(prefix), prefix, "Unknown non-decimal prefix")
         };
 
         bool IsDigit(char? c) => IsDigitGivenRadix(radix, c);
