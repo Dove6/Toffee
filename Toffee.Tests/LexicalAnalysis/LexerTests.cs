@@ -7,6 +7,7 @@ public class LexerTests
 {
     // TODO: negative tests
 
+    [Trait("Category", "Operators")]
     [Theory]
     [InlineData(".", TokenType.OperatorDot)]
     [InlineData("?.", TokenType.OperatorQueryDot)]
@@ -49,6 +50,7 @@ public class LexerTests
         Assert.Equal(expectedTokenType, lexer.CurrentToken.Type);
     }
 
+    [Trait("Category", "Comments")]
     [Theory]
     [InlineData("//", TokenType.LineComment)]
     [InlineData("/*", TokenType.BlockComment)]
@@ -61,6 +63,7 @@ public class LexerTests
         Assert.Equal(expectedTokenType, lexer.CurrentToken.Type);
     }
 
+    [Trait("Category", "Comments")]
     [Theory]
     [InlineData("//", false, "")]
     [InlineData("// ", false, " ")]
@@ -106,6 +109,7 @@ public class LexerTests
         Assert.Equal(TokenType.EndOfText, lexer.CurrentToken.Type);
     }
 
+    [Trait("Category", "Numbers")]
     [Theory]
     [InlineData("1", 1L)]
     [InlineData("0", 0L)]
@@ -130,6 +134,7 @@ public class LexerTests
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
     }
 
+    [Trait("Category", "Numbers")]
     [Theory]
     [InlineData("1.", 1.0)]
     [InlineData("0.", 0.0)]
@@ -151,12 +156,24 @@ public class LexerTests
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
     }
 
+    [Trait("Category", "Strings")]
     [Theory]
-    [InlineData("\"\"", "")]
-    [InlineData("\" \"", " ")]
-    [InlineData("\"abcd1234\"", "abcd1234")]
-    [InlineData("\"aąаαáåあア汉漢👨‍💻\"", "aąаαáåあア汉漢👨‍💻")]
-    [InlineData(@"""\a\b\f\n\r\t\v\\\""\0\xD\xff""", "\a\b\f\n\r\t\v\\\"\0\xD\xff")]
+    [InlineData(@"""""", "")]
+    [InlineData(@""" """, " ")]
+    [InlineData(@"""abcd1234""", "abcd1234")]
+    [InlineData(@"""aąаαáåあア汉漢👨‍💻""", "aąаαáåあア汉漢👨‍💻")]
+    [InlineData(@"""\a""", "\a")]
+    [InlineData(@"""\b""", "\b")]
+    [InlineData(@"""\f""", "\f")]
+    [InlineData(@"""\n""", "\n")]
+    [InlineData(@"""\r""", "\r")]
+    [InlineData(@"""\t""", "\t")]
+    [InlineData(@"""\v""", "\v")]
+    [InlineData(@"""\\""", "\\")]
+    [InlineData(@"""\""""", "\"")]
+    [InlineData(@"""\0""", "\0")]
+    [InlineData(@"""\xD""", "\xD")]
+    [InlineData(@"""\x6a""", "\x6a")]
     public void StringsShouldBeRecognizedCorrectly(string input, string expectedContent)
     {
         var scannerMock = new ScannerMock(input);
@@ -164,5 +181,57 @@ public class LexerTests
 
         Assert.Equal(TokenType.LiteralString, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
+    }
+
+    [Trait("Category", "Strings")]
+    [Theory]
+    [InlineData(@"""\a\b\f\n\r\t\v\\\""\0\a\b\f\n\r\t\v\\\""\0""", "\a\b\f\n\r\t\v\\\"\0\a\b\f\n\r\t\v\\\"\0")]
+    [InlineData(@"""\xatest""", "\xatest")]
+    [InlineData(@"""\x0123456""", "\x0123456")]
+    [InlineData(@"""\xabcdefg""", "\xabcdefg")]
+    [InlineData(@"""\xcactus""", "\xcactus")]
+    public void BoundariesOfEscapeSequencesInStringShouldBeRecognizedCorrectly(string input, string expectedContent)
+    {
+        var scannerMock = new ScannerMock(input);
+        var lexer = new Lexer(scannerMock);
+
+        Assert.Equal(TokenType.LiteralString, lexer.CurrentToken.Type);
+        Assert.Equal(expectedContent, lexer.CurrentToken.Content);
+    }
+
+    [Trait("Category", "Keywords")]
+    [Theory]
+    [InlineData("int", TokenType.KeywordInt)]
+    [InlineData("float", TokenType.KeywordFloat)]
+    [InlineData("string", TokenType.KeywordString)]
+    [InlineData("bool", TokenType.KeywordBool)]
+    [InlineData("function", TokenType.KeywordFunction)]
+    [InlineData("null", TokenType.KeywordNull)]
+    [InlineData("init", TokenType.KeywordInit)]
+    [InlineData("const", TokenType.KeywordConst)]
+    [InlineData("pull", TokenType.KeywordPull)]
+    [InlineData("if", TokenType.KeywordIf)]
+    [InlineData("elif", TokenType.KeywordElif)]
+    [InlineData("else", TokenType.KeywordElse)]
+    [InlineData("while", TokenType.KeywordWhile)]
+    [InlineData("for", TokenType.KeywordFor)]
+    [InlineData("break", TokenType.KeywordBreak)]
+    [InlineData("break_if", TokenType.KeywordBreakIf)]
+    [InlineData("functi", TokenType.KeywordFuncti)]
+    [InlineData("return", TokenType.KeywordReturn)]
+    [InlineData("match", TokenType.KeywordMatch)]
+    [InlineData("and", TokenType.KeywordAnd)]
+    [InlineData("or", TokenType.KeywordOr)]
+    [InlineData("is", TokenType.KeywordIs)]
+    [InlineData("not", TokenType.KeywordNot)]
+    [InlineData("default", TokenType.KeywordDefault)]
+    [InlineData("false", TokenType.KeywordFalse)]
+    [InlineData("true", TokenType.KeywordTrue)]
+    public void KeywordsShouldBeRecognizedCorrectly(string input, TokenType expectedTokenType)
+    {
+        var scannerMock = new ScannerMock(input);
+        var lexer = new Lexer(scannerMock);
+
+        Assert.Equal(expectedTokenType, lexer.CurrentToken.Type);
     }
 }
