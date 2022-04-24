@@ -1,24 +1,23 @@
-﻿using Toffee.Scanning;
+﻿using Toffee.Logging;
+using Toffee.Scanning;
 
 namespace Toffee.LexicalAnalysis;
 
-public partial class Lexer : ILexer
+public sealed partial class Lexer : LexerBase
 {
     private readonly IScanner _scanner;
+    private readonly Logger? _logger;
     private Position _tokenStartPosition;
 
     private uint CurrentOffset => _scanner.CurrentPosition.Character - _tokenStartPosition.Character;
 
-    public bool HadError { get; private set; }
-    public Token CurrentToken { get; private set; }
-    public LexerError? CurrentError { get; private set; }
-
     private delegate Token? MatchDelegate();
     private readonly List<MatchDelegate> _matchers;
 
-    public Lexer(IScanner scanner)
+    public Lexer(IScanner scanner, Logger? logger = null)
     {
         _scanner = scanner;
+        _logger = logger;
 
         _matchers = new List<MatchDelegate>
         {
@@ -61,11 +60,12 @@ public partial class Lexer : ILexer
     private void EmitError(LexerError error)
     {
         CurrentError = error;
+        _logger?.LogError(_tokenStartPosition, error.ToMessage(), error);
     }
 
     private void EmitWarning(LexerWarning warning)
     {
-        ;
+        _logger?.LogWarning(_tokenStartPosition, warning.ToMessage(), warning);
     }
 
     private bool TryMatchToken(out Token matchedToken)
@@ -88,7 +88,7 @@ public partial class Lexer : ILexer
             _scanner.Advance();
     }
 
-    public void Advance()
+    public override void Advance()
     {
         _tokenStartPosition = _scanner.CurrentPosition;
 
@@ -103,11 +103,5 @@ public partial class Lexer : ILexer
             EmitError(new UnknownToken());
             CurrentToken = new Token(TokenType.Unknown, _scanner.CurrentCharacter, _tokenStartPosition);
         }
-    }
-
-    public void ResetError()
-    {
-        CurrentError = null;
-        HadError = false;
     }
 }

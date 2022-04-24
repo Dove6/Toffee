@@ -2,7 +2,7 @@
 
 namespace Toffee.LexicalAnalysis;
 
-public partial class Lexer
+public sealed partial class Lexer
 {
     private Token? MatchKeywordOrIdentifier()
     {
