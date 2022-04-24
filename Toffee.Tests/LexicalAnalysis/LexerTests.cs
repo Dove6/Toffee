@@ -326,13 +326,15 @@ public class LexerTests
         Assert.Equal(typeof(UnexpectedEndOfText), lexer.CurrentError?.GetType());
         Assert.Equal(expectedOffset, lexer.CurrentError!.Offset);
     }
-    // TODO: ETX for "promising" operators
 
     [Trait("Category", "Operators")]
     [Theory]
-    [InlineData("`", '`', 0u)]
-    [InlineData("🐲", '\uD83D', 0u)]
-    [InlineData("\a", '\a', 0u)]
+    [InlineData("`", "`", 0u)]
+    [InlineData("🐲", "🐲", 0u)]
+    [InlineData("\a", "\a", 0u)]
+    [InlineData("?", "?", 0u)]
+    [InlineData("&", "&", 0u)]
+    [InlineData("|", "|", 0u)]
     public void UnknownTokensShouldBeDetectedProperly(string input, object expectedContent, uint expectedOffset)
     {
         var scannerMock = new ScannerMock(input);

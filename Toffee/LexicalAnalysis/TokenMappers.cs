@@ -89,5 +89,5 @@ public static class OperatorMapper
 
     public static Token MapToToken(string content) => CommentMap.ContainsKey(content)
         ? new Token(CommentMap[content])
-        : new Token(OperatorMap.GetValueOrDefault(content, TokenType.UnknownOperator), content);
+        : new Token(OperatorMap.GetValueOrDefault(content, TokenType.Unknown), content);
 }

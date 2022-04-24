@@ -12,7 +12,6 @@ public enum TokenType
     LiteralInteger,
     LiteralFloat,
 
-    UnknownOperator,
     OperatorDot,
     OperatorQueryDot,
     OperatorCaret,

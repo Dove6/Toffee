@@ -21,7 +21,7 @@ public sealed partial class Lexer
         }
 
         var resultingToken = OperatorMapper.MapToToken(symbolString);
-        if (resultingToken.Type is TokenType.UnknownOperator)
+        if (resultingToken.Type is TokenType.Unknown)
             EmitError(new UnknownToken());
         return resultingToken.Type switch
         {

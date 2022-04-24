@@ -128,8 +128,14 @@ public sealed partial class Lexer : LexerBase
             CurrentToken = matchedToken with { Position = _tokenStartPosition };
         else
         {
+            var buffer = $"{_scanner.CurrentCharacter.Value}";
+            if (char.IsHighSurrogate(buffer[0]))
+            {
+                _scanner.Advance();
+                buffer += _scanner.CurrentCharacter;
+            }
             EmitError(new UnknownToken());
-            CurrentToken = new Token(TokenType.Unknown, _scanner.CurrentCharacter, _tokenStartPosition);
+            CurrentToken = new Token(TokenType.Unknown, buffer, _tokenStartPosition);
         }
     }
 }
