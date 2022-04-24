@@ -69,7 +69,7 @@ public sealed partial class Lexer : LexerBase
         if (buffer.Length >= MaxLexemeLength)
         {
             maxLengthExceeded = true;
-            EmitError(new MaxLexemeLengthExceeded(offset ?? CurrentOffset));
+            EmitError(new ExceededMaxLexemeLength(offset ?? CurrentOffset));
         }
         else
         {
@@ -80,7 +80,7 @@ public sealed partial class Lexer : LexerBase
             catch (ArgumentOutOfRangeException)
             {
                 maxLengthExceeded = true;
-                EmitError(new MaxLexemeLengthExceeded(offset ?? CurrentOffset));
+                EmitError(new ExceededMaxLexemeLength(offset ?? CurrentOffset));
             }
         }
     }

@@ -1,12 +1,16 @@
-﻿using Toffee.LexicalAnalysis;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using Moq;
+using Toffee.LexicalAnalysis;
+using Toffee.Logging;
+using Toffee.Scanning;
 using Xunit;
 
 namespace Toffee.Tests.LexicalAnalysis;
 
 public class LexerTests
 {
-    // TODO: negative tests
-
     [Trait("Category", "Operators")]
     [Theory]
     [InlineData(".", TokenType.OperatorDot)]
@@ -233,5 +237,24 @@ public class LexerTests
         var lexer = new Lexer(scannerMock);
 
         Assert.Equal(expectedTokenType, lexer.CurrentToken.Type);
+    }
+
+    [Trait("Category", "Strings")]
+    [Theory]
+    [InlineData(@"""abcd\efg""", typeof(UnknownEscapeSequence), 5u)]
+    [InlineData(@"""abcdefghijklmnopqrstuvw\xyz""", typeof(MissingHexCharCode), 24u)]
+    public void IssuesInEscapeSequencesInStringsShouldBeDetectedProperly(string input, Type expectedWarningType, uint expectedOffset)
+    {
+        var capturedAttachments = new List<object>();
+        var logger = new Mock<Logger>("");
+        logger.Setup(x =>
+            x.Log(LogLevel.Warning, It.IsAny<Position>(), It.IsAny<string>(), Capture.In(capturedAttachments)));
+
+        var scannerMock = new ScannerMock(input);
+        var lexer = new Lexer(scannerMock, logger.Object);
+
+        Assert.Equal(TokenType.LiteralString, lexer.CurrentToken.Type);
+        var warning = capturedAttachments.First(x => x.GetType() == expectedWarningType) as LexerWarning;
+        Assert.Equal(expectedOffset, warning!.Offset);
     }
 }

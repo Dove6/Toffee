@@ -80,7 +80,7 @@ public sealed partial class Lexer
 
         if (!IsDigit(_scanner.CurrentCharacter))
         {
-            EmitError(new NonDecimalDigitsMissing(CurrentOffset));
+            EmitError(new MissingNonDecimalDigits(CurrentOffset));
             return new Token(TokenType.LiteralInteger, 0L);
         }
 

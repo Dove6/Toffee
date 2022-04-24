@@ -20,7 +20,7 @@ public sealed partial class Lexer
                 var escapeSequenceOffset = CurrentOffset - 1;
                 var specifier = _scanner.CurrentCharacter.Value;
                 _scanner.Advance();
-                var matchedEscapeSequence = MatchEscapeSequence(specifier);
+                var matchedEscapeSequence = MatchEscapeSequence(specifier, escapeSequenceOffset);
                 AppendCharConsideringLengthLimit(contentBuilder, matchedEscapeSequence, ref maxLengthExceeded, escapeSequenceOffset);
             }
             else
@@ -41,11 +41,11 @@ public sealed partial class Lexer
         return new Token(TokenType.LiteralString, contentBuilder.ToString());
     }
 
-    private char? MatchEscapeSequence(char specifier)
+    private char? MatchEscapeSequence(char specifier, uint offsetForWarning)
     {
         char EmitUnknownSequenceWarning()
         {
-            EmitWarning(new UnknownEscapeSequence(specifier, CurrentOffset - 1));
+            EmitWarning(new UnknownEscapeSequence(specifier, offsetForWarning));
             return specifier;
         }
 
@@ -61,12 +61,12 @@ public sealed partial class Lexer
             '\\' => '\\',
             '"'  => '"',
             '0'  => '\0',
-            'x'  => MatchEscapedHexChar(),
+            'x'  => MatchEscapedHexChar(offsetForWarning),
             _    => EmitUnknownSequenceWarning()
         };
     }
 
-    private char? MatchEscapedHexChar()
+    private char? MatchEscapedHexChar(uint offsetForWarning)
     {
         const int maxHexCodeLength = 4;
         static bool IsHexDigit(char? c) => IsDigitGivenRadix(16, c);
@@ -78,7 +78,7 @@ public sealed partial class Lexer
             _scanner.Advance();
         }
         if (digitBuffer.Length == 0)
-            EmitWarning(new HexCharCodeMissing(CurrentOffset));
+            EmitWarning(new MissingHexCharCode(offsetForWarning));
 
         var bytes = Convert.FromHexString(digitBuffer.PadLeft(maxHexCodeLength, '0'));
         // BitConverter converts data according to the endianness of the running environment.
