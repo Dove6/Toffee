@@ -105,6 +105,7 @@ public class LexerTests
     [InlineData(" ")]
     [InlineData(" \t\v")]
     [InlineData("\n")]
+    [InlineData("\u2029")]
     public void WhiteSpacesShouldBeSkipped(string input)
     {
         var scannerMock = new ScannerMock(input);
@@ -241,9 +242,9 @@ public class LexerTests
 
     [Trait("Category", "Strings")]
     [Theory]
-    [InlineData(@"""abcd\efg""", typeof(UnknownEscapeSequence), 5u)]
-    [InlineData(@"""abcdefghijklmnopqrstuvw\xyz""", typeof(MissingHexCharCode), 24u)]
-    public void IssuesInEscapeSequencesInStringsShouldBeDetectedProperly(string input, Type expectedWarningType, uint expectedOffset)
+    [InlineData(@"""abcd\efg""", "abcdefg", typeof(UnknownEscapeSequence), 5u)]
+    [InlineData(@"""abcdefghijklmnopqrstuvw\xyz""", "abcdefghijklmnopqrstuvwyz", typeof(MissingHexCharCode), 24u)]
+    public void IssuesInEscapeSequencesInStringsShouldBeDetectedProperly(string input, string expectedContent, Type expectedWarningType, uint expectedOffset)
     {
         var capturedAttachments = new List<object>();
         var logger = new Mock<Logger>("");
@@ -254,7 +255,92 @@ public class LexerTests
         var lexer = new Lexer(scannerMock, logger.Object);
 
         Assert.Equal(TokenType.LiteralString, lexer.CurrentToken.Type);
+        Assert.Equal(expectedContent, lexer.CurrentToken.Content);
         var warning = capturedAttachments.First(x => x.GetType() == expectedWarningType) as LexerWarning;
         Assert.Equal(expectedOffset, warning!.Offset);
+    }
+
+    [Trait("Category", "Numbers")]
+    [Theory]
+    [InlineData("9223372036854775808", TokenType.LiteralInteger, 922337203685477580L, 18u)]
+    [InlineData("10.9999999999999999999", TokenType.LiteralFloat, 10.999999999999999999, 21u)]
+    [InlineData("3.14e9999999999999999999", TokenType.LiteralFloat, double.PositiveInfinity, 23u)]
+    public void NumberLiteralOverflowShouldBeDetectedProperly(string input, TokenType expectedTokenType, object expectedContent, uint expectedOffset)
+    {
+        var scannerMock = new ScannerMock(input);
+        var lexer = new Lexer(scannerMock);
+
+        Assert.Equal(expectedTokenType, lexer.CurrentToken.Type);
+        Assert.Equal(expectedContent, lexer.CurrentToken.Content);
+        Assert.Equal(typeof(NumberLiteralTooLarge), lexer.CurrentError?.GetType());
+        Assert.Equal(expectedOffset, lexer.CurrentError!.Offset);
+    }
+
+    [Trait("Category", "Strings")]
+    [Trait("Category", "Comments")]
+    [Trait("Category", "Identifiers")]
+    [Theory]
+    [InlineData(@"""abcdefg""", 3, TokenType.LiteralString, "abc", 4u)]
+    [InlineData("// abcdefg", 4, TokenType.LineComment, " abc", 6u)]
+    [InlineData("/* abcdefg */", 4, TokenType.BlockComment, " abc", 6u)]
+    [InlineData("abcdefg", 3, TokenType.Identifier, "abc", 3u)]
+    public void ExcessLexemeLengthShouldBeDetectedProperly(string input, int lengthLimit, TokenType expectedTokenType, string expectedContent, uint expectedOffset)
+    {
+        var scannerMock = new ScannerMock(input);
+        var lexer = new Lexer(scannerMock, maxLexemeLength: lengthLimit);
+
+        Assert.Equal(expectedTokenType, lexer.CurrentToken.Type);
+        Assert.Equal(expectedContent, lexer.CurrentToken.Content);
+        Assert.Equal(typeof(ExceededMaxLexemeLength), lexer.CurrentError?.GetType());
+        Assert.Equal(expectedOffset, lexer.CurrentError!.Offset);
+    }
+
+    [Trait("Category", "Numbers")]
+    [Theory]
+    [InlineData("0x", TokenType.LiteralInteger, 0L, 2u)]
+    [InlineData("0c", TokenType.LiteralInteger, 0L, 2u)]
+    [InlineData("0b", TokenType.LiteralInteger, 0L, 2u)]
+    public void MissingNonDecimalDigitsShouldBeDetectedProperly(string input, TokenType expectedTokenType, object expectedContent, uint expectedOffset)
+    {
+        var scannerMock = new ScannerMock(input);
+        var lexer = new Lexer(scannerMock);
+
+        Assert.Equal(expectedTokenType, lexer.CurrentToken.Type);
+        Assert.Equal(expectedContent, lexer.CurrentToken.Content);
+        Assert.Equal(typeof(MissingNonDecimalDigits), lexer.CurrentError?.GetType());
+        Assert.Equal(expectedOffset, lexer.CurrentError!.Offset);
+    }
+
+    [Trait("Category", "Strings")]
+    [Trait("Category", "Comments")]
+    [Theory]
+    [InlineData(@"""nerotaruk", TokenType.LiteralString, "nerotaruk", 10u)]
+    [InlineData("/* zaq1@WSX", TokenType.BlockComment, " zaq1@WSX", 11u)]
+    public void UnexpectedEndOfTextShouldBeDetectedProperly(string input, TokenType expectedTokenType, object expectedContent, uint expectedOffset)
+    {
+        var scannerMock = new ScannerMock(input);
+        var lexer = new Lexer(scannerMock);
+
+        Assert.Equal(expectedTokenType, lexer.CurrentToken.Type);
+        Assert.Equal(expectedContent, lexer.CurrentToken.Content);
+        Assert.Equal(typeof(UnexpectedEndOfText), lexer.CurrentError?.GetType());
+        Assert.Equal(expectedOffset, lexer.CurrentError!.Offset);
+    }
+    // TODO: ETX for "promising" operators
+
+    [Trait("Category", "Operators")]
+    [Theory]
+    [InlineData("`", '`', 0u)]
+    [InlineData("🐲", '\uD83D', 0u)]
+    [InlineData("\a", '\a', 0u)]
+    public void UnknownTokensShouldBeDetectedProperly(string input, object expectedContent, uint expectedOffset)
+    {
+        var scannerMock = new ScannerMock(input);
+        var lexer = new Lexer(scannerMock);
+
+        Assert.Equal(TokenType.Unknown, lexer.CurrentToken.Type);
+        Assert.Equal(expectedContent, lexer.CurrentToken.Content);
+        Assert.Equal(typeof(UnknownToken), lexer.CurrentError?.GetType());
+        Assert.Equal(expectedOffset, lexer.CurrentError!.Offset);
     }
 }

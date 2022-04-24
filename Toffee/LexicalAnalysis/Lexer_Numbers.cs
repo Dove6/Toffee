@@ -49,6 +49,7 @@ public sealed partial class Lexer
             return new Token(TokenType.LiteralFloat, joinedNumber);
         }
 
+        //TODO: missing exponent
         _scanner.Advance();
         var exponentialPart = 0L;
         var exponentSign = _scanner.CurrentCharacter is '-' ? -1 : 1;
