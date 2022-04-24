@@ -5,9 +5,13 @@ namespace Toffee.LexicalAnalysis;
 public partial class Lexer : ILexer
 {
     private readonly IScanner _scanner;
-
     private Position _tokenStartPosition;
+
+    private uint CurrentOffset => _scanner.CurrentPosition.Character - _tokenStartPosition.Character;
+
+    public bool HadError { get; private set; }
     public Token CurrentToken { get; private set; }
+    public LexerError? CurrentError { get; private set; }
 
     private delegate Token? MatchDelegate();
     private readonly List<MatchDelegate> _matchers;
@@ -54,6 +58,16 @@ public partial class Lexer : ILexer
         }
     }
 
+    private void EmitError(LexerError error)
+    {
+        CurrentError = error;
+    }
+
+    private void EmitWarning(LexerWarning warning)
+    {
+        ;
+    }
+
     private bool TryMatchToken(out Token matchedToken)
     {
         matchedToken = new Token(TokenType.Unknown);
@@ -84,7 +98,16 @@ public partial class Lexer : ILexer
             CurrentToken = new Token(TokenType.EndOfText, "ETX", _tokenStartPosition);
         else if (TryMatchToken(out var matchedToken))
             CurrentToken = matchedToken with { Position = _tokenStartPosition };
-        else  // TODO: error
+        else
+        {
+            EmitError(new UnknownToken());
             CurrentToken = new Token(TokenType.Unknown, _scanner.CurrentCharacter, _tokenStartPosition);
+        }
+    }
+
+    public void ResetError()
+    {
+        CurrentError = null;
+        HadError = false;
     }
 }

@@ -21,14 +21,14 @@ public partial class Lexer
         }
 
         var resultingToken = OperatorMapper.MapToToken(symbolString);
-        if (resultingToken.Type is TokenType.LineComment)
-            return ContinueMatchingLineComment();
-        if (resultingToken.Type is TokenType.BlockComment)
-            return ContinueMatchingBlockComment();
         if (resultingToken.Type is TokenType.UnknownOperator)
-            new string("Unknown token"); // TODO: error
-
-        return resultingToken;
+            EmitError(new UnknownToken());
+        return resultingToken.Type switch
+        {
+            TokenType.LineComment  => ContinueMatchingLineComment(),
+            TokenType.BlockComment => ContinueMatchingBlockComment(),
+            _                      => resultingToken
+        };
     }
 
     private Token ContinueMatchingBlockComment()
@@ -49,7 +49,7 @@ public partial class Lexer
             contentBuilder.Append(buffer);
         }
         if (!matchedEnd)
-            new string("Unexpected ETX"); // TODO: error
+            EmitError(new UnexpectedEndOfText(CurrentOffset));
         return new Token(TokenType.BlockComment, contentBuilder.ToString());
     }
 

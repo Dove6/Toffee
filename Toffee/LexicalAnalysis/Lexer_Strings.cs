@@ -19,10 +19,7 @@ public partial class Lexer
                 escaping = false;
                 var specifier = _scanner.CurrentCharacter.Value;
                 _scanner.Advance();
-                if (TryMatchEscapeSequence(specifier, out var matchedChar))
-                    contentBuilder.Append(matchedChar);
-                else
-                    new string("Invalid escape sequence");  // TODO: error
+                contentBuilder.Append(MatchEscapeSequence(specifier));
             }
             else
             {
@@ -38,34 +35,33 @@ public partial class Lexer
         if (_scanner.CurrentCharacter is '"')
             _scanner.Advance();
         else
-            new string("Unexpected ETX"); // TODO: error
+            EmitError(new UnexpectedEndOfText(CurrentOffset));
         return new Token(TokenType.LiteralString, contentBuilder.ToString());
     }
 
-    private bool TryMatchEscapeSequence(char specifier, out char result)
+    private char? MatchEscapeSequence(char specifier)
     {
-        result = '\0';
-        if (specifier is 'x')
+        char EmitUnknownSequenceWarning()
         {
-            var matchedChar = MatchEscapedHexChar();
-            result = matchedChar ?? result;
-            return matchedChar.HasValue;
+            EmitWarning(new UnknownEscapeSequence(specifier, CurrentOffset - 1));
+            return specifier;
         }
-        result = specifier switch
+
+        return specifier switch
         {
-            'a' => '\a',
-            'b' => '\b',
-            'f' => '\f',
-            'n' => '\n',
-            'r' => '\r',
-            't' => '\t',
-            'v' => '\v',
+            'a'  => '\a',
+            'b'  => '\b',
+            'f'  => '\f',
+            'n'  => '\n',
+            'r'  => '\r',
+            't'  => '\t',
+            'v'  => '\v',
             '\\' => '\\',
-            '"' => '"',
-            '0' => '\0',
-            _ => specifier // TODO: error
+            '"'  => '"',
+            '0'  => '\0',
+            'x'  => MatchEscapedHexChar(),
+            _    => EmitUnknownSequenceWarning()
         };
-        return true;
     }
 
     private char? MatchEscapedHexChar()
@@ -80,7 +76,7 @@ public partial class Lexer
             _scanner.Advance();
         }
         if (digitBuffer.Length == 0)
-            new string("Missing hex code"); // TODO: error
+            EmitWarning(new HexCharCodeMissing(CurrentOffset));
 
         var bytes = Convert.FromHexString(digitBuffer.PadLeft(maxHexCodeLength, '0'));
         // BitConverter converts data according to the endianness of the running environment.

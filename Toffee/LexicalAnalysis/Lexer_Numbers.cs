@@ -4,27 +4,16 @@ public partial class Lexer
 {
     private Token? MatchNumber()
     {
-        var radix = 10;
-        if (!IsDigitGivenRadix(radix, _scanner.CurrentCharacter))
+        if (!IsDigitGivenRadix(10, _scanner.CurrentCharacter))
             return null;
 
         var initialD = _scanner.CurrentCharacter!.Value;
         _scanner.Advance();
-        if ((initialD, _scanner.CurrentCharacter) is ('0', 'x') or ('0', 'c') or ('0', 'b'))
-        {
-#pragma warning disable CS8509
-            radix = _scanner.CurrentCharacter switch
-            {
-                'x' => 16,
-                'c' => 8,
-                'b' => 2
-            };
-#pragma warning restore CS8509
-            _scanner.Advance();
-        }
-        return radix == 10
-            ? ContinueMatchingDecimalNumber(initialD)
-            : ContinueMatchingNonDecimalInteger(radix);
+        if ((initialD, _scanner.CurrentCharacter) is not (('0', 'x') or ('0', 'c') or ('0', 'b')))
+            return ContinueMatchingDecimalNumber(initialD);
+        var prefix = _scanner.CurrentCharacter.Value;
+        _scanner.Advance();
+        return ContinueMatchingNonDecimalInteger(prefix);
     }
 
     private Token ContinueMatchingDecimalNumber(char initialDigit)
@@ -33,16 +22,22 @@ public partial class Lexer
         static (long, OverflowException?) AppendDigit(long buffer, char digit) =>
             AppendDigitGivenRadix(10, buffer, digit);
 
-        OverflowException? overflowException = null; // TODO: handle this
-        var integralPart = (long)CharToDigit(initialDigit);
-        while (IsDigit(_scanner.CurrentCharacter))
+        OverflowException? overflowException = null;
+        void AppendDigitConsideringOverflow(ref long buffer)
         {
             if (overflowException is null)
-                (integralPart, overflowException) = AppendDigit(integralPart, _scanner.CurrentCharacter!.Value);
+            {
+                (buffer, overflowException) = AppendDigit(buffer, _scanner.CurrentCharacter!.Value);
+                if (overflowException is not null)
+                    EmitError(new NumberLiteralTooLarge(CurrentOffset));
+            }
             _scanner.Advance();
         }
-        if (_scanner.CurrentCharacter is not '.')
-            // no fractional part
+
+        var integralPart = (long)CharToDigit(initialDigit);
+        while (IsDigit(_scanner.CurrentCharacter))
+            AppendDigitConsideringOverflow(ref integralPart);
+        if (_scanner.CurrentCharacter is not '.')  // no fractional part
             return new Token(TokenType.LiteralInteger, integralPart);
 
         _scanner.Advance();
@@ -50,16 +45,15 @@ public partial class Lexer
         var fractionalPartLength = 0;
         while (IsDigit(_scanner.CurrentCharacter))
         {
-            if (overflowException is null)
-                (fractionalPart, overflowException) = AppendDigit(fractionalPart, _scanner.CurrentCharacter.Value);
+            AppendDigitConsideringOverflow(ref fractionalPart);
             if (overflowException is null)
                 fractionalPartLength++;
-            _scanner.Advance();
         }
-        if (_scanner.CurrentCharacter is not ('e' or 'E'))
-            // no exponential part
-            return new Token(TokenType.LiteralFloat,
-                integralPart + fractionalPart / Math.Pow(10, fractionalPartLength));
+        if (_scanner.CurrentCharacter is not ('e' or 'E')) // no exponential part
+        {
+            var joinedNumber = integralPart + fractionalPart / Math.Pow(10, fractionalPartLength);
+            return new Token(TokenType.LiteralFloat, joinedNumber);
+        }
 
         _scanner.Advance();
         var exponentialPart = 0L;
@@ -67,33 +61,48 @@ public partial class Lexer
         if (_scanner.CurrentCharacter is '-' or '+')
             _scanner.Advance();
         while (IsDigit(_scanner.CurrentCharacter))
-        {
-            if (overflowException is null)
-                (exponentialPart, overflowException) = AppendDigit(exponentialPart, _scanner.CurrentCharacter.Value);
-            _scanner.Advance();
-        }
+            AppendDigitConsideringOverflow(ref exponentialPart);
         var exponentiatedNumber = integralPart * Math.Pow(10, exponentSign * exponentialPart)
-                                  + fractionalPart * Math.Pow(10,
-                                      exponentSign * exponentialPart - fractionalPartLength);
+            + fractionalPart * Math.Pow(10, exponentSign * exponentialPart - fractionalPartLength);
         return new Token(TokenType.LiteralFloat, exponentiatedNumber);
     }
 
-    private Token ContinueMatchingNonDecimalInteger(int radix)
+    private Token ContinueMatchingNonDecimalInteger(char prefix)
     {
+        var radix = prefix switch
+        {
+            'x' => 16,
+            'c' => 8,
+            'b' => 2,
+            _ => throw new ArgumentOutOfRangeException(nameof(prefix), prefix, null)
+        };
+
         bool IsDigit(char? c) => IsDigitGivenRadix(radix, c);
         (long, OverflowException?) AppendDigit(long buffer, char digit) =>
             AppendDigitGivenRadix(radix, buffer, digit);
 
         if (!IsDigit(_scanner.CurrentCharacter))
-            new string("Expected digits"); // TODO: error
+        {
+            EmitError(new NonDecimalDigitsMissing(CurrentOffset));
+            return new Token(TokenType.LiteralInteger, 0L);
+        }
 
-        OverflowException? overflowException = null; // TODO: handle this
+        OverflowException? overflowException = null;
+        void EmitOverflowErrorConditionally()
+        {
+            if (overflowException is not null)
+                EmitError(new NumberLiteralTooLarge(CurrentOffset));
+        }
+
         var integralPart = (long)CharToDigit(_scanner.CurrentCharacter!.Value);
         _scanner.Advance();
         while (IsDigit(_scanner.CurrentCharacter))
         {
             if (overflowException is null)
+            {
                 (integralPart, overflowException) = AppendDigit(integralPart, _scanner.CurrentCharacter.Value);
+                EmitOverflowErrorConditionally();
+            }
             _scanner.Advance();
         }
         return new Token(TokenType.LiteralInteger, integralPart);
