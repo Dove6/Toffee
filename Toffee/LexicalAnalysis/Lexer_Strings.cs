@@ -6,7 +6,6 @@ public sealed partial class Lexer
 {
     private Token? MatchString()
     {
-        // TODO: OoM exception
         if (_scanner.CurrentCharacter is not '"')
             return null;
         _scanner.Advance();

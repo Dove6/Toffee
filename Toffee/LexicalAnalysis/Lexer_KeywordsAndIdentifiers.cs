@@ -6,7 +6,6 @@ public sealed partial class Lexer
 {
     private Token? MatchKeywordOrIdentifier()
     {
-        // TODO: OoM exception
         static bool IsPartOfIdentifier(char? c) => c is not null && (char.IsLetterOrDigit(c.Value) || c is '_');
         if (_scanner.CurrentCharacter is null || !char.IsLetter(_scanner.CurrentCharacter.Value))
             return null;

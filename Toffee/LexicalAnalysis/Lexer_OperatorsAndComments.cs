@@ -33,7 +33,6 @@ public sealed partial class Lexer
 
     private Token ContinueMatchingBlockComment()
     {
-        // TODO: OoM exception
         var contentBuilder = new StringBuilder();
         var maxLengthExceeded = false;
         var matchedEnd = false;
@@ -56,7 +55,6 @@ public sealed partial class Lexer
 
     private Token ContinueMatchingLineComment()
     {
-        // TODO: OoM exception
         var contentBuilder = new StringBuilder();
         var maxLengthExceeded = false;
         while (_scanner.CurrentCharacter is not (null or '\n'))
