@@ -1,19 +1,13 @@
-﻿namespace Toffee.Running;
+﻿using Toffee.SyntacticAnalysis;
+
+namespace Toffee.Running;
 
 public class Runner : IRunner
 {
-    private readonly TextReader _reader;
-    private readonly string _sourceName;
+    private readonly IParser _parser;
 
-    public Runner(TextReader reader, string sourceName)
+    public Runner(IParser parser)
     {
-        _reader = reader;
-        _sourceName = sourceName;
-    }
-
-    public int Run()
-    {
-        // TODO: implement
-        return 0;
+        _parser = parser;
     }
 }

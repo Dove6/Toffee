@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using Toffee.Scanning;
+﻿using Toffee.Scanning;
 
 namespace Toffee.Tests.LexicalAnalysis;
 

@@ -15,7 +15,7 @@ public sealed partial class Lexer : LexerBase
     private delegate Token? MatchDelegate();
     private readonly List<MatchDelegate> _matchers;
 
-    public Lexer(IScanner scanner, Logger? logger = null, int maxLexemeLength = int.MaxValue) : base(maxLexemeLength)
+    public Lexer(IScanner scanner, Logger? logger = null, int? maxLexemeLength = null) : base(maxLexemeLength)
     {
         _scanner = scanner;
         _logger = logger;

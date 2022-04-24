@@ -9,6 +9,7 @@ public class Scanner : IScanner
 
     public char? CurrentCharacter { get; private set; }
     public Position CurrentPosition { get; private set; } = new();
+
     private Position _nextPosition = new();
     private Position NextPosition
     {

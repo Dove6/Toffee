@@ -18,9 +18,9 @@ public abstract class LexerBase
     public Token CurrentToken { get; protected set; }
     public LexerError? CurrentError { get; protected set; }
 
-    protected LexerBase(int maxLexemeLength = int.MaxValue)
+    protected LexerBase(int? maxLexemeLength = null)
     {
-        MaxLexemeLength = maxLexemeLength;
+        MaxLexemeLength = maxLexemeLength ?? int.MaxValue;
     }
 
     public abstract void Advance();
