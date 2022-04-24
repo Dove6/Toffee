@@ -361,4 +361,49 @@ public class LexerTests
         Assert.Equal(typeof(MissingExponent), lexer.CurrentError?.GetType());
         Assert.Equal(expectedOffset, lexer.CurrentError!.Offset);
     }
+
+    [Theory]
+    [MemberData(nameof(PositionTestData))]
+    public void PositionShouldBeCalculatedCorrectly(string input, uint tokenIndex, TokenType expectedTokenType,
+        Position expectedPosition)
+    {
+        var scannerMock = new ScannerMock(input);
+        var lexer = new Lexer(scannerMock);
+
+        for (var i = 0u; i < tokenIndex; i++)
+            lexer.Advance();
+
+        Assert.Equal(expectedTokenType, lexer.CurrentToken.Type);
+        Assert.Equal(expectedPosition, lexer.CurrentToken.Position);
+    }
+
+    public static IEnumerable<object[]> PositionTestData()
+    {
+        const string input = "pull std.io;\n"
+            + "/* block\n"
+            + "comment */\n"
+            + "init const a = 5; // line comment\n"
+            + "\n"
+            + "print(a^2);";
+        yield return new object[] { input, 0, TokenType.KeywordPull,       new Position(0, 1, 0) };
+        yield return new object[] { input, 1, TokenType.Identifier,        new Position(5, 1, 5) };
+        yield return new object[] { input, 2, TokenType.OperatorDot,       new Position(8, 1, 8) };
+        yield return new object[] { input, 3, TokenType.Identifier,        new Position(9, 1, 9) };
+        yield return new object[] { input, 4, TokenType.Semicolon,         new Position(11, 1, 11) };
+        yield return new object[] { input, 5, TokenType.BlockComment,      new Position(13, 2, 0) };
+        yield return new object[] { input, 6, TokenType.KeywordInit,       new Position(33, 4, 0) };
+        yield return new object[] { input, 7, TokenType.KeywordConst,      new Position(38, 4, 5) };
+        yield return new object[] { input, 8, TokenType.Identifier,        new Position(44, 4, 11) };
+        yield return new object[] { input, 9, TokenType.OperatorEquals,    new Position(46, 4, 13) };
+        yield return new object[] { input, 10, TokenType.LiteralInteger,   new Position(48, 4, 15) };
+        yield return new object[] { input, 11, TokenType.Semicolon,        new Position(49, 4, 16) };
+        yield return new object[] { input, 12, TokenType.LineComment,      new Position(51, 4, 18) };
+        yield return new object[] { input, 13, TokenType.Identifier,       new Position(68, 6, 0) };
+        yield return new object[] { input, 14, TokenType.LeftParenthesis,  new Position(73, 6, 5) };
+        yield return new object[] { input, 15, TokenType.Identifier,       new Position(74, 6, 6) };
+        yield return new object[] { input, 16, TokenType.OperatorCaret,    new Position(75, 6, 7) };
+        yield return new object[] { input, 17, TokenType.LiteralInteger,   new Position(76, 6, 8) };
+        yield return new object[] { input, 18, TokenType.RightParenthesis, new Position(77, 6, 9) };
+        yield return new object[] { input, 19, TokenType.Semicolon,        new Position(78, 6, 10) };
+    }
 }

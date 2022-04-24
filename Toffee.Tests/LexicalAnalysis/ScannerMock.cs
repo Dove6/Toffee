@@ -21,6 +21,6 @@ public class ScannerMock : IScanner
         if (CurrentCharacter is '\n')
             CurrentPosition = CurrentPosition.WithIncrementedLine(1);
         else if (CurrentCharacter is not null)
-            CurrentPosition = CurrentPosition.WithIncrementedColumn;
+            CurrentPosition = CurrentPosition.WithIncrementedColumn();
     }
 }

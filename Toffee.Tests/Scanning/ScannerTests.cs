@@ -71,9 +71,32 @@ public class ScannerTests
         for (var i = 0u; i < input.Length; i++)
         {
             Assert.Equal(i, scanner.CurrentPosition.Character);
+            Assert.Equal(1u, scanner.CurrentPosition.Line);
+            Assert.Equal(i, scanner.CurrentPosition.Column);
             scanner.Advance();
         }
 
         Assert.Equal((uint)input.Length, scanner.CurrentPosition.Character);
+        Assert.Equal(1u, scanner.CurrentPosition.Line);
+        Assert.Equal((uint)input.Length, scanner.CurrentPosition.Column);
+    }
+
+    [Fact]
+    public void NewLineCharactersShouldIncrementPositionProperly()
+    {
+        const string input = "\n\n\n";
+        var scanner = new Scanner(new StringReader(input));
+
+        for (var i = 0u; i < input.Length; i++)
+        {
+            Assert.Equal(i, scanner.CurrentPosition.Character);
+            Assert.Equal(i + 1, scanner.CurrentPosition.Line);
+            Assert.Equal(0u, scanner.CurrentPosition.Column);
+            scanner.Advance();
+        }
+
+        Assert.Equal((uint)input.Length, scanner.CurrentPosition.Character);
+        Assert.Equal((uint)input.Length + 1, scanner.CurrentPosition.Line);
+        Assert.Equal(0u, scanner.CurrentPosition.Column);
     }
 }

@@ -70,7 +70,7 @@ public class Scanner : IScanner
         }
         else
         {
-            NextPosition = NextPosition.WithIncrementedColumn;
+            NextPosition = NextPosition.WithIncrementedColumn();
             CurrentCharacter = _buffer[0];
             _buffer.RemoveAt(0);
         }
