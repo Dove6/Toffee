@@ -297,15 +297,15 @@ public class LexerTests
 
     [Trait("Category", "Numbers")]
     [Theory]
-    [InlineData("0x", TokenType.LiteralInteger, 0L, 2u)]
-    [InlineData("0c", TokenType.LiteralInteger, 0L, 2u)]
-    [InlineData("0b", TokenType.LiteralInteger, 0L, 2u)]
-    public void MissingNonDecimalDigitsShouldBeDetectedProperly(string input, TokenType expectedTokenType, object expectedContent, uint expectedOffset)
+    [InlineData("0x", 0L, 2u)]
+    [InlineData("0c", 0L, 2u)]
+    [InlineData("0b", 0L, 2u)]
+    public void MissingNonDecimalDigitsShouldBeDetectedProperly(string input, object expectedContent, uint expectedOffset)
     {
         var scannerMock = new ScannerMock(input);
         var lexer = new Lexer(scannerMock);
 
-        Assert.Equal(expectedTokenType, lexer.CurrentToken.Type);
+        Assert.Equal(TokenType.LiteralInteger, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
         Assert.Equal(typeof(MissingNonDecimalDigits), lexer.CurrentError?.GetType());
         Assert.Equal(expectedOffset, lexer.CurrentError!.Offset);
@@ -341,6 +341,22 @@ public class LexerTests
         Assert.Equal(TokenType.Unknown, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
         Assert.Equal(typeof(UnknownToken), lexer.CurrentError?.GetType());
+        Assert.Equal(expectedOffset, lexer.CurrentError!.Offset);
+    }
+
+    [Trait("Category", "Numbers")]
+    [Theory]
+    [InlineData("12.e", 12.0, 4u)]
+    [InlineData("1234.5678e+", 1234.5678, 11u)]
+    [InlineData("0.5e--", 0.5, 5u)]
+    public void MissingExponentShouldBeDetectedProperly(string input, object expectedContent, uint expectedOffset)
+    {
+        var scannerMock = new ScannerMock(input);
+        var lexer = new Lexer(scannerMock);
+
+        Assert.Equal(TokenType.LiteralFloat, lexer.CurrentToken.Type);
+        Assert.Equal(expectedContent, lexer.CurrentToken.Content);
+        Assert.Equal(typeof(MissingExponent), lexer.CurrentError?.GetType());
         Assert.Equal(expectedOffset, lexer.CurrentError!.Offset);
     }
 }

@@ -8,6 +8,7 @@ public record ExceededMaxLexemeLength(uint Offset = 0) : LexerError(Offset);
 public record UnknownToken(uint Offset = 0) : LexerError(Offset);
 public record NumberLiteralTooLarge(uint Offset = 0) : LexerError(Offset);
 public record MissingNonDecimalDigits(uint Offset = 0) : LexerError(Offset);
+public record MissingExponent(uint Offset = 0) : LexerError(Offset);
 
 public static class LexerErrorExtensions
 {
@@ -17,7 +18,8 @@ public static class LexerErrorExtensions
         { typeof(ExceededMaxLexemeLength), "Unexpected end of text" },
         { typeof(UnknownToken), "Unknown token" },
         { typeof(NumberLiteralTooLarge), "Overflow in number literal" },
-        { typeof(MissingNonDecimalDigits), "No digits provided after non-decimal number prefix" }
+        { typeof(MissingNonDecimalDigits), "No digits after non-decimal number prefix" },
+        { typeof(MissingExponent), "No digits after scientific notation prefix" }
     });
 
     public static string ToMessage(this LexerError error) =>

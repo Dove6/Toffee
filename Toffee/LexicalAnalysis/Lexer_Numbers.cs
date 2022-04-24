@@ -4,6 +4,7 @@ public sealed partial class Lexer
 {
     private Token? MatchNumber()
     {
+        // TODO: -9223372036854775808 would not be matched correctly
         if (!IsDigitGivenRadix(10, _scanner.CurrentCharacter))
             return null;
 
@@ -49,12 +50,13 @@ public sealed partial class Lexer
             return new Token(TokenType.LiteralFloat, joinedNumber);
         }
 
-        //TODO: missing exponent
         _scanner.Advance();
         var exponentialPart = 0L;
         var exponentSign = _scanner.CurrentCharacter is '-' ? -1 : 1;
         if (_scanner.CurrentCharacter is '-' or '+')
             _scanner.Advance();
+        if (!IsDigit(_scanner.CurrentCharacter))
+            EmitError(new MissingExponent(CurrentOffset));
         while (IsDigit(_scanner.CurrentCharacter))
         {
             AppendDigitConsideringOverflow(ref exponentialPart, _scanner.CurrentCharacter!.Value, ref overflowOccurred);
