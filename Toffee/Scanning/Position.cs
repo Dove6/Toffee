@@ -1,7 +1,10 @@
 ﻿namespace Toffee.Scanning;
 
-public record Position(uint Character = 0, uint Line = 1, uint Column = 0)
+public readonly record struct Position(uint Character, uint Line, uint Column)
 {
+    public Position() : this(0, 1, 0)
+    { }
+
     public Position WithIncrementedLine(uint newLineSequenceLength) => new()
     {
         Character = Character + newLineSequenceLength,
