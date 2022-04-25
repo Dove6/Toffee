@@ -240,6 +240,24 @@ public class LexerTests
         Assert.Equal(expectedTokenType, lexer.CurrentToken.Type);
     }
 
+    [Trait("Category", "Identifiers")]
+    [Theory]
+    [InlineData("integer")]
+    [InlineData("INIT")]
+    [InlineData("constantinople")]
+    [InlineData("ppull")]
+    [InlineData("iff")]
+    [InlineData("and2")]
+    [InlineData("defaul")]
+    public void IdentifiersBasedOnKeywordsShouldBeRecognizedCorrectly(string input)
+    {
+        var scannerMock = new ScannerMock(input);
+        var lexer = new Lexer(scannerMock);
+
+        Assert.Equal(TokenType.Identifier, lexer.CurrentToken.Type);
+        Assert.Equal(input, lexer.CurrentToken.Content);
+    }
+
     [Trait("Category", "Strings")]
     [Theory]
     [InlineData(@"""abcd\efg""", "abcdefg", typeof(UnknownEscapeSequence), 5u)]
@@ -298,6 +316,7 @@ public class LexerTests
     [Trait("Category", "Numbers")]
     [Theory]
     [InlineData("0x", 0L, 2u)]
+    [InlineData("0xx", 0L, 2u)]
     [InlineData("0c", 0L, 2u)]
     [InlineData("0b", 0L, 2u)]
     public void MissingNonDecimalDigitsShouldBeDetectedProperly(string input, object expectedContent, uint expectedOffset)
@@ -351,6 +370,7 @@ public class LexerTests
     [InlineData("12.e", 12.0, 4u)]
     [InlineData("1234.5678e+", 1234.5678, 11u)]
     [InlineData("0.5e--", 0.5, 5u)]
+    [InlineData("789.ee", 789.0, 5u)]
     public void MissingExponentShouldBeDetectedProperly(string input, object expectedContent, uint expectedOffset)
     {
         var scannerMock = new ScannerMock(input);
@@ -360,6 +380,29 @@ public class LexerTests
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
         Assert.Equal(typeof(MissingExponent), lexer.CurrentError?.GetType());
         Assert.Equal(expectedOffset, lexer.CurrentError!.Offset);
+    }
+
+    [Theory]
+    [InlineData("\"string\"1234", TokenType.LiteralInteger, 1234L)]
+    [InlineData("/* comment */1234", TokenType.LiteralInteger, 1234L)]
+    [InlineData("// comment\n\"string\"", TokenType.LiteralString, "string")]
+    [InlineData("?>implying", TokenType.Identifier, "implying")]
+    [InlineData("1234true", TokenType.KeywordTrue, "true")]
+    [InlineData("1234/* comment */", TokenType.BlockComment, " comment ")]
+    [InlineData("true//this is so true", TokenType.LineComment, "this is so true")]
+    [InlineData("0b11019.5", TokenType.LiteralFloat, 9.5)]
+    [InlineData("500+", TokenType.OperatorPlus, "+")]
+    [InlineData("112..", TokenType.OperatorDot, ".")]
+    [InlineData("...", TokenType.OperatorDot, ".")]
+    public void TokenInSequenceShouldHaveNoImpactOnItsSuccessor(string input, TokenType expectedTokenType, object expectedContent)
+    {
+        var scannerMock = new ScannerMock(input);
+        var lexer = new Lexer(scannerMock);
+
+        lexer.Advance();
+
+        Assert.Equal(expectedTokenType, lexer.CurrentToken.Type);
+        Assert.Equal(expectedContent, lexer.CurrentToken.Content);
     }
 
     [Theory]

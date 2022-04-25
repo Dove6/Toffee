@@ -1,4 +1,5 @@
 using System.IO;
+using System.Linq;
 using Toffee.Scanning;
 using Xunit;
 
@@ -97,6 +98,26 @@ public class ScannerTests
 
         Assert.Equal((uint)input.Length, scanner.CurrentPosition.Character);
         Assert.Equal((uint)input.Length + 1, scanner.CurrentPosition.Line);
+        Assert.Equal(0u, scanner.CurrentPosition.Column);
+    }
+
+    [Fact]
+    public void DifferentNewLineCharactersShouldIncrementPositionProperly()
+    {
+        const string input = "\n" + "\n\r" + "\r" + "\r\n" + "\x1e" + "\x1e";
+        var increments = new[]{ 1u, 2u, 1u, 2u, 1u, 1u };
+        var scanner = new Scanner(new StringReader(input));
+
+        for (var i = 0u; i < increments.Length; i++)
+        {
+            Assert.Equal(increments.Take((int)i).Sum(x => x), scanner.CurrentPosition.Character);
+            Assert.Equal(i + 1, scanner.CurrentPosition.Line);
+            Assert.Equal(0u, scanner.CurrentPosition.Column);
+            scanner.Advance();
+        }
+
+        Assert.Equal((uint)increments.Sum(x => x), scanner.CurrentPosition.Character);
+        Assert.Equal((uint)increments.Length + 1, scanner.CurrentPosition.Line);
         Assert.Equal(0u, scanner.CurrentPosition.Column);
     }
 }
