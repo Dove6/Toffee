@@ -101,6 +101,9 @@ public sealed partial class Lexer : LexerBase
         _errorHandler?.Handle(warning);
     }
 
+    private Token FillInTokenPosition(Token baseToken) =>
+        baseToken with { StartPosition = _tokenStartPosition, EndPosition = _scanner.CurrentPosition };
+
     private bool TryMatchToken(out Token matchedToken)
     {
         matchedToken = new Token(TokenType.Unknown);
@@ -121,7 +124,6 @@ public sealed partial class Lexer : LexerBase
             _scanner.Advance();
     }
 
-    // TODO: return the superseded token
     public override Token Advance()
     {
         CurrentError = null;
@@ -130,9 +132,9 @@ public sealed partial class Lexer : LexerBase
         _tokenStartPosition = _scanner.CurrentPosition;
 
         if (_scanner.CurrentCharacter is null)
-            CurrentToken = new Token(TokenType.EndOfText, "ETX", _tokenStartPosition);
+            CurrentToken = FillInTokenPosition(new Token(TokenType.EndOfText, "ETX"));
         else if (TryMatchToken(out var matchedToken))
-            CurrentToken = matchedToken with { Position = _tokenStartPosition };
+            CurrentToken = FillInTokenPosition(matchedToken);
         else
         {
             var unknownTokenPosition = _scanner.CurrentPosition;
@@ -140,7 +142,7 @@ public sealed partial class Lexer : LexerBase
             if (char.IsHighSurrogate(buffer[0]))
                 buffer += _scanner.Advance();
             EmitError(new UnknownToken(unknownTokenPosition, buffer));
-            CurrentToken = new Token(TokenType.Unknown, buffer, _tokenStartPosition);
+            CurrentToken = FillInTokenPosition(new Token(TokenType.Unknown, buffer));
         }
         return supersededToken;
     }

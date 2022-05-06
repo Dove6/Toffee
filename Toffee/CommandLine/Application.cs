@@ -35,7 +35,7 @@ public class Application
             $"[{position.Character}] {position.Line}:{position.Column}";
         while (_lexer!.CurrentToken.Type != TokenType.EndOfText)
         {
-            var positionDescription = FormatPosition(_lexer.CurrentToken.Position);
+            var positionDescription = FormatPosition(_lexer.CurrentToken.StartPosition);
             var contentDescription = _lexer.CurrentToken.Content switch
             {
                 char charContent => $"0x{Convert.ToByte(charContent):x2}",

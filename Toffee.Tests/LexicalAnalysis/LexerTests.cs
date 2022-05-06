@@ -462,7 +462,8 @@ public class LexerTests
             lexer.Advance();
 
         Assert.Equal(expectedToken.Type, lexer.CurrentToken.Type);
-        Assert.Equal(expectedToken.Position, lexer.CurrentToken.Position);
+        Assert.Equal(expectedToken.StartPosition, lexer.CurrentToken.StartPosition);
+        Assert.Equal(expectedToken.EndPosition, lexer.CurrentToken.EndPosition);
     }
 
     public static IEnumerable<object[]> TestSequenceEnumerable()
@@ -475,28 +476,28 @@ public class LexerTests
             + "print(a^2 + 3.14e0);";
         uint counter = 0;
         // ReSharper disable RedundantAssignment
-        yield return new object[] { input, counter++, new Token(TokenType.KeywordPull,      "pull",             new Position(0, 1, 0)) };
-        yield return new object[] { input, counter++, new Token(TokenType.Identifier,       "std",              new Position(5, 1, 5)) };
-        yield return new object[] { input, counter++, new Token(TokenType.OperatorDot,      ".",                new Position(8, 1, 8)) };
-        yield return new object[] { input, counter++, new Token(TokenType.Identifier,       "io",               new Position(9, 1, 9)) };
-        yield return new object[] { input, counter++, new Token(TokenType.Semicolon,        ";",                new Position(11, 1, 11)) };
-        yield return new object[] { input, counter++, new Token(TokenType.BlockComment,     " block\ncomment ", new Position(13, 2, 0)) };
-        yield return new object[] { input, counter++, new Token(TokenType.KeywordInit,      "init",             new Position(33, 4, 0)) };
-        yield return new object[] { input, counter++, new Token(TokenType.KeywordConst,     "const",            new Position(38, 4, 5)) };
-        yield return new object[] { input, counter++, new Token(TokenType.Identifier,       "a",                new Position(44, 4, 11)) };
-        yield return new object[] { input, counter++, new Token(TokenType.OperatorEquals,   "=",                new Position(46, 4, 13)) };
-        yield return new object[] { input, counter++, new Token(TokenType.LiteralInteger,   5,                  new Position(48, 4, 15)) };
-        yield return new object[] { input, counter++, new Token(TokenType.Semicolon,        ";",                new Position(49, 4, 16)) };
-        yield return new object[] { input, counter++, new Token(TokenType.LineComment,      " line comment",    new Position(51, 4, 18)) };
-        yield return new object[] { input, counter++, new Token(TokenType.Identifier,       "print",            new Position(68, 6, 0)) };
-        yield return new object[] { input, counter++, new Token(TokenType.LeftParenthesis,  "(",                new Position(73, 6, 5)) };
-        yield return new object[] { input, counter++, new Token(TokenType.Identifier,       "a",                new Position(74, 6, 6)) };
-        yield return new object[] { input, counter++, new Token(TokenType.OperatorCaret,    "^",                new Position(75, 6, 7)) };
-        yield return new object[] { input, counter++, new Token(TokenType.LiteralInteger,   2,                  new Position(76, 6, 8)) };
-        yield return new object[] { input, counter++, new Token(TokenType.OperatorPlus,     "+",                new Position(78, 6, 10)) };
-        yield return new object[] { input, counter++, new Token(TokenType.LiteralFloat,     3.14,               new Position(80, 6, 12)) };
-        yield return new object[] { input, counter++, new Token(TokenType.RightParenthesis, ")",                new Position(86, 6, 18)) };
-        yield return new object[] { input, counter++, new Token(TokenType.Semicolon,        ";",                new Position(87, 6, 19)) };
+        yield return new object[] { input, counter++, new Token(TokenType.KeywordPull,      "pull",             new Position(0, 1, 0),   new Position(4, 1, 4)) };
+        yield return new object[] { input, counter++, new Token(TokenType.Identifier,       "std",              new Position(5, 1, 5),   new Position(8, 1, 8)) };
+        yield return new object[] { input, counter++, new Token(TokenType.OperatorDot,      ".",                new Position(8, 1, 8),   new Position(9, 1, 9)) };
+        yield return new object[] { input, counter++, new Token(TokenType.Identifier,       "io",               new Position(9, 1, 9),   new Position(11, 1, 11)) };
+        yield return new object[] { input, counter++, new Token(TokenType.Semicolon,        ";",                new Position(11, 1, 11), new Position(12, 1, 12)) };
+        yield return new object[] { input, counter++, new Token(TokenType.BlockComment,     " block\ncomment ", new Position(13, 2, 0),  new Position(32, 3, 10)) };
+        yield return new object[] { input, counter++, new Token(TokenType.KeywordInit,      "init",             new Position(33, 4, 0),  new Position(37, 4, 4)) };
+        yield return new object[] { input, counter++, new Token(TokenType.KeywordConst,     "const",            new Position(38, 4, 5),  new Position(43, 4, 10)) };
+        yield return new object[] { input, counter++, new Token(TokenType.Identifier,       "a",                new Position(44, 4, 11), new Position(45, 4, 12)) };
+        yield return new object[] { input, counter++, new Token(TokenType.OperatorEquals,   "=",                new Position(46, 4, 13), new Position(47, 4, 14)) };
+        yield return new object[] { input, counter++, new Token(TokenType.LiteralInteger,   5,                  new Position(48, 4, 15), new Position(49, 4, 16)) };
+        yield return new object[] { input, counter++, new Token(TokenType.Semicolon,        ";",                new Position(49, 4, 16), new Position(50, 4, 17)) };
+        yield return new object[] { input, counter++, new Token(TokenType.LineComment,      " line comment",    new Position(51, 4, 18), new Position(66, 4, 33)) };
+        yield return new object[] { input, counter++, new Token(TokenType.Identifier,       "print",            new Position(68, 6, 0),  new Position(73, 6, 5)) };
+        yield return new object[] { input, counter++, new Token(TokenType.LeftParenthesis,  "(",                new Position(73, 6, 5),  new Position(74, 6, 6)) };
+        yield return new object[] { input, counter++, new Token(TokenType.Identifier,       "a",                new Position(74, 6, 6),  new Position(75, 6, 7)) };
+        yield return new object[] { input, counter++, new Token(TokenType.OperatorCaret,    "^",                new Position(75, 6, 7),  new Position(76, 6, 8)) };
+        yield return new object[] { input, counter++, new Token(TokenType.LiteralInteger,   2,                  new Position(76, 6, 8),  new Position(77, 6, 9)) };
+        yield return new object[] { input, counter++, new Token(TokenType.OperatorPlus,     "+",                new Position(78, 6, 10), new Position(79, 6, 11)) };
+        yield return new object[] { input, counter++, new Token(TokenType.LiteralFloat,     3.14,               new Position(80, 6, 12), new Position(86, 6, 18)) };
+        yield return new object[] { input, counter++, new Token(TokenType.RightParenthesis, ")",                new Position(86, 6, 18), new Position(87, 6, 19)) };
+        yield return new object[] { input, counter++, new Token(TokenType.Semicolon,        ";",                new Position(87, 6, 19), new Position(88, 6, 20)) };
         // ReSharper restore RedundantAssignment
     }
 }
