@@ -8,6 +8,7 @@ public record UnexpectedEndOfText(Position Position, TokenType BuiltTokenType) :
 public record ExceededMaxLexemeLength(Position Position, int MaxLexemeLength) : LexerError(Position);
 public record UnknownToken(Position Position, string Content) : LexerError(Position);
 public record NumberLiteralTooLarge(Position Position) : LexerError(Position);
+public record InvalidNonDecimalPrefix(Position Position, char NonDecimalPrefix) : LexerError(Position);
 public record MissingNonDecimalDigits(Position Position, char NonDecimalPrefix) : LexerError(Position);
 public record MissingExponent(Position Position) : LexerError(Position);
 
@@ -19,6 +20,7 @@ public static class LexerErrorExtensions
         { typeof(ExceededMaxLexemeLength), "Unexpected end of text" },
         { typeof(UnknownToken), "Unknown token" },
         { typeof(NumberLiteralTooLarge), "Overflow in number literal" },
+        { typeof(InvalidNonDecimalPrefix), "Unknown non-decimal number prefix" },
         { typeof(MissingNonDecimalDigits), "No digits after non-decimal number prefix" },
         { typeof(MissingExponent), "No digits after scientific notation prefix" }
     });

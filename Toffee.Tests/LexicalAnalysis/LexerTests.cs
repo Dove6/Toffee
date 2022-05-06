@@ -331,6 +331,24 @@ public class LexerTests
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
         Assert.Equal(typeof(MissingNonDecimalDigits), lexer.CurrentError?.GetType());
         Assert.Equal(new Position(expectedOffset, 1, expectedOffset), lexer.CurrentError!.Position);
+        Assert.Equal(prefix, (lexer.CurrentError as MissingNonDecimalDigits)!.NonDecimalPrefix);
+    }
+
+    [Trait("Category", "Numbers")]
+    [Theory]
+    [InlineData("0a", 'a', 0ul, 1u)]
+    [InlineData("0z", 'z', 0ul, 1u)]
+    [InlineData("0u", 'u', 0ul, 1u)]
+    public void InvalidNonDecimalPrefixesShouldBeDetectedProperly(string input, char prefix, object expectedContent, uint expectedOffset)
+    {
+        var scannerMock = new ScannerMock(input);
+        var lexer = new Lexer(scannerMock);
+
+        Assert.Equal(TokenType.LiteralInteger, lexer.CurrentToken.Type);
+        Assert.Equal(expectedContent, lexer.CurrentToken.Content);
+        Assert.Equal(typeof(InvalidNonDecimalPrefix), lexer.CurrentError?.GetType());
+        Assert.Equal(new Position(expectedOffset, 1, expectedOffset), lexer.CurrentError!.Position);
+        Assert.Equal(prefix, (lexer.CurrentError as InvalidNonDecimalPrefix)!.NonDecimalPrefix);
     }
 
     [Trait("Category", "Strings")]

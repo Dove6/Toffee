@@ -12,11 +12,12 @@ public sealed partial class Lexer
 
         var initialD = _scanner.CurrentCharacter!.Value;
         _scanner.Advance();
-        if ((initialD, _scanner.CurrentCharacter) is not (('0', 'x') or ('0', 'c') or ('0', 'b')))
+        if (_scanner.CurrentCharacter is null || !char.IsLetter(_scanner.CurrentCharacter!.Value))
             return ContinueMatchingDecimalNumber(initialD);
         var prefix = _scanner.CurrentCharacter.Value;
+        var prefixPosition = _scanner.CurrentPosition;
         _scanner.Advance();
-        return ContinueMatchingNonDecimalInteger(prefix);
+        return ContinueMatchingNonDecimalInteger(prefix, prefixPosition);
     }
 
     private Token ContinueMatchingDecimalNumber(char initialDigit)
@@ -69,20 +70,27 @@ public sealed partial class Lexer
         return new Token(TokenType.LiteralFloat, exponentiatedNumber);
     }
 
-    private Token ContinueMatchingNonDecimalInteger(char prefix)
+    private Token ContinueMatchingNonDecimalInteger(char prefix, Position prefixPosition)
     {
-        // TODO: report other prefixes
-        var radix = prefix switch
+        var (radix, isPrefixValid) = prefix switch
         {
-            'x' => 16,
-            'c' => 8,
-            'b' => 2,
-            _ => throw new ArgumentOutOfRangeException(nameof(prefix), prefix, "Unknown non-decimal prefix")
+            'x' => (16, true),
+            'c' => (8, true),
+            'b' => (2, true),
+            _ => (16, false)  // widest range for unknown prefixes
         };
 
         bool IsDigit(char? c) => IsDigitGivenRadix(radix, c);
         void AppendDigitConsideringOverflow(ref ulong buffer, char digit, ref bool overflowOccurred, Position? errorPosition = null) =>
             AppendDigitConsideringOverflowGivenRadix(radix, ref buffer, digit, ref overflowOccurred, errorPosition);
+
+        if (!isPrefixValid)
+        {
+            while (IsDigit(_scanner.CurrentCharacter))
+                _scanner.Advance();
+            EmitError(new InvalidNonDecimalPrefix(prefixPosition, prefix));
+            return new Token(TokenType.LiteralInteger, 0ul);
+        }
 
         if (!IsDigit(_scanner.CurrentCharacter))
         {
