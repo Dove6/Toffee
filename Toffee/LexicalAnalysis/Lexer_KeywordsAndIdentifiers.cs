@@ -10,14 +10,10 @@ public sealed partial class Lexer
         if (_scanner.CurrentCharacter is null || !char.IsLetter(_scanner.CurrentCharacter.Value))
             return null;
 
-        var nameBuilder = new StringBuilder($"{_scanner.CurrentCharacter.Value}");
+        var nameBuilder = new StringBuilder($"{_scanner.Advance()}");
         var maxLengthExceeded = false;
-        _scanner.Advance();
         while (IsPartOfIdentifier(_scanner.CurrentCharacter))
-        {
-            AppendCharConsideringLengthLimit(nameBuilder, _scanner.CurrentCharacter, ref maxLengthExceeded);
-            _scanner.Advance();
-        }
+            CollectCharConsideringLengthLimit(nameBuilder, ref maxLengthExceeded);
         return KeywordOrIdentifierMapper.MapToKeywordOrIdentifier(nameBuilder.ToString());
     }
 }

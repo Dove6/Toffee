@@ -52,14 +52,15 @@ public class Scanner : IScanner
         return length > 0;
     }
 
-    public void Advance()
+    public char? Advance()
     {
+        var supersededCharacter = CurrentCharacter;
         RestockBuffer();
         if (_buffer.Count == 0)
         {
             NextPosition = NextPosition with {};
             CurrentCharacter = null;
-            return;
+            return supersededCharacter;
         }
 
         if (TryMatchNewLine(out var newLineSequenceLength))
@@ -74,5 +75,6 @@ public class Scanner : IScanner
             CurrentCharacter = _buffer[0];
             _buffer.RemoveAt(0);
         }
+        return supersededCharacter;
     }
 }

@@ -7,18 +7,16 @@ namespace Toffee.LexicalAnalysis;
 public sealed partial class Lexer : LexerBase
 {
     private readonly IScanner _scanner;
-    private readonly Logger? _logger;
+    private readonly ILexerErrorHandler? _errorHandler;
     private Position _tokenStartPosition;
-
-    private uint CurrentOffset => _scanner.CurrentPosition.Character - _tokenStartPosition.Character;
 
     private delegate Token? MatchDelegate();
     private readonly List<MatchDelegate> _matchers;
 
-    public Lexer(IScanner scanner, Logger? logger = null, int? maxLexemeLength = null) : base(maxLexemeLength)
+    public Lexer(IScanner scanner, ILexerErrorHandler? errorHandler = null, int? maxLexemeLength = null) : base(maxLexemeLength)
     {
         _scanner = scanner;
-        _logger = logger;
+        _errorHandler = errorHandler;
 
         _matchers = new List<MatchDelegate>
         {
@@ -28,6 +26,7 @@ public sealed partial class Lexer : LexerBase
             MatchString
         };
 
+        CurrentToken = new Token(TokenType.Unknown);
         Advance();
     }
 
@@ -46,55 +45,64 @@ public sealed partial class Lexer : LexerBase
             ? c - 'A' + 10
             : c - '0';
 
-    private void AppendDigitConsideringOverflowGivenRadix(int radix, ref long buffer, char digit, ref bool overflowOccurred, uint? offset = null)
+    private void CollectDigitConsideringOverflowGivenRadix(int radix, ref ulong buffer, ref bool overflowOccurred)
     {
-        if (!overflowOccurred)
+        var digitPosition = _scanner.CurrentPosition;
+        if (overflowOccurred)
         {
-            try
-            {
-                buffer = checked(radix * buffer + CharToDigit(digit));
-            }
-            catch (OverflowException)
-            {
-                overflowOccurred = true;
-                EmitError(new NumberLiteralTooLarge(offset ?? CurrentOffset));
-            }
+            _scanner.Advance();
+            return;
+        }
+        try
+        {
+            buffer = checked((ulong)radix * buffer + (ulong)CharToDigit(_scanner.Advance()!.Value));
+        }
+        catch (OverflowException)
+        {
+            overflowOccurred = true;
+            EmitError(new NumberLiteralTooLarge(digitPosition));
         }
     }
 
-    private void AppendCharConsideringLengthLimit(StringBuilder buffer, char? c, ref bool maxLengthExceeded, uint? offset = null)
+    private void CollectCharConsideringLengthLimit(StringBuilder buffer, ref bool maxLengthExceeded)
     {
-        if (maxLengthExceeded)
-            return;
-        if (buffer.Length >= MaxLexemeLength)
+        var charPosition = _scanner.CurrentPosition;
+        AppendCharConsideringLengthLimit(buffer, _scanner.Advance(), ref maxLengthExceeded, charPosition);
+    }
+
+    private void AppendCharConsideringLengthLimit(StringBuilder buffer, char? c, ref bool maxLengthExceeded, Position charPosition)
+    {
+        if (!maxLengthExceeded && buffer.Length >= MaxLexemeLength)
         {
             maxLengthExceeded = true;
-            EmitError(new ExceededMaxLexemeLength(offset ?? CurrentOffset));
+            EmitError(new ExceededMaxLexemeLength(charPosition, MaxLexemeLength));
         }
-        else
+        if (maxLengthExceeded)
+            return;
+        try
         {
-            try
-            {
-                buffer.Append(c);
-            }
-            catch (ArgumentOutOfRangeException)
-            {
-                maxLengthExceeded = true;
-                EmitError(new ExceededMaxLexemeLength(offset ?? CurrentOffset));
-            }
+            buffer.Append(c);
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            maxLengthExceeded = true;
+            EmitError(new ExceededMaxLexemeLength(charPosition, MaxLexemeLength));
         }
     }
 
     private void EmitError(LexerError error)
     {
         CurrentError = error;
-        _logger?.LogError(_tokenStartPosition, error.ToMessage(), error);
+        _errorHandler?.Handle(error);
     }
 
     private void EmitWarning(LexerWarning warning)
     {
-        _logger?.LogWarning(_tokenStartPosition, warning.ToMessage(), warning);
+        _errorHandler?.Handle(warning);
     }
+
+    private Token FillInTokenPosition(Token baseToken) =>
+        baseToken with { StartPosition = _tokenStartPosition, EndPosition = _scanner.CurrentPosition };
 
     private bool TryMatchToken(out Token matchedToken)
     {
@@ -116,26 +124,26 @@ public sealed partial class Lexer : LexerBase
             _scanner.Advance();
     }
 
-    public override void Advance()
+    public override Token Advance()
     {
+        CurrentError = null;
+        var supersededToken = CurrentToken;
         SkipWhitespaces();
-
         _tokenStartPosition = _scanner.CurrentPosition;
 
         if (_scanner.CurrentCharacter is null)
-            CurrentToken = new Token(TokenType.EndOfText, "ETX", _tokenStartPosition);
+            CurrentToken = FillInTokenPosition(new Token(TokenType.EndOfText, "ETX"));
         else if (TryMatchToken(out var matchedToken))
-            CurrentToken = matchedToken with { Position = _tokenStartPosition };
+            CurrentToken = FillInTokenPosition(matchedToken);
         else
         {
-            var buffer = $"{_scanner.CurrentCharacter.Value}";
+            var unknownTokenPosition = _scanner.CurrentPosition;
+            var buffer = $"{_scanner.Advance()}";
             if (char.IsHighSurrogate(buffer[0]))
-            {
-                _scanner.Advance();
-                buffer += _scanner.CurrentCharacter;
-            }
-            EmitError(new UnknownToken());
-            CurrentToken = new Token(TokenType.Unknown, buffer, _tokenStartPosition);
+                buffer += _scanner.Advance();
+            EmitError(new UnknownToken(unknownTokenPosition, buffer));
+            CurrentToken = FillInTokenPosition(new Token(TokenType.Unknown, buffer));
         }
+        return supersededToken;
     }
 }

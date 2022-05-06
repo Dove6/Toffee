@@ -18,12 +18,14 @@ print("5");  // "Brak dopasowania"
 
 
 // konstrukcja match pozwala również na skorzystanie z predykatu - funkcji jednoargumentowej, której wynik będzie rzutowany do typu bool
-init const isOdd = functi(num) num % 2;
+init const isOdd = functi(num) { num % 2 };
 
-init const predicateMatchingExample = functi(var) match(var) {
-    is int and isOdd: "Liczba nieparzysta";
-    is int:           "Liczba";
-    default:          "???";
+init const predicateMatchingExample = functi(var) {
+    match(var) {
+        is int and isOdd: "Liczba nieparzysta";
+        is int:           "Liczba";
+        default:          "???";
+    }
 };
 
 print(5);  // "Liczba nieparzysta"

@@ -1,10 +1,11 @@
 ﻿using System.Collections.ObjectModel;
+using Toffee.Scanning;
 
 namespace Toffee.LexicalAnalysis;
 
-public abstract record LexerWarning(uint Offset);
-public record UnknownEscapeSequence(char Specifier, uint Offset = 0) : LexerWarning(Offset);
-public record MissingHexCharCode(uint Offset = 0) : LexerWarning(Offset);
+public abstract record LexerWarning(Position Position);
+public record UnknownEscapeSequence(Position Position, char Specifier) : LexerWarning(Position);
+public record MissingHexCharCode(Position Position) : LexerWarning(Position);
 
 public static class LexerWarningExtensions
 {

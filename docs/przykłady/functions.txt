@@ -1,6 +1,6 @@
 // wszystkie funkcje są potencjalnymi domknięciami, można również definiować funkcje wyższego rzędu
 
-init add = functi(a, b) a + b;
+init add = functi(a, b) { a + b };
 print(add(3, 8));  // 11
 
 // słowo kluczowe return może być podane bez wyrażenia (zostaje zwrócony null) lub z wyrażeniem
@@ -23,7 +23,7 @@ printRequired(5);  // 5 - OK
 printRequired(null);  // błąd!
 
 // przykład funkcji z niemutowalnym oraz z mutowalnym parametrem
-init const recursiveFactorial = functi(const n) if (n > 0) n * recursiveFactorial(n - 1) else 1;
+init const recursiveFactorial = functi(const n) { if (n > 0) n * recursiveFactorial(n - 1) else 1 };
 
 init const iterativeFactorial = functi(n) {
     init result = 1;
@@ -34,4 +34,4 @@ init const iterativeFactorial = functi(n) {
     return(n);
 };
 
-init const dontDoThis = functi(const n) n = 5;  // błąd
+init const dontDoThis = functi(const n) { n = 5 };  // błąd

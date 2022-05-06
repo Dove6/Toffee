@@ -120,4 +120,16 @@ public class ScannerTests
         Assert.Equal((uint)increments.Length + 1, scanner.CurrentPosition.Line);
         Assert.Equal(0u, scanner.CurrentPosition.Column);
     }
+
+    [Fact]
+    public void SupersededCharactersShouldBeReturnedByAdvanceMethodCorrectly()
+    {
+        const string input = "abcd1234";
+        var scanner = new Scanner(new StringReader(input));
+
+        foreach (var character in input)
+            Assert.Equal(character, scanner.Advance());
+
+        Assert.Null(scanner.Advance());
+    }
 }
