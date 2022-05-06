@@ -44,19 +44,18 @@ public sealed partial class Lexer : LexerBase
             ? c - 'A' + 10
             : c - '0';
 
-    private void AppendDigitConsideringOverflowGivenRadix(int radix, ref long buffer, char digit, ref bool overflowOccurred, Position? errorPosition = null)
+    private void AppendDigitConsideringOverflowGivenRadix(int radix, ref ulong buffer, char digit, ref bool overflowOccurred, Position? errorPosition = null)
     {
-        if (!overflowOccurred)
+        if (overflowOccurred)
+            return;
+        try
         {
-            try
-            {
-                buffer = checked(radix * buffer + CharToDigit(digit));
-            }
-            catch (OverflowException)
-            {
-                overflowOccurred = true;
-                EmitError(new NumberLiteralTooLarge(errorPosition ?? _scanner.CurrentPosition));
-            }
+            buffer = checked((ulong)radix * buffer + (ulong)CharToDigit(digit));
+        }
+        catch (OverflowException)
+        {
+            overflowOccurred = true;
+            EmitError(new NumberLiteralTooLarge(errorPosition ?? _scanner.CurrentPosition));
         }
     }
 

@@ -116,21 +116,23 @@ public class LexerTests
 
     [Trait("Category", "Numbers")]
     [Theory]
-    [InlineData("1", 1L)]
-    [InlineData("0", 0L)]
-    [InlineData("9223372036854775807", 9223372036854775807L)]
-    [InlineData("0000001", 1L)]
-    [InlineData("01", 1L)]
-    [InlineData("0x1", 1L)]
-    [InlineData("0x001", 1L)]
-    [InlineData("0xabCD", 43981L)]
-    [InlineData("0c1", 1L)]
-    [InlineData("0c001", 1L)]
-    [InlineData("0c741", 481L)]
-    [InlineData("0b1", 1L)]
-    [InlineData("0b0001", 1L)]
-    [InlineData("0b1011", 11L)]
-    public void IntegersShouldBeRecognizedCorrectly(string input, long expectedContent)
+    [InlineData("1", 1ul)]
+    [InlineData("0", 0ul)]
+    [InlineData("9223372036854775807", 9223372036854775807ul)]
+    [InlineData("9223372036854775808", 9223372036854775808ul)]
+    [InlineData("18446744073709551615", 18446744073709551615ul)]
+    [InlineData("0000001", 1ul)]
+    [InlineData("01", 1ul)]
+    [InlineData("0x1", 1ul)]
+    [InlineData("0x001", 1ul)]
+    [InlineData("0xabCD", 43981ul)]
+    [InlineData("0c1", 1ul)]
+    [InlineData("0c001", 1ul)]
+    [InlineData("0c741", 481ul)]
+    [InlineData("0b1", 1ul)]
+    [InlineData("0b0001", 1ul)]
+    [InlineData("0b1011", 11ul)]
+    public void IntegersShouldBeRecognizedCorrectly(string input, ulong expectedContent)
     {
         var scannerMock = new ScannerMock(input);
         var lexer = new Lexer(scannerMock);
@@ -280,9 +282,9 @@ public class LexerTests
 
     [Trait("Category", "Numbers")]
     [Theory]
-    [InlineData("9223372036854775808", TokenType.LiteralInteger, 922337203685477580L, 18u)]
-    [InlineData("10.9999999999999999999", TokenType.LiteralFloat, 10.999999999999999999, 21u)]
-    [InlineData("3.14e9999999999999999999", TokenType.LiteralFloat, double.PositiveInfinity, 23u)]
+    [InlineData("18446744073709551616", TokenType.LiteralInteger, 1844674407370955161ul, 19u)]
+    [InlineData("10.99999999999999999999", TokenType.LiteralFloat, 10.9999999999999999999, 22u)]
+    [InlineData("3.14e99999999999999999999", TokenType.LiteralFloat, double.PositiveInfinity, 24u)]
     public void NumberLiteralOverflowShouldBeDetectedProperly(string input, TokenType expectedTokenType, object expectedContent, uint expectedOffset)
     {
         var scannerMock = new ScannerMock(input);
@@ -316,10 +318,10 @@ public class LexerTests
 
     [Trait("Category", "Numbers")]
     [Theory]
-    [InlineData("0x", 'x', 0L, 2u)]
-    [InlineData("0xx", 'x', 0L, 2u)]
-    [InlineData("0c", 'c', 0L, 2u)]
-    [InlineData("0b", 'b', 0L, 2u)]
+    [InlineData("0x", 'x', 0ul, 2u)]
+    [InlineData("0xx", 'x', 0ul, 2u)]
+    [InlineData("0c", 'c', 0ul, 2u)]
+    [InlineData("0b", 'b', 0ul, 2u)]
     public void MissingNonDecimalDigitsShouldBeDetectedProperly(string input, char prefix, object expectedContent, uint expectedOffset)
     {
         var scannerMock = new ScannerMock(input);
@@ -386,8 +388,8 @@ public class LexerTests
     }
 
     [Theory]
-    [InlineData("\"string\"1234", TokenType.LiteralInteger, 1234L)]
-    [InlineData("/* comment */1234", TokenType.LiteralInteger, 1234L)]
+    [InlineData("\"string\"1234", TokenType.LiteralInteger, 1234ul)]
+    [InlineData("/* comment */1234", TokenType.LiteralInteger, 1234ul)]
     [InlineData("// comment\n\"string\"", TokenType.LiteralString, "string")]
     [InlineData("?>implying", TokenType.Identifier, "implying")]
     [InlineData("1234true", TokenType.KeywordTrue, "true")]
