@@ -21,7 +21,7 @@ Podstawowe typy danych będą przekazywane do funkcji przez kopię, natomiast ł
 
 ## Formalna specyfikacja i składnia
 
-Gramatyka realizowanego języka opisana jest w pliku [gramatyka.md](gramatyka.md). Reguły dotyczące operatorów są zgodne z tabelami z pliku [operatory.md](operatory.md).
+Gramatyka realizowanego języka opisana jest w pliku [gramatyka.md](docs/gramatyka.md). Reguły dotyczące operatorów są zgodne z tabelami z pliku [operatory.md](docs/operatory.md).
 
 Nie przewiduje się na razie konfiguracji zachowania interpretera poprzez specjalne pliki.
 

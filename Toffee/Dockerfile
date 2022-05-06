@@ -16,5 +16,3 @@ FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "Toffee.dll"]
-
-# TODO: make sure .dockerignore stays up to date (and this file too >.<)
