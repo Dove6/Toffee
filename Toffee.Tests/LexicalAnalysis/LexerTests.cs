@@ -264,18 +264,18 @@ public class LexerTests
     [InlineData(@"""abcdefghijklmnopqrstuvw\xyz""", "abcdefghijklmnopqrstuvwyz", typeof(MissingHexCharCode), 24u)]
     public void IssuesInEscapeSequencesInStringsShouldBeDetectedProperly(string input, string expectedContent, Type expectedWarningType, uint expectedOffset)
     {
-        var capturedAttachments = new List<object>();
-        var logger = new Mock<Logger>("");
+        var capturedAttachments = new List<LexerWarning>();
+        var logger = new Mock<ILexerErrorHandler>();
         logger.Setup(x =>
-            x.Log(LogLevel.Warning, It.IsAny<Position>(), It.IsAny<string>(), Capture.In(capturedAttachments)));
+            x.Handle(Capture.In(capturedAttachments)));
 
         var scannerMock = new ScannerMock(input);
         var lexer = new Lexer(scannerMock, logger.Object);
 
         Assert.Equal(TokenType.LiteralString, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
-        var warning = capturedAttachments.First(x => x.GetType() == expectedWarningType) as LexerWarning;
-        Assert.Equal(expectedOffset, warning!.Offset);
+        var warning = capturedAttachments.First(x => x.GetType() == expectedWarningType);
+        Assert.Equal(new Position(expectedOffset, 1, expectedOffset), warning.Position);
     }
 
     [Trait("Category", "Numbers")]
@@ -291,7 +291,7 @@ public class LexerTests
         Assert.Equal(expectedTokenType, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
         Assert.Equal(typeof(NumberLiteralTooLarge), lexer.CurrentError?.GetType());
-        Assert.Equal(expectedOffset, lexer.CurrentError!.Offset);
+        Assert.Equal(new Position(expectedOffset, 1, expectedOffset), lexer.CurrentError!.Position);
     }
 
     [Trait("Category", "Strings")]
@@ -310,16 +310,17 @@ public class LexerTests
         Assert.Equal(expectedTokenType, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
         Assert.Equal(typeof(ExceededMaxLexemeLength), lexer.CurrentError?.GetType());
-        Assert.Equal(expectedOffset, lexer.CurrentError!.Offset);
+        Assert.Equal(new Position(expectedOffset, 1, expectedOffset), lexer.CurrentError!.Position);
+        Assert.Equal(lengthLimit, (lexer.CurrentError as ExceededMaxLexemeLength)!.MaxLexemeLength);
     }
 
     [Trait("Category", "Numbers")]
     [Theory]
-    [InlineData("0x", 0L, 2u)]
-    [InlineData("0xx", 0L, 2u)]
-    [InlineData("0c", 0L, 2u)]
-    [InlineData("0b", 0L, 2u)]
-    public void MissingNonDecimalDigitsShouldBeDetectedProperly(string input, object expectedContent, uint expectedOffset)
+    [InlineData("0x", 'x', 0L, 2u)]
+    [InlineData("0xx", 'x', 0L, 2u)]
+    [InlineData("0c", 'c', 0L, 2u)]
+    [InlineData("0b", 'b', 0L, 2u)]
+    public void MissingNonDecimalDigitsShouldBeDetectedProperly(string input, char prefix, object expectedContent, uint expectedOffset)
     {
         var scannerMock = new ScannerMock(input);
         var lexer = new Lexer(scannerMock);
@@ -327,7 +328,7 @@ public class LexerTests
         Assert.Equal(TokenType.LiteralInteger, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
         Assert.Equal(typeof(MissingNonDecimalDigits), lexer.CurrentError?.GetType());
-        Assert.Equal(expectedOffset, lexer.CurrentError!.Offset);
+        Assert.Equal(new Position(expectedOffset, 1, expectedOffset), lexer.CurrentError!.Position);
     }
 
     [Trait("Category", "Strings")]
@@ -343,7 +344,8 @@ public class LexerTests
         Assert.Equal(expectedTokenType, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
         Assert.Equal(typeof(UnexpectedEndOfText), lexer.CurrentError?.GetType());
-        Assert.Equal(expectedOffset, lexer.CurrentError!.Offset);
+        Assert.Equal(new Position(expectedOffset, 1, expectedOffset), lexer.CurrentError!.Position);
+        Assert.Equal(expectedTokenType, (lexer.CurrentError as UnexpectedEndOfText)!.BuiltTokenType);
     }
 
     [Trait("Category", "Operators")]
@@ -362,7 +364,8 @@ public class LexerTests
         Assert.Equal(TokenType.Unknown, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
         Assert.Equal(typeof(UnknownToken), lexer.CurrentError?.GetType());
-        Assert.Equal(expectedOffset, lexer.CurrentError!.Offset);
+        Assert.Equal(new Position(expectedOffset, 1, expectedOffset), lexer.CurrentError!.Position);
+        Assert.Equal(input, (lexer.CurrentError as UnknownToken)!.Content);
     }
 
     [Trait("Category", "Numbers")]
@@ -379,7 +382,7 @@ public class LexerTests
         Assert.Equal(TokenType.LiteralFloat, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
         Assert.Equal(typeof(MissingExponent), lexer.CurrentError?.GetType());
-        Assert.Equal(expectedOffset, lexer.CurrentError!.Offset);
+        Assert.Equal(new Position(expectedOffset, 1, expectedOffset), lexer.CurrentError!.Position);
     }
 
     [Theory]
@@ -428,6 +431,7 @@ public class LexerTests
             + "\n"
             + "print(a^2 + 3.14e0);";
         uint counter = 0;
+        // ReSharper disable RedundantAssignment
         yield return new object[] { input, counter++, new Token(TokenType.KeywordPull,      "pull",             new Position(0, 1, 0)) };
         yield return new object[] { input, counter++, new Token(TokenType.Identifier,       "std",              new Position(5, 1, 5)) };
         yield return new object[] { input, counter++, new Token(TokenType.OperatorDot,      ".",                new Position(8, 1, 8)) };
@@ -450,5 +454,6 @@ public class LexerTests
         yield return new object[] { input, counter++, new Token(TokenType.LiteralFloat,     3.14,               new Position(80, 6, 12)) };
         yield return new object[] { input, counter++, new Token(TokenType.RightParenthesis, ")",                new Position(86, 6, 18)) };
         yield return new object[] { input, counter++, new Token(TokenType.Semicolon,        ";",                new Position(87, 6, 19)) };
+        // ReSharper restore RedundantAssignment
     }
 }

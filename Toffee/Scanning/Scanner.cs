@@ -52,6 +52,7 @@ public class Scanner : IScanner
         return length > 0;
     }
 
+    // TODO: return the superseded character
     public void Advance()
     {
         RestockBuffer();

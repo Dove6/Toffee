@@ -9,7 +9,7 @@ public class Application
 {
     private TextReader? _reader;
     private IScanner? _scanner;
-    private Logger? _logger;
+    private ILexerErrorHandler? _logger;
     private LexerBase? _lexer;
 
     [DefaultCommand]
@@ -24,7 +24,7 @@ public class Application
             : new StreamReader(scriptFilename.Name);
         var sourceName = scriptFilename?.Name ?? "STDIN";
         _scanner = new Scanner(_reader);
-        _logger = new ConsoleLogger(sourceName);
+        _logger = new ConsoleErrorHandler(sourceName);
         _lexer = new Lexer(_scanner, _logger, maxLexemeLength);
         RunLexer();
     }

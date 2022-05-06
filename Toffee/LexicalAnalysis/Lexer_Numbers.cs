@@ -1,4 +1,6 @@
-﻿namespace Toffee.LexicalAnalysis;
+﻿using Toffee.Scanning;
+
+namespace Toffee.LexicalAnalysis;
 
 public sealed partial class Lexer
 {
@@ -20,8 +22,8 @@ public sealed partial class Lexer
     private Token ContinueMatchingDecimalNumber(char initialDigit)
     {
         static bool IsDigit(char? c) => IsDigitGivenRadix(10, c);
-        void AppendDigitConsideringOverflow(ref long buffer, char digit, ref bool overflowOccurred, uint? offset = null) =>
-            AppendDigitConsideringOverflowGivenRadix(10, ref buffer, digit, ref overflowOccurred, offset);
+        void AppendDigitConsideringOverflow(ref long buffer, char digit, ref bool overflowOccurred, Position? errorPosition = null) =>
+            AppendDigitConsideringOverflowGivenRadix(10, ref buffer, digit, ref overflowOccurred, errorPosition);
 
         var overflowOccurred = false;
 
@@ -56,7 +58,7 @@ public sealed partial class Lexer
         if (_scanner.CurrentCharacter is '-' or '+')
             _scanner.Advance();
         if (!IsDigit(_scanner.CurrentCharacter))
-            EmitError(new MissingExponent(CurrentOffset));
+            EmitError(new MissingExponent(_scanner.CurrentPosition));
         while (IsDigit(_scanner.CurrentCharacter))
         {
             AppendDigitConsideringOverflow(ref exponentialPart, _scanner.CurrentCharacter!.Value, ref overflowOccurred);
@@ -69,6 +71,7 @@ public sealed partial class Lexer
 
     private Token ContinueMatchingNonDecimalInteger(char prefix)
     {
+        // TODO: report other prefixes
         var radix = prefix switch
         {
             'x' => 16,
@@ -78,12 +81,12 @@ public sealed partial class Lexer
         };
 
         bool IsDigit(char? c) => IsDigitGivenRadix(radix, c);
-        void AppendDigitConsideringOverflow(ref long buffer, char digit, ref bool overflowOccurred, uint? offset = null) =>
-            AppendDigitConsideringOverflowGivenRadix(radix, ref buffer, digit, ref overflowOccurred, offset);
+        void AppendDigitConsideringOverflow(ref long buffer, char digit, ref bool overflowOccurred, Position? errorPosition = null) =>
+            AppendDigitConsideringOverflowGivenRadix(radix, ref buffer, digit, ref overflowOccurred, errorPosition);
 
         if (!IsDigit(_scanner.CurrentCharacter))
         {
-            EmitError(new MissingNonDecimalDigits(CurrentOffset));
+            EmitError(new MissingNonDecimalDigits(_scanner.CurrentPosition, prefix));
             return new Token(TokenType.LiteralInteger, 0L);
         }
 

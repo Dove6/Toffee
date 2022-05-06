@@ -1,14 +1,15 @@
 ﻿using System.Collections.ObjectModel;
+using Toffee.Scanning;
 
 namespace Toffee.LexicalAnalysis;
 
-public abstract record LexerError(uint Offset);
-public record UnexpectedEndOfText(uint Offset = 0) : LexerError(Offset);
-public record ExceededMaxLexemeLength(uint Offset = 0) : LexerError(Offset);
-public record UnknownToken(uint Offset = 0) : LexerError(Offset);
-public record NumberLiteralTooLarge(uint Offset = 0) : LexerError(Offset);
-public record MissingNonDecimalDigits(uint Offset = 0) : LexerError(Offset);
-public record MissingExponent(uint Offset = 0) : LexerError(Offset);
+public abstract record LexerError(Position Position);
+public record UnexpectedEndOfText(Position Position, TokenType BuiltTokenType) : LexerError(Position);
+public record ExceededMaxLexemeLength(Position Position, int MaxLexemeLength) : LexerError(Position);
+public record UnknownToken(Position Position, string Content) : LexerError(Position);
+public record NumberLiteralTooLarge(Position Position) : LexerError(Position);
+public record MissingNonDecimalDigits(Position Position, char NonDecimalPrefix) : LexerError(Position);
+public record MissingExponent(Position Position) : LexerError(Position);
 
 public static class LexerErrorExtensions
 {

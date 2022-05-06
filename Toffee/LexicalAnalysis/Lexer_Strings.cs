@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using Toffee.Scanning;
 
 namespace Toffee.LexicalAnalysis;
 
@@ -12,23 +13,26 @@ public sealed partial class Lexer
         var contentBuilder = new StringBuilder();
         var maxLengthExceeded = false;
         var escaping = false;
+        var escapeSequencePosition = _scanner.CurrentPosition;
         while (_scanner.CurrentCharacter is not null)
         {
             if (escaping)
             {
                 escaping = false;
-                var escapeSequenceOffset = CurrentOffset - 1;
                 var specifier = _scanner.CurrentCharacter.Value;
                 _scanner.Advance();
-                var matchedEscapeSequence = MatchEscapeSequence(specifier, escapeSequenceOffset);
-                AppendCharConsideringLengthLimit(contentBuilder, matchedEscapeSequence, ref maxLengthExceeded, escapeSequenceOffset);
+                var matchedEscapeSequence = MatchEscapeSequence(specifier, escapeSequencePosition);
+                AppendCharConsideringLengthLimit(contentBuilder, matchedEscapeSequence, ref maxLengthExceeded, escapeSequencePosition);
             }
             else
             {
                 if (_scanner.CurrentCharacter is '"')
                     break;
                 if (_scanner.CurrentCharacter is '\\')
+                {
                     escaping = true;
+                    escapeSequencePosition = _scanner.CurrentPosition;
+                }
                 else
                     AppendCharConsideringLengthLimit(contentBuilder, _scanner.CurrentCharacter, ref maxLengthExceeded);
                 _scanner.Advance();
@@ -37,15 +41,15 @@ public sealed partial class Lexer
         if (_scanner.CurrentCharacter is '"')
             _scanner.Advance();
         else
-            EmitError(new UnexpectedEndOfText(CurrentOffset));
+            EmitError(new UnexpectedEndOfText(_scanner.CurrentPosition, TokenType.LiteralString));
         return new Token(TokenType.LiteralString, contentBuilder.ToString());
     }
 
-    private char? MatchEscapeSequence(char specifier, uint offsetForWarning)
+    private char? MatchEscapeSequence(char specifier, Position warningPosition)
     {
         char EmitUnknownSequenceWarning()
         {
-            EmitWarning(new UnknownEscapeSequence(specifier, offsetForWarning));
+            EmitWarning(new UnknownEscapeSequence(warningPosition, specifier));
             return specifier;
         }
 
@@ -61,12 +65,12 @@ public sealed partial class Lexer
             '\\' => '\\',
             '"'  => '"',
             '0'  => '\0',
-            'x'  => MatchEscapedHexChar(offsetForWarning),
+            'x'  => MatchEscapedHexChar(warningPosition),
             _    => EmitUnknownSequenceWarning()
         };
     }
 
-    private char? MatchEscapedHexChar(uint offsetForWarning)
+    private char? MatchEscapedHexChar(Position warningPosition)
     {
         const int maxHexCodeLength = 4;
         static bool IsHexDigit(char? c) => IsDigitGivenRadix(16, c);
@@ -78,7 +82,7 @@ public sealed partial class Lexer
             _scanner.Advance();
         }
         if (digitBuffer.Length == 0)
-            EmitWarning(new MissingHexCharCode(offsetForWarning));
+            EmitWarning(new MissingHexCharCode(warningPosition));
 
         var bytes = Convert.FromHexString(digitBuffer.PadLeft(maxHexCodeLength, '0'));
         // BitConverter converts data according to the endianness of the running environment.

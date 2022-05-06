@@ -7,18 +7,16 @@ namespace Toffee.LexicalAnalysis;
 public sealed partial class Lexer : LexerBase
 {
     private readonly IScanner _scanner;
-    private readonly Logger? _logger;
+    private readonly ILexerErrorHandler? _errorHandler;
     private Position _tokenStartPosition;
-
-    private uint CurrentOffset => _scanner.CurrentPosition.Character - _tokenStartPosition.Character;
 
     private delegate Token? MatchDelegate();
     private readonly List<MatchDelegate> _matchers;
 
-    public Lexer(IScanner scanner, Logger? logger = null, int? maxLexemeLength = null) : base(maxLexemeLength)
+    public Lexer(IScanner scanner, ILexerErrorHandler? errorHandler = null, int? maxLexemeLength = null) : base(maxLexemeLength)
     {
         _scanner = scanner;
-        _logger = logger;
+        _errorHandler = errorHandler;
 
         _matchers = new List<MatchDelegate>
         {
@@ -46,7 +44,7 @@ public sealed partial class Lexer : LexerBase
             ? c - 'A' + 10
             : c - '0';
 
-    private void AppendDigitConsideringOverflowGivenRadix(int radix, ref long buffer, char digit, ref bool overflowOccurred, uint? offset = null)
+    private void AppendDigitConsideringOverflowGivenRadix(int radix, ref long buffer, char digit, ref bool overflowOccurred, Position? errorPosition = null)
     {
         if (!overflowOccurred)
         {
@@ -57,19 +55,19 @@ public sealed partial class Lexer : LexerBase
             catch (OverflowException)
             {
                 overflowOccurred = true;
-                EmitError(new NumberLiteralTooLarge(offset ?? CurrentOffset));
+                EmitError(new NumberLiteralTooLarge(errorPosition ?? _scanner.CurrentPosition));
             }
         }
     }
 
-    private void AppendCharConsideringLengthLimit(StringBuilder buffer, char? c, ref bool maxLengthExceeded, uint? offset = null)
+    private void AppendCharConsideringLengthLimit(StringBuilder buffer, char? c, ref bool maxLengthExceeded, Position? errorPosition = null)
     {
         if (maxLengthExceeded)
             return;
         if (buffer.Length >= MaxLexemeLength)
         {
             maxLengthExceeded = true;
-            EmitError(new ExceededMaxLexemeLength(offset ?? CurrentOffset));
+            EmitError(new ExceededMaxLexemeLength(errorPosition ?? _scanner.CurrentPosition, MaxLexemeLength));
         }
         else
         {
@@ -80,7 +78,7 @@ public sealed partial class Lexer : LexerBase
             catch (ArgumentOutOfRangeException)
             {
                 maxLengthExceeded = true;
-                EmitError(new ExceededMaxLexemeLength(offset ?? CurrentOffset));
+                EmitError(new ExceededMaxLexemeLength(errorPosition ?? _scanner.CurrentPosition, MaxLexemeLength));
             }
         }
     }
@@ -88,12 +86,12 @@ public sealed partial class Lexer : LexerBase
     private void EmitError(LexerError error)
     {
         CurrentError = error;
-        _logger?.LogError(_tokenStartPosition, error.ToMessage(), error);
+        _errorHandler?.Handle(error);
     }
 
     private void EmitWarning(LexerWarning warning)
     {
-        _logger?.LogWarning(_tokenStartPosition, warning.ToMessage(), warning);
+        _errorHandler?.Handle(warning);
     }
 
     private bool TryMatchToken(out Token matchedToken)
@@ -116,6 +114,7 @@ public sealed partial class Lexer : LexerBase
             _scanner.Advance();
     }
 
+    // TODO: return the superseded token
     public override void Advance()
     {
         SkipWhitespaces();
@@ -128,13 +127,14 @@ public sealed partial class Lexer : LexerBase
             CurrentToken = matchedToken with { Position = _tokenStartPosition };
         else
         {
+            var unknownTokenPosition = _scanner.CurrentPosition;
             var buffer = $"{_scanner.CurrentCharacter.Value}";
             if (char.IsHighSurrogate(buffer[0]))
             {
                 _scanner.Advance();
                 buffer += _scanner.CurrentCharacter;
             }
-            EmitError(new UnknownToken());
+            EmitError(new UnknownToken(unknownTokenPosition, buffer));
             CurrentToken = new Token(TokenType.Unknown, buffer, _tokenStartPosition);
         }
     }
