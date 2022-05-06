@@ -19,8 +19,7 @@ public sealed partial class Lexer
             if (escaping)
             {
                 escaping = false;
-                var specifier = _scanner.CurrentCharacter.Value;
-                _scanner.Advance();
+                var specifier = _scanner.Advance()!.Value;
                 var matchedEscapeSequence = MatchEscapeSequence(specifier, escapeSequencePosition);
                 AppendCharConsideringLengthLimit(contentBuilder, matchedEscapeSequence, ref maxLengthExceeded, escapeSequencePosition);
             }
@@ -32,10 +31,10 @@ public sealed partial class Lexer
                 {
                     escaping = true;
                     escapeSequencePosition = _scanner.CurrentPosition;
+                    _scanner.Advance();
                 }
                 else
-                    AppendCharConsideringLengthLimit(contentBuilder, _scanner.CurrentCharacter, ref maxLengthExceeded);
-                _scanner.Advance();
+                    CollectCharConsideringLengthLimit(contentBuilder, ref maxLengthExceeded);
             }
         }
         if (_scanner.CurrentCharacter is '"')
@@ -77,10 +76,7 @@ public sealed partial class Lexer
 
         var digitBuffer = "";
         for (var i = 0; i < maxHexCodeLength && IsHexDigit(_scanner.CurrentCharacter); i++)
-        {
-            digitBuffer += _scanner.CurrentCharacter!.Value;
-            _scanner.Advance();
-        }
+            digitBuffer += _scanner.Advance()!.Value;
         if (digitBuffer.Length == 0)
             EmitWarning(new MissingHexCharCode(warningPosition));
 

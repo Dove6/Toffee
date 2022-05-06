@@ -23,7 +23,11 @@ public abstract class LexerBase
         MaxLexemeLength = maxLexemeLength ?? int.MaxValue;
     }
 
-    public abstract void Advance();
+    /// <summary>
+    /// Advances the position of the lexer in the token stream.
+    /// </summary>
+    /// <returns>Superseded token - the current one from before the method was called</returns>
+    public abstract Token Advance();
 
     public void ResetError()
     {

@@ -16,10 +16,7 @@ public sealed partial class Lexer
         var errorPosition = _scanner.CurrentPosition;
 
         while (IsSymbol(_scanner.CurrentCharacter) && CanExtend(symbolString, _scanner.CurrentCharacter!.Value))
-        {
-            symbolString += _scanner.CurrentCharacter!.Value;
-            _scanner.Advance();
-        }
+            symbolString += _scanner.Advance()!.Value;
 
         var resultingToken = OperatorMapper.MapToToken(symbolString);
         if (resultingToken.Type is TokenType.Unknown)
@@ -39,9 +36,8 @@ public sealed partial class Lexer
         var matchedEnd = false;
         while (_scanner.CurrentCharacter is not null)
         {
-            var buffer = _scanner.CurrentCharacter.Value;
             var errorPosition = _scanner.CurrentPosition;
-            _scanner.Advance();
+            var buffer = _scanner.Advance()!.Value;
             if ((buffer, _scanner.CurrentCharacter) is ('*', '/'))
             {
                 matchedEnd = true;
@@ -60,10 +56,7 @@ public sealed partial class Lexer
         var contentBuilder = new StringBuilder();
         var maxLengthExceeded = false;
         while (_scanner.CurrentCharacter is not (null or '\n'))
-        {
-            AppendCharConsideringLengthLimit(contentBuilder, _scanner.CurrentCharacter, ref maxLengthExceeded);
-            _scanner.Advance();
-        }
+            CollectCharConsideringLengthLimit(contentBuilder, ref maxLengthExceeded);
         return new Token(TokenType.LineComment, contentBuilder.ToString());
     }
 }

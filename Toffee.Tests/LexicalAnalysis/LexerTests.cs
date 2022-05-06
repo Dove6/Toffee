@@ -429,6 +429,29 @@ public class LexerTests
     }
 
     [Theory]
+    [InlineData("\"string\"1234", TokenType.LiteralString, "string")]
+    [InlineData("/* comment */1234", TokenType.BlockComment, " comment ")]
+    [InlineData("// comment\n\"string\"", TokenType.LineComment, " comment")]
+    [InlineData("?>implying", TokenType.OperatorQueryGreater, "?>")]
+    [InlineData("1234true", TokenType.LiteralInteger, 1234ul)]
+    [InlineData("1234/* comment */", TokenType.LiteralInteger, 1234ul)]
+    [InlineData("true//this is so true", TokenType.KeywordTrue, "true")]
+    [InlineData("0b11019.5", TokenType.LiteralInteger, 13ul)]
+    [InlineData("500+", TokenType.LiteralInteger, 500ul)]
+    [InlineData("112..", TokenType.LiteralFloat, 112.0)]
+    [InlineData("...", TokenType.OperatorDotDot, "..")]
+    public void SupersededTokenShouldBeReturnedByAdvanceMethodCorrectly(string input, TokenType expectedTokenType, object expectedContent)
+    {
+        var scannerMock = new ScannerMock(input);
+        var lexer = new Lexer(scannerMock);
+
+        var supersededToken = lexer.Advance();
+
+        Assert.Equal(expectedTokenType, supersededToken.Type);
+        Assert.Equal(expectedContent, supersededToken.Content);
+    }
+
+    [Theory]
     [MemberData(nameof(TestSequenceEnumerable))]
     public void PositionShouldBeCalculatedCorrectly(string input, uint tokenIndex, Token expectedToken)
     {

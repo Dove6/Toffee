@@ -26,6 +26,7 @@ public sealed partial class Lexer : LexerBase
             MatchString
         };
 
+        CurrentToken = new Token(TokenType.Unknown);
         Advance();
     }
 
@@ -44,41 +45,48 @@ public sealed partial class Lexer : LexerBase
             ? c - 'A' + 10
             : c - '0';
 
-    private void AppendDigitConsideringOverflowGivenRadix(int radix, ref ulong buffer, char digit, ref bool overflowOccurred, Position? errorPosition = null)
+    private void CollectDigitConsideringOverflowGivenRadix(int radix, ref ulong buffer, ref bool overflowOccurred)
     {
+        var digitPosition = _scanner.CurrentPosition;
         if (overflowOccurred)
+        {
+            _scanner.Advance();
             return;
+        }
         try
         {
-            buffer = checked((ulong)radix * buffer + (ulong)CharToDigit(digit));
+            buffer = checked((ulong)radix * buffer + (ulong)CharToDigit(_scanner.Advance()!.Value));
         }
         catch (OverflowException)
         {
             overflowOccurred = true;
-            EmitError(new NumberLiteralTooLarge(errorPosition ?? _scanner.CurrentPosition));
+            EmitError(new NumberLiteralTooLarge(digitPosition));
         }
     }
 
-    private void AppendCharConsideringLengthLimit(StringBuilder buffer, char? c, ref bool maxLengthExceeded, Position? errorPosition = null)
+    private void CollectCharConsideringLengthLimit(StringBuilder buffer, ref bool maxLengthExceeded)
     {
-        if (maxLengthExceeded)
-            return;
-        if (buffer.Length >= MaxLexemeLength)
+        var charPosition = _scanner.CurrentPosition;
+        AppendCharConsideringLengthLimit(buffer, _scanner.Advance(), ref maxLengthExceeded, charPosition);
+    }
+
+    private void AppendCharConsideringLengthLimit(StringBuilder buffer, char? c, ref bool maxLengthExceeded, Position charPosition)
+    {
+        if (!maxLengthExceeded && buffer.Length >= MaxLexemeLength)
         {
             maxLengthExceeded = true;
-            EmitError(new ExceededMaxLexemeLength(errorPosition ?? _scanner.CurrentPosition, MaxLexemeLength));
+            EmitError(new ExceededMaxLexemeLength(charPosition, MaxLexemeLength));
         }
-        else
+        if (maxLengthExceeded)
+            return;
+        try
         {
-            try
-            {
-                buffer.Append(c);
-            }
-            catch (ArgumentOutOfRangeException)
-            {
-                maxLengthExceeded = true;
-                EmitError(new ExceededMaxLexemeLength(errorPosition ?? _scanner.CurrentPosition, MaxLexemeLength));
-            }
+            buffer.Append(c);
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            maxLengthExceeded = true;
+            EmitError(new ExceededMaxLexemeLength(charPosition, MaxLexemeLength));
         }
     }
 
@@ -114,10 +122,11 @@ public sealed partial class Lexer : LexerBase
     }
 
     // TODO: return the superseded token
-    public override void Advance()
+    public override Token Advance()
     {
+        CurrentError = null;
+        var supersededToken = CurrentToken;
         SkipWhitespaces();
-
         _tokenStartPosition = _scanner.CurrentPosition;
 
         if (_scanner.CurrentCharacter is null)
@@ -127,15 +136,12 @@ public sealed partial class Lexer : LexerBase
         else
         {
             var unknownTokenPosition = _scanner.CurrentPosition;
-            var buffer = $"{_scanner.CurrentCharacter.Value}";
-            _scanner.Advance();
+            var buffer = $"{_scanner.Advance()}";
             if (char.IsHighSurrogate(buffer[0]))
-            {
-                buffer += _scanner.CurrentCharacter;
-                _scanner.Advance();
-            }
+                buffer += _scanner.Advance();
             EmitError(new UnknownToken(unknownTokenPosition, buffer));
             CurrentToken = new Token(TokenType.Unknown, buffer, _tokenStartPosition);
         }
+        return supersededToken;
     }
 }

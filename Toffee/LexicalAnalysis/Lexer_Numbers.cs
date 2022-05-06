@@ -10,30 +10,25 @@ public sealed partial class Lexer
         if (!IsDigitGivenRadix(10, _scanner.CurrentCharacter))
             return null;
 
-        var initialD = _scanner.CurrentCharacter!.Value;
-        _scanner.Advance();
+        var initialD = _scanner.Advance()!.Value;
         if (_scanner.CurrentCharacter is null || !char.IsLetter(_scanner.CurrentCharacter!.Value))
             return ContinueMatchingDecimalNumber(initialD);
-        var prefix = _scanner.CurrentCharacter.Value;
         var prefixPosition = _scanner.CurrentPosition;
-        _scanner.Advance();
+        var prefix = _scanner.Advance()!.Value;
         return ContinueMatchingNonDecimalInteger(prefix, prefixPosition);
     }
 
     private Token ContinueMatchingDecimalNumber(char initialDigit)
     {
         static bool IsDigit(char? c) => IsDigitGivenRadix(10, c);
-        void AppendDigitConsideringOverflow(ref ulong buffer, char digit, ref bool overflowOccurred, Position? errorPosition = null) =>
-            AppendDigitConsideringOverflowGivenRadix(10, ref buffer, digit, ref overflowOccurred, errorPosition);
+        void AppendDigitConsideringOverflow(ref ulong buffer, ref bool overflowOccurred) =>
+            CollectDigitConsideringOverflowGivenRadix(10, ref buffer, ref overflowOccurred);
 
         var overflowOccurred = false;
 
         var integralPart = (ulong)CharToDigit(initialDigit);
         while (IsDigit(_scanner.CurrentCharacter))
-        {
-            AppendDigitConsideringOverflow(ref integralPart, _scanner.CurrentCharacter!.Value, ref overflowOccurred);
-            _scanner.Advance();
-        }
+            AppendDigitConsideringOverflow(ref integralPart, ref overflowOccurred);
         if (_scanner.CurrentCharacter is not '.')  // no fractional part
             return new Token(TokenType.LiteralInteger, integralPart);
 
@@ -42,8 +37,7 @@ public sealed partial class Lexer
         var fractionalPartLength = 0;
         while (IsDigit(_scanner.CurrentCharacter))
         {
-            AppendDigitConsideringOverflow(ref fractionalPart, _scanner.CurrentCharacter!.Value, ref overflowOccurred);
-            _scanner.Advance();
+            AppendDigitConsideringOverflow(ref fractionalPart, ref overflowOccurred);
             if (!overflowOccurred)
                 fractionalPartLength++;
         }
@@ -61,10 +55,7 @@ public sealed partial class Lexer
         if (!IsDigit(_scanner.CurrentCharacter))
             EmitError(new MissingExponent(_scanner.CurrentPosition));
         while (IsDigit(_scanner.CurrentCharacter))
-        {
-            AppendDigitConsideringOverflow(ref exponentialPart, _scanner.CurrentCharacter!.Value, ref overflowOccurred);
-            _scanner.Advance();
-        }
+            AppendDigitConsideringOverflow(ref exponentialPart, ref overflowOccurred);
         var exponentiatedNumber = integralPart * Math.Pow(10, exponentSign * (double)exponentialPart)
             + fractionalPart * Math.Pow(10, exponentSign * (double)exponentialPart - fractionalPartLength);
         return new Token(TokenType.LiteralFloat, exponentiatedNumber);
@@ -81,8 +72,8 @@ public sealed partial class Lexer
         };
 
         bool IsDigit(char? c) => IsDigitGivenRadix(radix, c);
-        void AppendDigitConsideringOverflow(ref ulong buffer, char digit, ref bool overflowOccurred, Position? errorPosition = null) =>
-            AppendDigitConsideringOverflowGivenRadix(radix, ref buffer, digit, ref overflowOccurred, errorPosition);
+        void AppendDigitConsideringOverflow(ref ulong buffer, ref bool overflowOccurred) =>
+            CollectDigitConsideringOverflowGivenRadix(radix, ref buffer, ref overflowOccurred);
 
         if (!isPrefixValid)
         {
@@ -100,13 +91,9 @@ public sealed partial class Lexer
 
         var overflowOccurred = false;
 
-        var integralPart = (ulong)CharToDigit(_scanner.CurrentCharacter!.Value);
-        _scanner.Advance();
+        var integralPart = (ulong)CharToDigit(_scanner.Advance()!.Value);
         while (IsDigit(_scanner.CurrentCharacter))
-        {
-            AppendDigitConsideringOverflow(ref integralPart, _scanner.CurrentCharacter!.Value, ref overflowOccurred);
-            _scanner.Advance();
-        }
+            AppendDigitConsideringOverflow(ref integralPart, ref overflowOccurred);
         return new Token(TokenType.LiteralInteger, integralPart);
     }
 }

@@ -16,11 +16,14 @@ public class ScannerMock : IScanner
         _outputBuffer = contentToOutput;
     }
 
-    public void Advance()
+    public char? Advance()
     {
+        var supersededCharacter = CurrentCharacter;
+
         if (CurrentCharacter is '\n')
             CurrentPosition = CurrentPosition.WithIncrementedLine(1);
         else if (CurrentCharacter is not null)
             CurrentPosition = CurrentPosition.WithIncrementedColumn();
+        return supersededCharacter;
     }
 }
