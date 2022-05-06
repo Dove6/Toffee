@@ -70,7 +70,7 @@ Możliwe jest importowanie zawartości innych skryptów za pomocą instrukcji `p
         * słowo kluczowe `break` pozwala na bezwarunkowe przerwanie wykonania obu typów pętli
         * słowo kluczowe `break_if` pozwala na warunkowe przerwanie wykonania obu typów pętli - warunek należy podać w nawiasach
 8. funkcje
-    * defiowanie funkcji anonimowych z użyciem słowa kluczowego `functi`, po którym następuje lista parametrów i ciało funkcji
+    * defiowanie funkcji anonimowych z użyciem słowa kluczowego `functi`, po którym następuje lista parametrów i ciało funkcji (blok)
     * funkcje anonimowe mogą być przypisane do zmiennej/stałej
     * funkcje anonimowe mogą przechwytywać zmienne (mechanizm domknięć), ale nie mogą ich modyfikować
     * wywołanie funkcji możliwe jest z użyciem nawiasów, w których podane są argumenty, możliwe rekursywne wywołania

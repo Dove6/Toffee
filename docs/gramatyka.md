@@ -53,7 +53,7 @@ while_loop_expression
 parenthesized_expression
     = LEFT_PARENTHESIS, expression, RIGHT_PARENTHESIS;
 function_definition
-    = KW_FUNCTI, LEFT_PARENTHESIS, parameter_list, RIGHT_PARENTHESIS, expression;
+    = KW_FUNCTI, LEFT_PARENTHESIS, parameter_list, RIGHT_PARENTHESIS, block;
 parameter_list
     = [ parameter, { COMMA, parameter } ];
 parameter
