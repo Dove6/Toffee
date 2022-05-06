@@ -12,30 +12,15 @@ public sealed partial class Lexer
         _scanner.Advance();
         var contentBuilder = new StringBuilder();
         var maxLengthExceeded = false;
-        var escaping = false;
-        var escapeSequencePosition = _scanner.CurrentPosition;
         while (_scanner.CurrentCharacter is not null)
         {
-            if (escaping)
-            {
-                escaping = false;
-                var specifier = _scanner.Advance()!.Value;
-                var matchedEscapeSequence = MatchEscapeSequence(specifier, escapeSequencePosition);
-                AppendCharConsideringLengthLimit(contentBuilder, matchedEscapeSequence, ref maxLengthExceeded, escapeSequencePosition);
-            }
+            var charPosition = _scanner.CurrentPosition;
+            if (TryMatchEscapeSequence(out var matchedEscapeSequence))
+                AppendCharConsideringLengthLimit(contentBuilder, matchedEscapeSequence, ref maxLengthExceeded, charPosition);
+            else if (TryMatchCharacter(out var matchedCharacter))
+                AppendCharConsideringLengthLimit(contentBuilder, matchedCharacter, ref maxLengthExceeded, charPosition);
             else
-            {
-                if (_scanner.CurrentCharacter is '"')
-                    break;
-                if (_scanner.CurrentCharacter is '\\')
-                {
-                    escaping = true;
-                    escapeSequencePosition = _scanner.CurrentPosition;
-                    _scanner.Advance();
-                }
-                else
-                    CollectCharConsideringLengthLimit(contentBuilder, ref maxLengthExceeded);
-            }
+                break;
         }
         if (_scanner.CurrentCharacter is '"')
             _scanner.Advance();
@@ -44,32 +29,42 @@ public sealed partial class Lexer
         return new Token(TokenType.LiteralString, contentBuilder.ToString());
     }
 
-    private char? MatchEscapeSequence(char specifier, Position warningPosition)
+    private bool TryMatchEscapeSequence(out char matchedEscapeSequence)
     {
-        char EmitUnknownSequenceWarning()
+        matchedEscapeSequence = default;
+        if (_scanner.CurrentCharacter is not '\\')
+            return false;
+        var escapeSequencePosition = _scanner.CurrentPosition;
+        _scanner.Advance();
+
+        if (_scanner.CurrentCharacter is null)
+            return false;
+
+        char EmitUnknownSequenceWarning(char specifier)
         {
-            EmitWarning(new UnknownEscapeSequence(warningPosition, specifier));
+            EmitWarning(new UnknownEscapeSequence(escapeSequencePosition, specifier));
             return specifier;
         }
 
-        return specifier switch
+        matchedEscapeSequence = _scanner.Advance()!.Value switch
         {
-            'a'  => '\a',
-            'b'  => '\b',
-            'f'  => '\f',
-            'n'  => '\n',
-            'r'  => '\r',
-            't'  => '\t',
-            'v'  => '\v',
-            '\\' => '\\',
-            '"'  => '"',
-            '0'  => '\0',
-            'x'  => MatchEscapedHexChar(warningPosition),
-            _    => EmitUnknownSequenceWarning()
+            'a'   => '\a',
+            'b'   => '\b',
+            'f'   => '\f',
+            'n'   => '\n',
+            'r'   => '\r',
+            't'   => '\t',
+            'v'   => '\v',
+            '\\'  => '\\',
+            '"'   => '"',
+            '0'   => '\0',
+            'x'   => MatchEscapedHexChar(escapeSequencePosition),
+            var c => EmitUnknownSequenceWarning(c)
         };
+        return true;
     }
 
-    private char? MatchEscapedHexChar(Position warningPosition)
+    private char MatchEscapedHexChar(Position warningPosition)
     {
         const int maxHexCodeLength = 4;
         static bool IsHexDigit(char? c) => IsDigitGivenRadix(16, c);
@@ -86,5 +81,15 @@ public sealed partial class Lexer
         if (BitConverter.IsLittleEndian)
             Array.Reverse(bytes);
         return BitConverter.ToChar(bytes);
+    }
+
+    private bool TryMatchCharacter(out char matchedCharacter)
+    {
+        matchedCharacter = default;
+        if (_scanner.CurrentCharacter is null or '"' or '\\')
+            return false;
+
+        matchedCharacter = _scanner.Advance()!.Value;
+        return true;
     }
 }
