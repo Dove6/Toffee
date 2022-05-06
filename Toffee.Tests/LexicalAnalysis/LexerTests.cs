@@ -116,21 +116,23 @@ public class LexerTests
 
     [Trait("Category", "Numbers")]
     [Theory]
-    [InlineData("1", 1L)]
-    [InlineData("0", 0L)]
-    [InlineData("9223372036854775807", 9223372036854775807L)]
-    [InlineData("0000001", 1L)]
-    [InlineData("01", 1L)]
-    [InlineData("0x1", 1L)]
-    [InlineData("0x001", 1L)]
-    [InlineData("0xabCD", 43981L)]
-    [InlineData("0c1", 1L)]
-    [InlineData("0c001", 1L)]
-    [InlineData("0c741", 481L)]
-    [InlineData("0b1", 1L)]
-    [InlineData("0b0001", 1L)]
-    [InlineData("0b1011", 11L)]
-    public void IntegersShouldBeRecognizedCorrectly(string input, long expectedContent)
+    [InlineData("1", 1ul)]
+    [InlineData("0", 0ul)]
+    [InlineData("9223372036854775807", 9223372036854775807ul)]
+    [InlineData("9223372036854775808", 9223372036854775808ul)]
+    [InlineData("18446744073709551615", 18446744073709551615ul)]
+    [InlineData("0000001", 1ul)]
+    [InlineData("01", 1ul)]
+    [InlineData("0x1", 1ul)]
+    [InlineData("0x001", 1ul)]
+    [InlineData("0xabCD", 43981ul)]
+    [InlineData("0c1", 1ul)]
+    [InlineData("0c001", 1ul)]
+    [InlineData("0c741", 481ul)]
+    [InlineData("0b1", 1ul)]
+    [InlineData("0b0001", 1ul)]
+    [InlineData("0b1011", 11ul)]
+    public void IntegersShouldBeRecognizedCorrectly(string input, ulong expectedContent)
     {
         var scannerMock = new ScannerMock(input);
         var lexer = new Lexer(scannerMock);
@@ -264,25 +266,25 @@ public class LexerTests
     [InlineData(@"""abcdefghijklmnopqrstuvw\xyz""", "abcdefghijklmnopqrstuvwyz", typeof(MissingHexCharCode), 24u)]
     public void IssuesInEscapeSequencesInStringsShouldBeDetectedProperly(string input, string expectedContent, Type expectedWarningType, uint expectedOffset)
     {
-        var capturedAttachments = new List<object>();
-        var logger = new Mock<Logger>("");
+        var capturedAttachments = new List<LexerWarning>();
+        var logger = new Mock<ILexerErrorHandler>();
         logger.Setup(x =>
-            x.Log(LogLevel.Warning, It.IsAny<Position>(), It.IsAny<string>(), Capture.In(capturedAttachments)));
+            x.Handle(Capture.In(capturedAttachments)));
 
         var scannerMock = new ScannerMock(input);
         var lexer = new Lexer(scannerMock, logger.Object);
 
         Assert.Equal(TokenType.LiteralString, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
-        var warning = capturedAttachments.First(x => x.GetType() == expectedWarningType) as LexerWarning;
-        Assert.Equal(expectedOffset, warning!.Offset);
+        var warning = capturedAttachments.First(x => x.GetType() == expectedWarningType);
+        Assert.Equal(new Position(expectedOffset, 1, expectedOffset), warning.Position);
     }
 
     [Trait("Category", "Numbers")]
     [Theory]
-    [InlineData("9223372036854775808", TokenType.LiteralInteger, 922337203685477580L, 18u)]
-    [InlineData("10.9999999999999999999", TokenType.LiteralFloat, 10.999999999999999999, 21u)]
-    [InlineData("3.14e9999999999999999999", TokenType.LiteralFloat, double.PositiveInfinity, 23u)]
+    [InlineData("18446744073709551616", TokenType.LiteralInteger, 1844674407370955161ul, 19u)]
+    [InlineData("10.99999999999999999999", TokenType.LiteralFloat, 10.9999999999999999999, 22u)]
+    [InlineData("3.14e99999999999999999999", TokenType.LiteralFloat, double.PositiveInfinity, 24u)]
     public void NumberLiteralOverflowShouldBeDetectedProperly(string input, TokenType expectedTokenType, object expectedContent, uint expectedOffset)
     {
         var scannerMock = new ScannerMock(input);
@@ -291,7 +293,7 @@ public class LexerTests
         Assert.Equal(expectedTokenType, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
         Assert.Equal(typeof(NumberLiteralTooLarge), lexer.CurrentError?.GetType());
-        Assert.Equal(expectedOffset, lexer.CurrentError!.Offset);
+        Assert.Equal(new Position(expectedOffset, 1, expectedOffset), lexer.CurrentError!.Position);
     }
 
     [Trait("Category", "Strings")]
@@ -310,16 +312,17 @@ public class LexerTests
         Assert.Equal(expectedTokenType, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
         Assert.Equal(typeof(ExceededMaxLexemeLength), lexer.CurrentError?.GetType());
-        Assert.Equal(expectedOffset, lexer.CurrentError!.Offset);
+        Assert.Equal(new Position(expectedOffset, 1, expectedOffset), lexer.CurrentError!.Position);
+        Assert.Equal(lengthLimit, (lexer.CurrentError as ExceededMaxLexemeLength)!.MaxLexemeLength);
     }
 
     [Trait("Category", "Numbers")]
     [Theory]
-    [InlineData("0x", 0L, 2u)]
-    [InlineData("0xx", 0L, 2u)]
-    [InlineData("0c", 0L, 2u)]
-    [InlineData("0b", 0L, 2u)]
-    public void MissingNonDecimalDigitsShouldBeDetectedProperly(string input, object expectedContent, uint expectedOffset)
+    [InlineData("0x", 'x', 0ul, 2u)]
+    [InlineData("0xx", 'x', 0ul, 2u)]
+    [InlineData("0c", 'c', 0ul, 2u)]
+    [InlineData("0b", 'b', 0ul, 2u)]
+    public void MissingNonDecimalDigitsShouldBeDetectedProperly(string input, char prefix, object expectedContent, uint expectedOffset)
     {
         var scannerMock = new ScannerMock(input);
         var lexer = new Lexer(scannerMock);
@@ -327,7 +330,25 @@ public class LexerTests
         Assert.Equal(TokenType.LiteralInteger, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
         Assert.Equal(typeof(MissingNonDecimalDigits), lexer.CurrentError?.GetType());
-        Assert.Equal(expectedOffset, lexer.CurrentError!.Offset);
+        Assert.Equal(new Position(expectedOffset, 1, expectedOffset), lexer.CurrentError!.Position);
+        Assert.Equal(prefix, (lexer.CurrentError as MissingNonDecimalDigits)!.NonDecimalPrefix);
+    }
+
+    [Trait("Category", "Numbers")]
+    [Theory]
+    [InlineData("0a", 'a', 0ul, 1u)]
+    [InlineData("0z", 'z', 0ul, 1u)]
+    [InlineData("0u", 'u', 0ul, 1u)]
+    public void InvalidNonDecimalPrefixesShouldBeDetectedProperly(string input, char prefix, object expectedContent, uint expectedOffset)
+    {
+        var scannerMock = new ScannerMock(input);
+        var lexer = new Lexer(scannerMock);
+
+        Assert.Equal(TokenType.LiteralInteger, lexer.CurrentToken.Type);
+        Assert.Equal(expectedContent, lexer.CurrentToken.Content);
+        Assert.Equal(typeof(InvalidNonDecimalPrefix), lexer.CurrentError?.GetType());
+        Assert.Equal(new Position(expectedOffset, 1, expectedOffset), lexer.CurrentError!.Position);
+        Assert.Equal(prefix, (lexer.CurrentError as InvalidNonDecimalPrefix)!.NonDecimalPrefix);
     }
 
     [Trait("Category", "Strings")]
@@ -343,7 +364,8 @@ public class LexerTests
         Assert.Equal(expectedTokenType, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
         Assert.Equal(typeof(UnexpectedEndOfText), lexer.CurrentError?.GetType());
-        Assert.Equal(expectedOffset, lexer.CurrentError!.Offset);
+        Assert.Equal(new Position(expectedOffset, 1, expectedOffset), lexer.CurrentError!.Position);
+        Assert.Equal(expectedTokenType, (lexer.CurrentError as UnexpectedEndOfText)!.BuiltTokenType);
     }
 
     [Trait("Category", "Operators")]
@@ -362,7 +384,8 @@ public class LexerTests
         Assert.Equal(TokenType.Unknown, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
         Assert.Equal(typeof(UnknownToken), lexer.CurrentError?.GetType());
-        Assert.Equal(expectedOffset, lexer.CurrentError!.Offset);
+        Assert.Equal(new Position(expectedOffset, 1, expectedOffset), lexer.CurrentError!.Position);
+        Assert.Equal(input, (lexer.CurrentError as UnknownToken)!.Content);
     }
 
     [Trait("Category", "Numbers")]
@@ -379,12 +402,12 @@ public class LexerTests
         Assert.Equal(TokenType.LiteralFloat, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
         Assert.Equal(typeof(MissingExponent), lexer.CurrentError?.GetType());
-        Assert.Equal(expectedOffset, lexer.CurrentError!.Offset);
+        Assert.Equal(new Position(expectedOffset, 1, expectedOffset), lexer.CurrentError!.Position);
     }
 
     [Theory]
-    [InlineData("\"string\"1234", TokenType.LiteralInteger, 1234L)]
-    [InlineData("/* comment */1234", TokenType.LiteralInteger, 1234L)]
+    [InlineData("\"string\"1234", TokenType.LiteralInteger, 1234ul)]
+    [InlineData("/* comment */1234", TokenType.LiteralInteger, 1234ul)]
     [InlineData("// comment\n\"string\"", TokenType.LiteralString, "string")]
     [InlineData("?>implying", TokenType.Identifier, "implying")]
     [InlineData("1234true", TokenType.KeywordTrue, "true")]
@@ -406,6 +429,29 @@ public class LexerTests
     }
 
     [Theory]
+    [InlineData("\"string\"1234", TokenType.LiteralString, "string")]
+    [InlineData("/* comment */1234", TokenType.BlockComment, " comment ")]
+    [InlineData("// comment\n\"string\"", TokenType.LineComment, " comment")]
+    [InlineData("?>implying", TokenType.OperatorQueryGreater, "?>")]
+    [InlineData("1234true", TokenType.LiteralInteger, 1234ul)]
+    [InlineData("1234/* comment */", TokenType.LiteralInteger, 1234ul)]
+    [InlineData("true//this is so true", TokenType.KeywordTrue, "true")]
+    [InlineData("0b11019.5", TokenType.LiteralInteger, 13ul)]
+    [InlineData("500+", TokenType.LiteralInteger, 500ul)]
+    [InlineData("112..", TokenType.LiteralFloat, 112.0)]
+    [InlineData("...", TokenType.OperatorDotDot, "..")]
+    public void SupersededTokenShouldBeReturnedByAdvanceMethodCorrectly(string input, TokenType expectedTokenType, object expectedContent)
+    {
+        var scannerMock = new ScannerMock(input);
+        var lexer = new Lexer(scannerMock);
+
+        var supersededToken = lexer.Advance();
+
+        Assert.Equal(expectedTokenType, supersededToken.Type);
+        Assert.Equal(expectedContent, supersededToken.Content);
+    }
+
+    [Theory]
     [MemberData(nameof(TestSequenceEnumerable))]
     public void PositionShouldBeCalculatedCorrectly(string input, uint tokenIndex, Token expectedToken)
     {
@@ -416,7 +462,8 @@ public class LexerTests
             lexer.Advance();
 
         Assert.Equal(expectedToken.Type, lexer.CurrentToken.Type);
-        Assert.Equal(expectedToken.Position, lexer.CurrentToken.Position);
+        Assert.Equal(expectedToken.StartPosition, lexer.CurrentToken.StartPosition);
+        Assert.Equal(expectedToken.EndPosition, lexer.CurrentToken.EndPosition);
     }
 
     public static IEnumerable<object[]> TestSequenceEnumerable()
@@ -428,27 +475,29 @@ public class LexerTests
             + "\n"
             + "print(a^2 + 3.14e0);";
         uint counter = 0;
-        yield return new object[] { input, counter++, new Token(TokenType.KeywordPull,      "pull",             new Position(0, 1, 0)) };
-        yield return new object[] { input, counter++, new Token(TokenType.Identifier,       "std",              new Position(5, 1, 5)) };
-        yield return new object[] { input, counter++, new Token(TokenType.OperatorDot,      ".",                new Position(8, 1, 8)) };
-        yield return new object[] { input, counter++, new Token(TokenType.Identifier,       "io",               new Position(9, 1, 9)) };
-        yield return new object[] { input, counter++, new Token(TokenType.Semicolon,        ";",                new Position(11, 1, 11)) };
-        yield return new object[] { input, counter++, new Token(TokenType.BlockComment,     " block\ncomment ", new Position(13, 2, 0)) };
-        yield return new object[] { input, counter++, new Token(TokenType.KeywordInit,      "init",             new Position(33, 4, 0)) };
-        yield return new object[] { input, counter++, new Token(TokenType.KeywordConst,     "const",            new Position(38, 4, 5)) };
-        yield return new object[] { input, counter++, new Token(TokenType.Identifier,       "a",                new Position(44, 4, 11)) };
-        yield return new object[] { input, counter++, new Token(TokenType.OperatorEquals,   "=",                new Position(46, 4, 13)) };
-        yield return new object[] { input, counter++, new Token(TokenType.LiteralInteger,   5,                  new Position(48, 4, 15)) };
-        yield return new object[] { input, counter++, new Token(TokenType.Semicolon,        ";",                new Position(49, 4, 16)) };
-        yield return new object[] { input, counter++, new Token(TokenType.LineComment,      " line comment",    new Position(51, 4, 18)) };
-        yield return new object[] { input, counter++, new Token(TokenType.Identifier,       "print",            new Position(68, 6, 0)) };
-        yield return new object[] { input, counter++, new Token(TokenType.LeftParenthesis,  "(",                new Position(73, 6, 5)) };
-        yield return new object[] { input, counter++, new Token(TokenType.Identifier,       "a",                new Position(74, 6, 6)) };
-        yield return new object[] { input, counter++, new Token(TokenType.OperatorCaret,    "^",                new Position(75, 6, 7)) };
-        yield return new object[] { input, counter++, new Token(TokenType.LiteralInteger,   2,                  new Position(76, 6, 8)) };
-        yield return new object[] { input, counter++, new Token(TokenType.OperatorPlus,     "+",                new Position(78, 6, 10)) };
-        yield return new object[] { input, counter++, new Token(TokenType.LiteralFloat,     3.14,               new Position(80, 6, 12)) };
-        yield return new object[] { input, counter++, new Token(TokenType.RightParenthesis, ")",                new Position(86, 6, 18)) };
-        yield return new object[] { input, counter++, new Token(TokenType.Semicolon,        ";",                new Position(87, 6, 19)) };
+        // ReSharper disable RedundantAssignment
+        yield return new object[] { input, counter++, new Token(TokenType.KeywordPull,      "pull",             new Position(0, 1, 0),   new Position(4, 1, 4)) };
+        yield return new object[] { input, counter++, new Token(TokenType.Identifier,       "std",              new Position(5, 1, 5),   new Position(8, 1, 8)) };
+        yield return new object[] { input, counter++, new Token(TokenType.OperatorDot,      ".",                new Position(8, 1, 8),   new Position(9, 1, 9)) };
+        yield return new object[] { input, counter++, new Token(TokenType.Identifier,       "io",               new Position(9, 1, 9),   new Position(11, 1, 11)) };
+        yield return new object[] { input, counter++, new Token(TokenType.Semicolon,        ";",                new Position(11, 1, 11), new Position(12, 1, 12)) };
+        yield return new object[] { input, counter++, new Token(TokenType.BlockComment,     " block\ncomment ", new Position(13, 2, 0),  new Position(32, 3, 10)) };
+        yield return new object[] { input, counter++, new Token(TokenType.KeywordInit,      "init",             new Position(33, 4, 0),  new Position(37, 4, 4)) };
+        yield return new object[] { input, counter++, new Token(TokenType.KeywordConst,     "const",            new Position(38, 4, 5),  new Position(43, 4, 10)) };
+        yield return new object[] { input, counter++, new Token(TokenType.Identifier,       "a",                new Position(44, 4, 11), new Position(45, 4, 12)) };
+        yield return new object[] { input, counter++, new Token(TokenType.OperatorEquals,   "=",                new Position(46, 4, 13), new Position(47, 4, 14)) };
+        yield return new object[] { input, counter++, new Token(TokenType.LiteralInteger,   5,                  new Position(48, 4, 15), new Position(49, 4, 16)) };
+        yield return new object[] { input, counter++, new Token(TokenType.Semicolon,        ";",                new Position(49, 4, 16), new Position(50, 4, 17)) };
+        yield return new object[] { input, counter++, new Token(TokenType.LineComment,      " line comment",    new Position(51, 4, 18), new Position(66, 4, 33)) };
+        yield return new object[] { input, counter++, new Token(TokenType.Identifier,       "print",            new Position(68, 6, 0),  new Position(73, 6, 5)) };
+        yield return new object[] { input, counter++, new Token(TokenType.LeftParenthesis,  "(",                new Position(73, 6, 5),  new Position(74, 6, 6)) };
+        yield return new object[] { input, counter++, new Token(TokenType.Identifier,       "a",                new Position(74, 6, 6),  new Position(75, 6, 7)) };
+        yield return new object[] { input, counter++, new Token(TokenType.OperatorCaret,    "^",                new Position(75, 6, 7),  new Position(76, 6, 8)) };
+        yield return new object[] { input, counter++, new Token(TokenType.LiteralInteger,   2,                  new Position(76, 6, 8),  new Position(77, 6, 9)) };
+        yield return new object[] { input, counter++, new Token(TokenType.OperatorPlus,     "+",                new Position(78, 6, 10), new Position(79, 6, 11)) };
+        yield return new object[] { input, counter++, new Token(TokenType.LiteralFloat,     3.14,               new Position(80, 6, 12), new Position(86, 6, 18)) };
+        yield return new object[] { input, counter++, new Token(TokenType.RightParenthesis, ")",                new Position(86, 6, 18), new Position(87, 6, 19)) };
+        yield return new object[] { input, counter++, new Token(TokenType.Semicolon,        ";",                new Position(87, 6, 19), new Position(88, 6, 20)) };
+        // ReSharper restore RedundantAssignment
     }
 }
