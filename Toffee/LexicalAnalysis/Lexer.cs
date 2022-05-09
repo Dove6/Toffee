@@ -4,7 +4,7 @@ using Toffee.Scanning;
 
 namespace Toffee.LexicalAnalysis;
 
-public sealed partial class Lexer : LexerBase
+public sealed partial class Lexer : BaseLexer
 {
     private readonly IScanner _scanner;
     private readonly ILexerErrorHandler? _errorHandler;

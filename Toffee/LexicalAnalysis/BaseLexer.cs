@@ -1,6 +1,6 @@
 ﻿namespace Toffee.LexicalAnalysis;
 
-public abstract class LexerBase
+public abstract class BaseLexer
 {
     private int _maxLexemeLength;
     public int MaxLexemeLength
@@ -18,7 +18,7 @@ public abstract class LexerBase
     public Token CurrentToken { get; protected set; }
     public LexerError? CurrentError { get; protected set; }
 
-    protected LexerBase(int? maxLexemeLength = null)
+    protected BaseLexer(int? maxLexemeLength = null)
     {
         MaxLexemeLength = maxLexemeLength ?? int.MaxValue;
     }

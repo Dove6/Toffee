@@ -4,10 +4,15 @@ namespace Toffee.SyntacticAnalysis;
 
 public class Parser : IParser
 {
-    private LexerBase _lexer;
+    private BaseLexer _lexer;
 
-    public Parser(LexerBase lexer)
+    public Parser(BaseLexer lexer)
     {
         _lexer = lexer;
+    }
+
+    public Program Parse()
+    {
+        throw new NotImplementedException();
     }
 }

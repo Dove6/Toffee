@@ -1,0 +1,36 @@
+﻿namespace Toffee.SyntacticAnalysis;
+
+public enum Operator
+{
+    NamespaceAccess,
+    SafeNamespaceAccess,
+    NullChecking,
+    Exponentiation,
+    NumberPromotion,
+    ArithmeticNegation,
+    LogicalNegation,
+    Multiplication,
+    Division,
+    Remainder,
+    Addition,
+    Subtraction,
+    Concatenation,
+    LessThanComparison,
+    LessOrEqualComparison,
+    GreaterThanComparison,
+    GreaterOrEqualComparison,
+    EqualComparison,
+    NotEqualComparison,
+    EqualTypeCheck,
+    NotEqualTypeCheck,
+    Conjunction,
+    Disjunction,
+    NullSafePipe,
+    NullCoalescing,
+    Assignment,
+    AdditionAssignment,
+    SubtractionAssignment,
+    MultiplicationAssignment,
+    DivisionAssignment,
+    RemainderAssignment
+}

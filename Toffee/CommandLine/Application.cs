@@ -10,7 +10,7 @@ public class Application
     private TextReader? _reader;
     private IScanner? _scanner;
     private ILexerErrorHandler? _logger;
-    private LexerBase? _lexer;
+    private BaseLexer? _lexer;
 
     [DefaultCommand]
     public void Execute(
