@@ -28,6 +28,7 @@ public class Parser : IParser
         _expressionParsers = new List<ParseExpressionDelegate>();
     }
 
+    // TODO: grammar definition
     private IStatement? ParseVariableInitializationListStatement()
     {
         if (_lexer.CurrentToken.Type != TokenType.KeywordInit)
@@ -54,7 +55,7 @@ public class Parser : IParser
             _lexer.Advance();
 
         if (_lexer.CurrentToken.Type != TokenType.Identifier)
-            ; // TODO: error
+            return false;  // TODO: error
 
         var variableName = (string)_lexer.Advance().Content!;
 
@@ -97,24 +98,32 @@ public class Parser : IParser
 
     private IStatement? ParseExpressionStatement()
     {
-        throw new NotImplementedException();
+        if (!TryParseExpression(out var parsedExpression))
+            return null;
+
+        return new ExpressionStatement(parsedExpression!);
     }
 
-    private bool TryParseStatement(out IStatement parsedStatement)
+    private bool TryParseStatement(out IStatement? parsedStatement)
     {
+        parsedStatement = null;
         foreach (var parser in _statementParsers)
         {
             var parserResult = parser();
             if (parserResult is null)
                 continue;
             parsedStatement = parserResult;
+            while (_lexer.CurrentToken.Type == TokenType.Semicolon)
+                _lexer.Advance();  // TODO: out bool
             return true;
         }
+        return false;
         throw new NotImplementedException();  // TODO: error
     }
 
-    private bool TryParseExpression(out IExpression parsedExpression)
+    private bool TryParseExpression(out IExpression? parsedExpression)
     {
+        parsedExpression = null;
         foreach (var parser in _expressionParsers)
         {
             var parserResult = parser();
@@ -123,6 +132,7 @@ public class Parser : IParser
             parsedExpression = parserResult;
             return true;
         }
+        return false;
         throw new NotImplementedException();  // TODO: error
     }
 
@@ -131,7 +141,7 @@ public class Parser : IParser
         var list = new List<IStatement>();
 
         while (TryParseStatement(out var parsedStatement))
-            list.Add(parsedStatement);
+            list.Add(parsedStatement!);
 
         return new Program(list);
     }

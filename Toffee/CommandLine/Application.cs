@@ -2,6 +2,7 @@
 using Toffee.LexicalAnalysis;
 using Toffee.Logging;
 using Toffee.Scanning;
+using Toffee.SyntacticAnalysis;
 
 namespace Toffee.CommandLine;
 
@@ -11,6 +12,7 @@ public class Application
     private IScanner? _scanner;
     private ILexerErrorHandler? _logger;
     private BaseLexer? _lexer;
+    private IParser? _parser;
 
     [DefaultCommand]
     public void Execute(
@@ -26,7 +28,8 @@ public class Application
         _scanner = new Scanner(_reader);
         _logger = new ConsoleErrorHandler(sourceName);
         _lexer = new Lexer(_scanner, _logger, maxLexemeLength);
-        RunLexer();
+        _parser = new Parser(_lexer);
+        RunParser();
     }
 
     private void RunLexer()
@@ -48,5 +51,12 @@ public class Application
                 $"position: {positionDescription}");
             _lexer.Advance();
         }
+    }
+
+    private void RunParser()
+    {
+        var program = _parser!.Parse();
+        foreach (var statement in program.Statements)
+            Console.WriteLine(statement);
     }
 }
