@@ -1,6 +1,7 @@
 ﻿using CommandDotNet;
 using Toffee.LexicalAnalysis;
 using Toffee.Logging;
+using Toffee.Running;
 using Toffee.Scanning;
 using Toffee.SyntacticAnalysis;
 
@@ -57,6 +58,6 @@ public class Application
     {
         var program = _parser!.Parse();
         foreach (var statement in program.Statements)
-            Console.WriteLine(statement);
+            AstPrinter.Print(statement);
     }
 }

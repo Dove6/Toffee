@@ -3,7 +3,6 @@
 public interface IExpression
 { }
 
-public record AssignmentExpression() : IExpression;
 public record BlockExpression(IList<IStatement> Statements, IStatement? UnterminatedStatement) : IExpression;
 public record ConditionalExpression(ConditionalElement IfPart, IList<ConditionalElement> ElifParts, IExpression? ElsePart) : IExpression;
 public record ForLoopExpression(string? CounterName, ForLoopRange Range, IExpression Body) : IExpression;
