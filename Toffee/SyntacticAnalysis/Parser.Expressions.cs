@@ -1,4 +1,6 @@
-﻿namespace Toffee.SyntacticAnalysis;
+﻿using Toffee.LexicalAnalysis;
+
+namespace Toffee.SyntacticAnalysis;
 
 public partial class Parser
 {
@@ -15,5 +17,60 @@ public partial class Parser
         }
         return false;
         throw new NotImplementedException(); // TODO: error
+    }
+
+    private IExpression? ParseBlockExpression()
+    {
+        if (_lexer.CurrentToken.Type != TokenType.LeftBrace)
+            return null;
+
+        throw new NotImplementedException();
+    }
+
+    private IExpression? ParseConditionalExpression()
+    {
+        if (_lexer.CurrentToken.Type != TokenType.KeywordIf)
+            return null;
+
+        throw new NotImplementedException();
+    }
+
+    private IExpression? ParseForLoopExpression()
+    {
+        if (_lexer.CurrentToken.Type != TokenType.KeywordFor)
+            return null;
+
+        throw new NotImplementedException();
+    }
+
+    private IExpression? ParseWhileLoopExpression()
+    {
+        if (_lexer.CurrentToken.Type != TokenType.KeywordWhile)
+            return null;
+
+        throw new NotImplementedException();
+    }
+
+    private IExpression? ParseFunctionDefinitionExpression()
+    {
+        if (_lexer.CurrentToken.Type != TokenType.KeywordFuncti)
+            return null;
+
+        throw new NotImplementedException();
+    }
+
+    private IExpression? ParsePatternMatchingExpression()
+    {
+        if (_lexer.CurrentToken.Type != TokenType.KeywordMatch)
+            return null;
+
+        throw new NotImplementedException();
+    }
+
+    private IExpression? ParseAssignmentExpression()
+    {
+        return null;
+
+        throw new NotImplementedException();
     }
 }

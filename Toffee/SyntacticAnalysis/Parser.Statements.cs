@@ -4,6 +4,23 @@ namespace Toffee.SyntacticAnalysis;
 
 public partial class Parser
 {
+    private bool TryParseStatement(out IStatement? parsedStatement, out bool isTerminated)
+    {
+        parsedStatement = null;
+        isTerminated = false;
+        foreach (var parser in _statementParsers)
+        {
+            var parserResult = parser();
+            if (parserResult is null)
+                continue;
+            parsedStatement = parserResult;
+            if (_lexer.CurrentToken.Type == TokenType.Semicolon)
+                isTerminated = true; // not using Advance here means not blocking (waiting for another input line)
+            return true;
+        }
+        return false;
+    }
+
     // TODO: grammar definition
     private IStatement? ParseVariableInitializationListStatement()
     {
@@ -78,23 +95,5 @@ public partial class Parser
             return null;
 
         return new ExpressionStatement(parsedExpression!);
-    }
-
-    private bool TryParseStatement(out IStatement? parsedStatement, out bool isTerminated)
-    {
-        parsedStatement = null;
-        isTerminated = false;
-        foreach (var parser in _statementParsers)
-        {
-            var parserResult = parser();
-            if (parserResult is null)
-                continue;
-            parsedStatement = parserResult;
-            if (_lexer.CurrentToken.Type == TokenType.Semicolon)
-                isTerminated = true; // not using Advance here means not blocking (waiting for another input line)
-            return true;
-        }
-        return false;
-        throw new NotImplementedException(); // TODO: error
     }
 }

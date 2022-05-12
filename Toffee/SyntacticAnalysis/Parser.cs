@@ -5,7 +5,7 @@ namespace Toffee.SyntacticAnalysis;
 
 public partial class Parser : IParser
 {
-    private BaseLexer _lexer;
+    private readonly BaseLexer _lexer;
     private readonly IParserErrorHandler? _errorHandler;
 
     public IStatement? CurrentStatement { get; private set; }
@@ -30,7 +30,16 @@ public partial class Parser : IParser
             ParseExpressionStatement
         };
 
-        _expressionParsers = new List<ParseExpressionDelegate>();
+        _expressionParsers = new List<ParseExpressionDelegate>
+        {
+            ParseBlockExpression,
+            ParseConditionalExpression,
+            ParseForLoopExpression,
+            ParseWhileLoopExpression,
+            ParseFunctionDefinitionExpression,
+            ParsePatternMatchingExpression,
+            ParseAssignmentExpression
+        };
 
         Advance();
     }
@@ -55,7 +64,14 @@ public partial class Parser : IParser
     {
         var supersededStatement = CurrentStatement;
         SkipSemicolons();
-        CurrentStatement = TryParseStatement(out var parsedStatement, out _) ? parsedStatement : null;
+
+        if (_lexer.CurrentToken.Type == TokenType.EndOfText)
+            CurrentStatement = null;
+        else if (TryParseStatement(out var parsedStatement, out _))
+            CurrentStatement = parsedStatement;
+        else
+            ; // TODO: error
+
         return supersededStatement;
     }
 }
