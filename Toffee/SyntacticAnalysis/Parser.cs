@@ -1,10 +1,12 @@
-﻿using Toffee.LexicalAnalysis;
+﻿using Toffee.ErrorHandling;
+using Toffee.LexicalAnalysis;
 
 namespace Toffee.SyntacticAnalysis;
 
 public class Parser : IParser
 {
     private BaseLexer _lexer;
+    private readonly IParserErrorHandler? _errorHandler;
 
     private delegate IStatement? ParseStatementDelegate();
     private readonly List<ParseStatementDelegate> _statementParsers;
@@ -12,9 +14,10 @@ public class Parser : IParser
     private delegate IExpression? ParseExpressionDelegate();
     private readonly List<ParseExpressionDelegate> _expressionParsers;
 
-    public Parser(BaseLexer lexer)
+    public Parser(BaseLexer lexer, IParserErrorHandler? errorHandler = null)
     {
         _lexer = lexer;
+        _errorHandler = errorHandler;
 
         _statementParsers = new List<ParseStatementDelegate>
         {
@@ -26,6 +29,16 @@ public class Parser : IParser
         };
 
         _expressionParsers = new List<ParseExpressionDelegate>();
+    }
+
+    private void EmitError(ParserError error)
+    {
+        _errorHandler?.Handle(error);
+    }
+
+    private void EmitWarning(ParserWarning warning)
+    {
+        _errorHandler?.Handle(warning);
     }
 
     // TODO: grammar definition

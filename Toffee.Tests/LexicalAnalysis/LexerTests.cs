@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using Moq;
+using Toffee.ErrorHandling;
 using Toffee.LexicalAnalysis;
-using Toffee.Logging;
 using Toffee.Scanning;
 using Xunit;
 

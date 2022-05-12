@@ -1,5 +1,5 @@
 ﻿using System.Text;
-using Toffee.Logging;
+using Toffee.ErrorHandling;
 using Toffee.Scanning;
 
 namespace Toffee.LexicalAnalysis;

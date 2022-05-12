@@ -1,6 +1,6 @@
 ﻿using CommandDotNet;
+using Toffee.ErrorHandling;
 using Toffee.LexicalAnalysis;
-using Toffee.Logging;
 using Toffee.Running;
 using Toffee.Scanning;
 using Toffee.SyntacticAnalysis;

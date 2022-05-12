@@ -1,6 +1,6 @@
 ﻿using Toffee.LexicalAnalysis;
 
-namespace Toffee.Logging;
+namespace Toffee.ErrorHandling;
 
 public interface ILexerErrorHandler
 {
