@@ -56,8 +56,10 @@ public class Application
 
     private void RunParser()
     {
-        var program = _parser!.Parse();
-        foreach (var statement in program.Statements)
-            AstPrinter.Print(statement);
+        while (_parser!.CurrentStatement is not null)
+        {
+            AstPrinter.Print(_parser.CurrentStatement);
+            _parser.Advance();
+        }
     }
 }

@@ -8,6 +8,8 @@ public class Parser : IParser
     private BaseLexer _lexer;
     private readonly IParserErrorHandler? _errorHandler;
 
+    public IStatement? CurrentStatement { get; private set; }
+
     private delegate IStatement? ParseStatementDelegate();
     private readonly List<ParseStatementDelegate> _statementParsers;
 
@@ -29,6 +31,8 @@ public class Parser : IParser
         };
 
         _expressionParsers = new List<ParseExpressionDelegate>();
+
+        Advance();
     }
 
     private void EmitError(ParserError error)
@@ -117,17 +121,18 @@ public class Parser : IParser
         return new ExpressionStatement(parsedExpression!);
     }
 
-    private bool TryParseStatement(out IStatement? parsedStatement)
+    private bool TryParseStatement(out IStatement? parsedStatement, out bool isTerminated)
     {
         parsedStatement = null;
+        isTerminated = false;
         foreach (var parser in _statementParsers)
         {
             var parserResult = parser();
             if (parserResult is null)
                 continue;
             parsedStatement = parserResult;
-            while (_lexer.CurrentToken.Type == TokenType.Semicolon)
-                _lexer.Advance();  // TODO: out bool
+            if (_lexer.CurrentToken.Type == TokenType.Semicolon)
+                isTerminated = true;  // not using Advance here means not blocking (waiting for another input line)
             return true;
         }
         return false;
@@ -149,13 +154,17 @@ public class Parser : IParser
         throw new NotImplementedException();  // TODO: error
     }
 
-    public Program Parse()
+    private void SkipSemicolons()
     {
-        var list = new List<IStatement>();
+        while (_lexer.CurrentToken.Type == TokenType.Semicolon)
+            _lexer.Advance();
+    }
 
-        while (TryParseStatement(out var parsedStatement))
-            list.Add(parsedStatement!);
-
-        return new Program(list);
+    public IStatement? Advance()
+    {
+        var supersededStatement = CurrentStatement;
+        SkipSemicolons();
+        CurrentStatement = TryParseStatement(out var parsedStatement, out _) ? parsedStatement : null;
+        return supersededStatement;
     }
 }
