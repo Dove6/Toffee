@@ -44,6 +44,28 @@ public partial class Parser : IParser
         Advance();
     }
 
+    private void EnsureToken(params TokenType[] expectedType)
+    {
+        if (!expectedType.Contains(_lexer.CurrentToken.Type))
+            throw new NotImplementedException();
+    }
+
+    private bool TryConsumeToken(out Token matchedToken, params TokenType[] expectedType)
+    {
+        matchedToken = new Token(TokenType.Unknown);
+        if (!expectedType.Contains(_lexer.CurrentToken.Type))
+            return false;
+        matchedToken = _lexer.Advance();
+        return true;
+    }
+
+    private Token ConsumeToken(params TokenType[] expectedType)
+    {
+        if (!expectedType.Contains(_lexer.CurrentToken.Type))
+            throw new NotImplementedException();
+        return _lexer.Advance();
+    }
+
     private void EmitError(ParserError error)
     {
         _errorHandler?.Handle(error);
@@ -70,7 +92,7 @@ public partial class Parser : IParser
         else if (TryParseStatement(out var parsedStatement))
             CurrentStatement = parsedStatement;
         else
-            ; // TODO: error
+            throw new NotImplementedException();
 
         return supersededStatement;
     }

@@ -7,7 +7,7 @@ public record NamespaceImportStatement(IList<string> NamespaceLevels) : IStateme
 public record VariableInitializationListStatement(IList<VariableInitialization> Items) : IStatement;
 public record BreakStatement : IStatement;
 public record BreakIfStatement(IExpression Condition) : IStatement;
-public record ReturnStatement(IExpression? Value) : IStatement;
+public record ReturnStatement(IExpression? Value = null) : IStatement;
 public record ExpressionStatement(IExpression Expression) : IStatement;
 
-public record VariableInitialization(string Name, IExpression? InitialValue, bool IsConst = false) : IStatement;
+public record VariableInitialization(string Name, IExpression? InitialValue = null, bool IsConst = false) : IStatement;

@@ -11,8 +11,8 @@ public partial class Parser
         parsedStatement = null;
         if (!TryParseUnterminatedStatement(out parsedStatement))
             return false;
-        if (_lexer.CurrentToken.Type != TokenType.Semicolon)
-            /* TODO: error */; // not using Advance here means not blocking (waiting for another input line)
+        // not consuming here means not blocking if line had a single trailing semicolon
+        EnsureToken(TokenType.Semicolon);
         return true;
     }
 
@@ -41,18 +41,12 @@ public partial class Parser
     //     = KW_INIT, variable_initialization, { COMMA, variable_initialization };
     private IStatement? ParseVariableInitializationListStatement()
     {
-        if (_lexer.CurrentToken.Type != TokenType.KeywordInit)
+        if (!TryConsumeToken(out _, TokenType.KeywordInit))
             return null;
 
-        _lexer.Advance();
-
         var list = new List<VariableInitialization>();
-
         while (TryParseVariableInitialization(out var parsedVariable))
-        {
             list.Add(parsedVariable!);
-        }
-
         return new VariableInitializationListStatement(list);
     }
 
@@ -62,24 +56,19 @@ public partial class Parser
     {
         variableInitialization = null;
 
-        var isConst = _lexer.CurrentToken.Type == TokenType.KeywordConst;
-        if (isConst)
-            _lexer.Advance();
+        var isConst = TryConsumeToken(out _, TokenType.KeywordConst);
 
-        if (_lexer.CurrentToken.Type != TokenType.Identifier)
-            return false; // TODO: error
+        var identifier = ConsumeToken(TokenType.Identifier);
+        var variableName = (string)identifier.Content!;
 
-        var variableName = (string)_lexer.Advance().Content!;
-
-        if (_lexer.CurrentToken.Type != TokenType.OperatorEquals)
+        if (!TryConsumeToken(out _, TokenType.OperatorEquals))
         {
             variableInitialization = new VariableInitialization(variableName, null, isConst);
             return true;
         }
 
-        _lexer.Advance();
         if (!TryParseExpression(out var initialValue))
-            return false; // TODO: error
+            throw new NotImplementedException();
         variableInitialization = new VariableInitialization(variableName, initialValue, isConst);
         return true;
     }
@@ -88,32 +77,35 @@ public partial class Parser
     //     = KW_BREAK;
     private IStatement? ParseBreakStatement()
     {
-        if (_lexer.CurrentToken.Type != TokenType.KeywordBreak)
+        if (!TryConsumeToken(out _, TokenType.KeywordBreak))
             return null;
 
-        throw new NotImplementedException();
+        return new BreakStatement();
     }
 
     // break_if
     //     = KW_BREAK_IF, parenthesized_expression;
     private IStatement? ParseBreakIfStatement()
     {
-        if (_lexer.CurrentToken.Type != TokenType.KeywordBreakIf)
+        if (!TryConsumeToken(out _, TokenType.KeywordBreakIf))
             return null;
 
-        throw new NotImplementedException();
+        var condition = ParseParenthesizedExpression();
+        return new BreakIfStatement(condition);
     }
 
     // return
     //     = KW_RETURN, expression;
     private IStatement? ParseReturnStatement()
     {
-        if (_lexer.CurrentToken.Type != TokenType.KeywordReturn)
+        if (!TryConsumeToken(out _, TokenType.KeywordReturn))
             return null;
 
-        throw new NotImplementedException();
-    }
+        if (!TryParseExpression(out var parsedExpression))
+            return new ReturnStatement();
 
+        return new ReturnStatement(parsedExpression!);
+    }
 
     private IStatement? ParseExpressionStatement()
     {

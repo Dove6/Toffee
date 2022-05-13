@@ -49,10 +49,8 @@ public partial class Parser
 
     // parenthesized_expression
     //     = LEFT_PARENTHESIS, expression, RIGHT_PARENTHESIS;
-    private bool TryParseParenthesizedExpression(out IExpression? expression)
+    private IExpression ParseParenthesizedExpression()
     {
-        expression = null;
-        return false;
         throw new NotImplementedException();
     }
 
