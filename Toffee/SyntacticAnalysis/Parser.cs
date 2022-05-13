@@ -67,7 +67,7 @@ public partial class Parser : IParser
 
         if (_lexer.CurrentToken.Type == TokenType.EndOfText)
             CurrentStatement = null;
-        else if (TryParseStatement(out var parsedStatement, out _))
+        else if (TryParseStatement(out var parsedStatement))
             CurrentStatement = parsedStatement;
         else
             ; // TODO: error

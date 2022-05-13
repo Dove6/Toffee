@@ -4,24 +4,41 @@ namespace Toffee.SyntacticAnalysis;
 
 public partial class Parser
 {
-    private bool TryParseStatement(out IStatement? parsedStatement, out bool isTerminated)
+    // statement
+    //     = unterminated_statement, SEMICOLON, { SEMICOLON };
+    private bool TryParseStatement(out IStatement? parsedStatement)
     {
         parsedStatement = null;
-        isTerminated = false;
+        if (!TryParseUnterminatedStatement(out parsedStatement))
+            return false;
+        if (_lexer.CurrentToken.Type != TokenType.Semicolon)
+            /* TODO: error */; // not using Advance here means not blocking (waiting for another input line)
+        return true;
+    }
+
+    // unterminated_statement
+    //     = namespace_import
+    //     | variable_initialization_list
+    //     | break
+    //     | break_if
+    //     | return
+    //     | expression;
+    private bool TryParseUnterminatedStatement(out IStatement? parsedStatement)
+    {
+        parsedStatement = null;
         foreach (var parser in _statementParsers)
         {
             var parserResult = parser();
             if (parserResult is null)
                 continue;
             parsedStatement = parserResult;
-            if (_lexer.CurrentToken.Type == TokenType.Semicolon)
-                isTerminated = true; // not using Advance here means not blocking (waiting for another input line)
             return true;
         }
         return false;
     }
 
-    // TODO: grammar definition
+    // variable_initialization_list
+    //     = KW_INIT, variable_initialization, { COMMA, variable_initialization };
     private IStatement? ParseVariableInitializationListStatement()
     {
         if (_lexer.CurrentToken.Type != TokenType.KeywordInit)
@@ -39,6 +56,8 @@ public partial class Parser
         return new VariableInitializationListStatement(list);
     }
 
+    // variable_initialization
+    //     = [ KW_CONST ], IDENTIFIER, [ OP_EQUALS, expression ];
     private bool TryParseVariableInitialization(out VariableInitialization? variableInitialization)
     {
         variableInitialization = null;
@@ -65,6 +84,8 @@ public partial class Parser
         return true;
     }
 
+    // break
+    //     = KW_BREAK;
     private IStatement? ParseBreakStatement()
     {
         if (_lexer.CurrentToken.Type != TokenType.KeywordBreak)
@@ -73,6 +94,8 @@ public partial class Parser
         throw new NotImplementedException();
     }
 
+    // break_if
+    //     = KW_BREAK_IF, parenthesized_expression;
     private IStatement? ParseBreakIfStatement()
     {
         if (_lexer.CurrentToken.Type != TokenType.KeywordBreakIf)
@@ -81,6 +104,8 @@ public partial class Parser
         throw new NotImplementedException();
     }
 
+    // return
+    //     = KW_RETURN, expression;
     private IStatement? ParseReturnStatement()
     {
         if (_lexer.CurrentToken.Type != TokenType.KeywordReturn)
@@ -88,6 +113,7 @@ public partial class Parser
 
         throw new NotImplementedException();
     }
+
 
     private IStatement? ParseExpressionStatement()
     {
