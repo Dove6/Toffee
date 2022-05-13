@@ -37,7 +37,9 @@ expression
 block
     = LEFT_BRACE, { statement }, [ unterminated_statement ], RIGHT_BRACE;
 conditional_expression
-    = KW_IF, parenthesized_expression, unterminated_statement, { conditional_elif_part }, [ conditional_else_part ];
+    = conditional_if_part, { conditional_elif_part }, [ conditional_else_part ];
+conditional_if_part
+    = KW_IF, parenthesized_expression, unterminated_statement;
 conditional_elif_part
     = KW_ELIF, parenthesized_expression, unterminated_statement;
 conditional_else_part
@@ -47,11 +49,9 @@ for_loop_expression
 for_loop_specification
     = LEFT_PARENTHESIS, [ IDENTIFIER, COMMA ], for_loop_range, RIGHT_PARENTHESIS;
 for_loop_range
-    = NUMBER, [ COLON, NUMBER, [ COLON, NUMBER ] ];
+    = expression, [ COLON, expression, [ COLON, expression ] ];
 while_loop_expression
     = KW_WHILE, parenthesized_expression, unterminated_statement;
-parenthesized_expression
-    = LEFT_PARENTHESIS, expression, RIGHT_PARENTHESIS;
 function_definition
     = KW_FUNCTI, LEFT_PARENTHESIS, parameter_list, RIGHT_PARENTHESIS, block;
 parameter_list
@@ -59,12 +59,15 @@ parameter_list
 parameter
     = [ KW_CONST ], IDENTIFIER, [ OP_BANG ];
 pattern_matching
-    = KW_MATCH, LEFT_PARENTHESIS, expression, RIGHT_PARENTHESIS, LEFT_BRACE, { pattern_specification }, RIGHT_BRACE;
+    = KW_MATCH, parenthesized_expression, LEFT_BRACE, { pattern_specification }, [ default_pattern_specification ], RIGHT_BRACE;
+parenthesized_expression
+    = LEFT_PARENTHESIS, expression, RIGHT_PARENTHESIS;
 pattern_specification
     = pattern_expression, COLON, expression, SEMICOLON;
+default_pattern_specification
+    = KW_DEFAULT, COLON, expression, SEMICOLON;
 pattern_expression
-    = pattern_expression_disjunction
-    | KW_DEFAULT;
+    = pattern_expression_disjunction;
 pattern_expression_disjunction
     = pattern_expression_conjunction, { KW_OR, pattern_expression_conjunction };
 pattern_expression_conjunction

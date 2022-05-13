@@ -13,7 +13,7 @@ public partial class Parser
             return false;
         // not consuming here means not blocking if line had a single trailing semicolon
         if (TryEnsureToken(TokenType.Semicolon))
-            parsedStatement = parsedStatement! with { Terminated = true };
+            parsedStatement = parsedStatement! with { IsTerminated = true };
         return true;
     }
 

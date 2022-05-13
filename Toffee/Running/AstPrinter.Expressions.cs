@@ -44,7 +44,10 @@ public static partial class AstPrinter
     private static void Print(PatternMatchingBranch branch, int indentLevel)
     {
         Print("pattern", indentLevel);
-        Print(branch.Pattern, indentLevel + 1);
+        if (branch.Pattern is null)
+            Print("default", indentLevel + 1);
+        else
+            Print(branch.Pattern, indentLevel + 1);
         Print("consequent", indentLevel);
         Print(branch.Consequent, indentLevel + 1);
     }
