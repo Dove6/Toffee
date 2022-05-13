@@ -69,7 +69,7 @@ public partial class Parser
         }
 
         if (!TryParseExpression(out var initialValue))
-            throw new NotImplementedException();
+            throw new ParserException(new UnexpectedToken(_lexer.CurrentToken));
         variableInitialization = new VariableInitialization(variableName, initialValue, isConst);
         return true;
     }
