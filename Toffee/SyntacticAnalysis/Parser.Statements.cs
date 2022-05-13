@@ -46,8 +46,16 @@ public partial class Parser
             return null;
 
         var list = new List<VariableInitialization>();
-        while (TryParseVariableInitialization(out var parsedVariable))
-            list.Add(parsedVariable!);
+        if (!TryParseVariableInitialization(out var firstInitialization))
+            throw new ParserException(new ExpectedStatement(_lexer.CurrentToken, typeof(VariableInitialization)));
+        list.Add(firstInitialization!);
+
+        while (TryConsumeToken(out _, TokenType.Comma))
+            if (TryParseVariableInitialization(out var nextInitialization))
+                list.Add(nextInitialization!);
+            else
+                throw new ParserException(new ExpectedStatement(_lexer.CurrentToken, typeof(VariableInitialization)));
+
         return new VariableInitializationListStatement(list);
     }
 
@@ -58,8 +66,10 @@ public partial class Parser
         variableInitialization = null;
 
         var isConst = TryConsumeToken(out _, TokenType.KeywordConst);
-
-        var identifier = ConsumeToken(TokenType.Identifier);
+        if (!TryConsumeToken(out var identifier, TokenType.Identifier))
+            return !isConst
+                ? false
+                : throw new ParserException(new UnexpectedToken(_lexer.CurrentToken, TokenType.Identifier));
         var variableName = (string)identifier.Content!;
 
         if (!TryConsumeToken(out _, TokenType.OperatorEquals))

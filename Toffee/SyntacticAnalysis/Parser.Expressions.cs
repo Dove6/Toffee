@@ -207,8 +207,14 @@ public partial class Parser
     private List<FunctionParameter> ParseParameterList()
     {
         var list = new List<FunctionParameter>();
-        while (TryParseParameter(out var parameter))
-            list.Add(parameter!);
+        if (!TryParseParameter(out var firstParameter))
+            return list;
+        list.Add(firstParameter!);
+        while (TryConsumeToken(out _, TokenType.Comma))
+            if (TryParseParameter(out var nextParameter))
+                list.Add(nextParameter!);
+            else
+                throw new ParserException(new ExpectedStatement(_lexer.CurrentToken, typeof(FunctionParameter)));
         return list;
     }
 
@@ -219,7 +225,9 @@ public partial class Parser
         parameter = null;
         var isConst = TryConsumeToken(out _, TokenType.KeywordConst);
         if (!TryConsumeToken(out var identifier, TokenType.Identifier))
-            return isConst ? false : throw new ParserException(new UnexpectedToken(_lexer.CurrentToken, TokenType.Identifier));
+            return !isConst
+                ? false
+                : throw new ParserException(new UnexpectedToken(_lexer.CurrentToken, TokenType.Identifier));
         var isNullable = !TryConsumeToken(out _, TokenType.OperatorBang);
 
         parameter = new FunctionParameter((string)identifier.Content!, isConst, isNullable);
