@@ -6,13 +6,14 @@ public partial class Parser
 {
     // statement
     //     = unterminated_statement, SEMICOLON, { SEMICOLON };
-    private bool TryParseStatement(out IStatement? parsedStatement)
+    private bool TryParseStatement(out Statement? parsedStatement)
     {
         parsedStatement = null;
         if (!TryParseUnterminatedStatement(out parsedStatement))
             return false;
         // not consuming here means not blocking if line had a single trailing semicolon
-        EnsureToken(TokenType.Semicolon);
+        if (TryEnsureToken(TokenType.Semicolon))
+            parsedStatement = parsedStatement! with { Terminated = true };
         return true;
     }
 
@@ -23,7 +24,7 @@ public partial class Parser
     //     | break_if
     //     | return
     //     | expression;
-    private bool TryParseUnterminatedStatement(out IStatement? parsedStatement)
+    private bool TryParseUnterminatedStatement(out Statement? parsedStatement)
     {
         parsedStatement = null;
         foreach (var parser in _statementParsers)
@@ -39,7 +40,7 @@ public partial class Parser
 
     // variable_initialization_list
     //     = KW_INIT, variable_initialization, { COMMA, variable_initialization };
-    private IStatement? ParseVariableInitializationListStatement()
+    private Statement? ParseVariableInitializationListStatement()
     {
         if (!TryConsumeToken(out _, TokenType.KeywordInit))
             return null;
@@ -75,7 +76,7 @@ public partial class Parser
 
     // break
     //     = KW_BREAK;
-    private IStatement? ParseBreakStatement()
+    private Statement? ParseBreakStatement()
     {
         if (!TryConsumeToken(out _, TokenType.KeywordBreak))
             return null;
@@ -85,7 +86,7 @@ public partial class Parser
 
     // break_if
     //     = KW_BREAK_IF, parenthesized_expression;
-    private IStatement? ParseBreakIfStatement()
+    private Statement? ParseBreakIfStatement()
     {
         if (!TryConsumeToken(out _, TokenType.KeywordBreakIf))
             return null;
@@ -96,7 +97,7 @@ public partial class Parser
 
     // return
     //     = KW_RETURN, expression;
-    private IStatement? ParseReturnStatement()
+    private Statement? ParseReturnStatement()
     {
         if (!TryConsumeToken(out _, TokenType.KeywordReturn))
             return null;
@@ -107,7 +108,7 @@ public partial class Parser
         return new ReturnStatement(parsedExpression!);
     }
 
-    private IStatement? ParseExpressionStatement()
+    private Statement? ParseExpressionStatement()
     {
         if (!TryParseExpression(out var parsedExpression))
             return null;

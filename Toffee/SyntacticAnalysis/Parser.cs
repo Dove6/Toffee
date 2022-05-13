@@ -8,12 +8,12 @@ public partial class Parser : IParser
     private readonly BaseLexer _lexer;
     private readonly IParserErrorHandler? _errorHandler;
 
-    public IStatement? CurrentStatement { get; private set; }
+    public Statement? CurrentStatement { get; private set; }
 
-    private delegate IStatement? ParseStatementDelegate();
+    private delegate Statement? ParseStatementDelegate();
     private readonly List<ParseStatementDelegate> _statementParsers;
 
-    private delegate IExpression? ParseExpressionDelegate();
+    private delegate Expression? ParseExpressionDelegate();
     private readonly List<ParseExpressionDelegate> _expressionParsers;
 
     public Parser(BaseLexer lexer, IParserErrorHandler? errorHandler = null)
@@ -43,6 +43,9 @@ public partial class Parser : IParser
 
         Advance();
     }
+
+    private bool TryEnsureToken(params TokenType[] expectedType) =>
+        expectedType.Contains(_lexer.CurrentToken.Type);
 
     private void EnsureToken(params TokenType[] expectedType)
     {
@@ -82,7 +85,7 @@ public partial class Parser : IParser
             _lexer.Advance();
     }
 
-    public IStatement? Advance()
+    public Statement? Advance()
     {
         var supersededStatement = CurrentStatement;
         SkipSemicolons();

@@ -5,7 +5,7 @@ namespace Toffee.Running;
 
 public static partial class AstPrinter
 {
-    public static void Print(IStatement statement, int indentLevel = 0)
+    public static void Print(Statement statement, int indentLevel = 0)
     {
         Print(statement.GetType().Name.Humanize(LetterCasing.LowerCase), indentLevel);
         PrintDynamic(statement as dynamic, indentLevel + 1);
@@ -21,7 +21,7 @@ public static partial class AstPrinter
         Print(initialization.InitialValue, indentLevel + 2);
     }
 
-    private static void PrintDynamic(IStatement statement, int indentLevel)
+    private static void PrintDynamic(Statement statement, int indentLevel)
     {
     }
 

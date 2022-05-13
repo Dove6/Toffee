@@ -5,6 +5,7 @@ using Toffee.Scanning;
 namespace Toffee.LexicalAnalysis;
 
 public abstract record LexerWarning(Position Position) : Warning(Position);
+
 public record UnknownEscapeSequence(Position Position, char Specifier) : LexerWarning(Position);
 public record MissingHexCharCode(Position Position) : LexerWarning(Position);
 

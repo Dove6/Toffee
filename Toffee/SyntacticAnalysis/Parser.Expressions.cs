@@ -12,7 +12,7 @@ public partial class Parser
     //     | while_loop_expression
     //     | function_definition
     //     | pattern_matching;
-    private bool TryParseExpression(out IExpression? parsedExpression)
+    private bool TryParseExpression(out Expression? parsedExpression)
     {
         parsedExpression = null;
         foreach (var parser in _expressionParsers)
@@ -29,9 +29,9 @@ public partial class Parser
 
     // block
     //     = LEFT_BRACE, { statement }, [ unterminated_statement ], RIGHT_BRACE;
-    private IExpression? ParseBlockExpression()
+    private Expression? ParseBlockExpression()
     {
-        if (_lexer.CurrentToken.Type != TokenType.LeftBrace)
+        if (!TryConsumeToken(out _, TokenType.LeftBrace))
             return null;
 
         throw new NotImplementedException();
@@ -39,7 +39,7 @@ public partial class Parser
 
     // conditional_expression
     //     = KW_IF, parenthesized_expression, unterminated_statement, { conditional_elif_part }, [ conditional_else_part ];
-    private IExpression? ParseConditionalExpression()
+    private Expression? ParseConditionalExpression()
     {
         if (_lexer.CurrentToken.Type != TokenType.KeywordIf)
             return null;
@@ -49,14 +49,14 @@ public partial class Parser
 
     // parenthesized_expression
     //     = LEFT_PARENTHESIS, expression, RIGHT_PARENTHESIS;
-    private IExpression ParseParenthesizedExpression()
+    private Expression ParseParenthesizedExpression()
     {
         throw new NotImplementedException();
     }
 
     // for_loop_expression
     //     = KW_FOR, for_loop_specification, unterminated_statement;
-    private IExpression? ParseForLoopExpression()
+    private Expression? ParseForLoopExpression()
     {
         if (_lexer.CurrentToken.Type != TokenType.KeywordFor)
             return null;
@@ -85,7 +85,7 @@ public partial class Parser
 
     // while_loop_expression
     //     = KW_WHILE, parenthesized_expression, unterminated_statement;
-    private IExpression? ParseWhileLoopExpression()
+    private Expression? ParseWhileLoopExpression()
     {
         if (_lexer.CurrentToken.Type != TokenType.KeywordWhile)
             return null;
@@ -95,7 +95,7 @@ public partial class Parser
 
     // function_definition
     //     = KW_FUNCTI, LEFT_PARENTHESIS, parameter_list, RIGHT_PARENTHESIS, block;
-    private IExpression? ParseFunctionDefinitionExpression()
+    private Expression? ParseFunctionDefinitionExpression()
     {
         if (_lexer.CurrentToken.Type != TokenType.KeywordFuncti)
             return null;
@@ -123,7 +123,7 @@ public partial class Parser
 
     // pattern_matching
     //     = KW_MATCH, LEFT_PARENTHESIS, expression, RIGHT_PARENTHESIS, LEFT_BRACE, { pattern_specification }, RIGHT_BRACE;
-    private IExpression? ParsePatternMatchingExpression()
+    private Expression? ParsePatternMatchingExpression()
     {
         if (_lexer.CurrentToken.Type != TokenType.KeywordMatch)
             return null;
@@ -143,7 +143,7 @@ public partial class Parser
     // pattern_expression
     //     = pattern_expression_disjunction
     //     | KW_DEFAULT;
-    private bool TryParsePatternExpression(out IExpression? patternExpression)
+    private bool TryParsePatternExpression(out Expression? patternExpression)
     {
         patternExpression = null;
         return false;
@@ -152,7 +152,7 @@ public partial class Parser
 
     // pattern_expression_disjunction
     //     = pattern_expression_conjunction, { KW_OR, pattern_expression_conjunction };
-    private IExpression? ParseDisjunctionPatternExpression()
+    private Expression? ParseDisjunctionPatternExpression()
     {
         return null;
 
@@ -161,7 +161,7 @@ public partial class Parser
 
     // pattern_expression_conjunction
     //     = pattern_expression_non_associative, { KW_AND, pattern_expression_non_associative };
-    private IExpression? ParseConjunctionPatternExpression()
+    private Expression? ParseConjunctionPatternExpression()
     {
         return null;
 
@@ -173,7 +173,7 @@ public partial class Parser
     //     | OP_TYPE_CHECK, TYPE
     //     | expression
     //     | LEFT_PARENTHESIS, pattern_expression_disjunction, RIGHT_PARENTHESIS;
-    private IExpression? ParseNonAssociativePatternExpression()
+    private Expression? ParseNonAssociativePatternExpression()
     {
         return null;
 
@@ -182,7 +182,7 @@ public partial class Parser
 
     // assignment
     //     = null_coalescing, [ OP_ASSIGNMENT, assignment ];
-    private IExpression? ParseAssignmentExpression()
+    private Expression? ParseAssignmentExpression()
     {
         return null;
 
@@ -191,7 +191,7 @@ public partial class Parser
 
     // null_coalescing
     //     = nullsafe_pipe, { OP_QUERY_QUERY, nullsafe_pipe };
-    private IExpression? ParseNullCoalescingExpression()
+    private Expression? ParseNullCoalescingExpression()
     {
         return null;
 
@@ -200,7 +200,7 @@ public partial class Parser
 
     // nullsafe_pipe
     //     = disjunction, { OP_QUERY_GREATER, disjunction };
-    private IExpression? ParseNullsafePipeExpression()
+    private Expression? ParseNullsafePipeExpression()
     {
         return null;
 
@@ -209,7 +209,7 @@ public partial class Parser
 
     // disjunction
     //     = conjunction, { OP_OR_OR, conjunction };
-    private IExpression? ParseDisjunctionExpression()
+    private Expression? ParseDisjunctionExpression()
     {
         return null;
 
@@ -218,7 +218,7 @@ public partial class Parser
 
     // conjunction
     //     = type_check, { OP_AND_AND, type_check };
-    private IExpression? ParseConjunctionExpression()
+    private Expression? ParseConjunctionExpression()
     {
         return null;
 
@@ -227,7 +227,7 @@ public partial class Parser
 
     // type_check
     //     = comparison, { OP_TYPE_CHECK, TYPE };
-    private IExpression? ParseTypeCheckExpression()
+    private Expression? ParseTypeCheckExpression()
     {
         return null;
 
@@ -236,7 +236,7 @@ public partial class Parser
 
     // comparison
     //     = concatenation, { OP_COMPARISON, concatenation };
-    private IExpression? ParseComparisonExpression()
+    private Expression? ParseComparisonExpression()
     {
         return null;
 
@@ -245,7 +245,7 @@ public partial class Parser
 
     // concatenation
     //     = term, { OP_DOT_DOT, term };
-    private IExpression? ParseNullConcatenationExpression()
+    private Expression? ParseNullConcatenationExpression()
     {
         return null;
 
@@ -254,7 +254,7 @@ public partial class Parser
 
     // term
     //     = factor, { OP_ADDITIVE, factor };
-    private IExpression? ParseTermExpression()
+    private Expression? ParseTermExpression()
     {
         return null;
 
@@ -263,7 +263,7 @@ public partial class Parser
 
     // factor
     //     = unary_prefixed, { OP_MULTIPLICATIVE, unary_prefixed };
-    private IExpression? ParseFactorExpression()
+    private Expression? ParseFactorExpression()
     {
         return null;
 
@@ -273,7 +273,7 @@ public partial class Parser
     // unary_prefixed
     //     = OP_UNARY_PREFIX, unary_prefixed
     //     | exponentiation;
-    private IExpression? ParseUnaryPrefixedExpression()
+    private Expression? ParseUnaryPrefixedExpression()
     {
         return null;
 
@@ -282,7 +282,7 @@ public partial class Parser
 
     // exponentiation
     //     = suffixed_expression, { OP_CARET, suffixed_expression };
-    private IExpression? ParseExponentiationExpression()
+    private Expression? ParseExponentiationExpression()
     {
         return null;
 
@@ -291,7 +291,7 @@ public partial class Parser
 
     // suffixed_expression
     //     = primary_expression, [ function_call | namespace_access ];
-    private IExpression? ParseSuffixedExpressionExpression()
+    private Expression? ParseSuffixedExpressionExpression()
     {
         return null;
 
@@ -300,7 +300,7 @@ public partial class Parser
 
     // function_call
     //     = LEFT_PARENTHESIS, arguments_list, RIGHT_PARENTHESIS;
-    private IExpression? ParseFunctionCall()
+    private Expression? ParseFunctionCall()
     {
         return null;
 
@@ -309,7 +309,7 @@ public partial class Parser
 
     // arguments_list
     //     = [ argument, { COMMA, argument } ];
-    private IExpression? ParseArgumentsList()
+    private Expression? ParseArgumentsList()
     {
         return null;
 
@@ -318,7 +318,7 @@ public partial class Parser
 
     // argument
     //     = expression;
-    private IExpression? ParseArgument()
+    private Expression? ParseArgument()
     {
         return null;
 
@@ -327,7 +327,7 @@ public partial class Parser
 
     // namespace_access
     //     = OP_NAMESPACE_ACCESS, primary_expression;
-    private IExpression? ParseNamespaceAccessExpression()
+    private Expression? ParseNamespaceAccessExpression()
     {
         return null;
 
@@ -338,7 +338,7 @@ public partial class Parser
     //     = LITERAL
     //     | IDENTIFIER
     //     | LEFT_PARENTHESIS, expression, RIGHT_PARENTHESIS;
-    private IExpression? ParsePrimaryExpression()
+    private Expression? ParsePrimaryExpression()
     {
         return null;
 
