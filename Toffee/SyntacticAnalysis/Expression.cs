@@ -18,6 +18,7 @@ public record PatternMatchingBranch(Expression? Pattern, Expression Consequent);
 
 public record BinaryExpression(Expression Left, Operator Operator, Expression Right) : Expression;
 public record UnaryExpression(Expression Expression, Operator Operator) : Expression;
-public record FunctionCallExpression(Expression Name, IList<Expression> Arguments) : Expression;
-public record IdentifierExpression(Expression Name) : Expression;
-public record LiteralExpression(object Value) : Expression;
+public record FunctionCallExpression(Expression Expression, IList<Expression> Arguments) : Expression;
+public record IdentifierExpression(string Name) : Expression;
+public record LiteralExpression(DataType Type, object? Value) : Expression;
+public record TypeExpression(DataType Type) : Expression;

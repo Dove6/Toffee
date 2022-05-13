@@ -38,6 +38,28 @@ public partial class Parser
         return false;
     }
 
+    // namespace_import
+    //     = KW_PULL, namespace;
+    // namespace
+    //     = IDENTIFIER, { OP_DOT, IDENTIFIER };
+    private Statement? ParseNamespaceImportStatement()
+    {
+        if (!TryConsumeToken(out _, TokenType.KeywordPull))
+            return null;
+
+        var list = new List<IdentifierExpression>();
+        var firstIdentifier = ConsumeToken(TokenType.Identifier);
+        list.Add(new IdentifierExpression((string)firstIdentifier.Content!));
+
+        while (TryConsumeToken(out _, TokenType.OperatorDot))
+        {
+            var nextIdentifier = ConsumeToken(TokenType.Identifier);
+            list.Add(new IdentifierExpression((string)nextIdentifier.Content!));
+        }
+
+        return new NamespaceImportStatement(list);
+    }
+
     // variable_initialization_list
     //     = KW_INIT, variable_initialization, { COMMA, variable_initialization };
     private Statement? ParseVariableInitializationListStatement()

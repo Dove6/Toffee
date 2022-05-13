@@ -25,6 +25,13 @@ public static partial class AstPrinter
     {
     }
 
+    private static void PrintDynamic(NamespaceImportStatement statement, int indentLevel)
+    {
+        Print("path");
+        foreach (var level in statement.NamespaceLevels)
+            Print(level.Name, indentLevel + 1);
+    }
+
     private static void PrintDynamic(VariableInitializationListStatement statement, int indentLevel)
     {
         Print("items", indentLevel);

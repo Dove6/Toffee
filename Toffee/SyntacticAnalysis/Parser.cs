@@ -23,6 +23,7 @@ public partial class Parser : IParser
 
         _statementParsers = new List<ParseStatementDelegate>
         {
+            ParseNamespaceImportStatement,
             ParseVariableInitializationListStatement,
             ParseBreakStatement,
             ParseBreakIfStatement,

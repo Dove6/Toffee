@@ -4,6 +4,65 @@ namespace Toffee.SyntacticAnalysis;
 
 public partial class Parser
 {
+    private readonly TokenType[] _comparisonOperators =
+    {
+        TokenType.OperatorLess,
+        TokenType.OperatorLessEquals,
+        TokenType.OperatorGreater,
+        TokenType.OperatorGreaterEquals,
+        TokenType.OperatorEqualsEquals,
+        TokenType.OperatorBangEquals
+    };
+
+    private readonly TokenType[] _additiveOperator =
+    {
+        TokenType.OperatorMinus,
+        TokenType.OperatorPlus
+    };
+
+    private readonly TokenType[] _multiplicativeOperators =
+    {
+        TokenType.OperatorAsterisk,
+        TokenType.OperatorSlash,
+        TokenType.OperatorPercent
+    };
+
+    private readonly TokenType[] _unaryOperators =
+    {
+        TokenType.OperatorPlus,
+        TokenType.OperatorMinus,
+        TokenType.OperatorBang
+    };
+
+    private readonly TokenType[] _literalTokenTypes =
+    {
+        TokenType.LiteralInteger,
+        TokenType.LiteralFloat,
+        TokenType.LiteralString,
+        TokenType.KeywordTrue,
+        TokenType.KeywordFalse,
+        TokenType.KeywordNull
+    };
+
+    private readonly TokenType[] _typeTokenTypes =
+    {
+        TokenType.KeywordFloat,
+        TokenType.KeywordInt,
+        TokenType.KeywordBool,
+        TokenType.KeywordString,
+        TokenType.KeywordNull
+    };
+
+    private readonly TokenType[] _assignmentTokenTypes =
+    {
+        TokenType.OperatorEquals,
+        TokenType.OperatorPlusEquals,
+        TokenType.OperatorMinusEquals,
+        TokenType.OperatorAsteriskEquals,
+        TokenType.OperatorSlashEquals,
+        TokenType.OperatorPercentEquals
+    };
+
     // expression
     //     = assignment
     //     | block
@@ -289,7 +348,7 @@ public partial class Parser
         if (right is null)
             throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
 
-        return new BinaryExpression(left, Operator.Disjunction, right);
+        return new BinaryExpression(left, Operator.PatternMatchingDisjunction, right);
     }
 
     // pattern_expression_conjunction
@@ -306,7 +365,7 @@ public partial class Parser
         if (right is null)
             throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
 
-        return new BinaryExpression(left, Operator.Conjunction, right);
+        return new BinaryExpression(left, Operator.PatternMatchingConjunction, right);
     }
 
     // pattern_expression_non_associative
@@ -316,49 +375,21 @@ public partial class Parser
     //     | LEFT_PARENTHESIS, pattern_expression_disjunction, RIGHT_PARENTHESIS;
     private Expression? ParseNonAssociativePatternExpression()
     {
-        if (TryConsumeToken(out var comparisonOperator,
-                TokenType.OperatorLess,
-                TokenType.OperatorLessEquals,
-                TokenType.OperatorGreater,
-                TokenType.OperatorGreaterEquals,
-                TokenType.OperatorEqualsEquals,
-                TokenType.OperatorBangEquals))
-            if (TryConsumeToken(out var literal,
-                    TokenType.LiteralFloat,
-                    TokenType.LiteralInteger,
-                    TokenType.LiteralString,
-                    TokenType.KeywordTrue,
-                    TokenType.KeywordFalse,
-                    TokenType.KeywordNull))
-                return new UnaryExpression(new LiteralExpression(literal.Content!),
-                    Operator.EqualComparison); // TODO: literal and operator mapping
+        if (TryConsumeToken(out var comparisonOperator, _comparisonOperators))
+            if (TryConsumeToken(out var literal, _literalTokenTypes))
+                return new UnaryExpression(LiteralMapper.MapToLiteralExpression(literal),
+                    OperatorMapper.MapPatternMatchingComparisonOperator(comparisonOperator.Type));
             else
-                throw new ParserException(new UnexpectedToken(_lexer.CurrentToken,
-                    TokenType.LiteralFloat,
-                    TokenType.LiteralInteger,
-                    TokenType.LiteralString,
-                    TokenType.KeywordTrue,
-                    TokenType.KeywordFalse,
-                    TokenType.KeywordNull));
+                throw new ParserException(new UnexpectedToken(_lexer.CurrentToken, _literalTokenTypes));
 
         if (TryConsumeToken(out _, TokenType.KeywordIs))
         {
             var typeCheckOperator = TryConsumeToken(out _, TokenType.KeywordNot)
-                ? Operator.NotEqualTypeCheck
-                : Operator.EqualTypeCheck;
-            if (TryConsumeToken(out var type,
-                    TokenType.KeywordFloat,
-                    TokenType.KeywordInt,
-                    TokenType.KeywordBool,
-                    TokenType.KeywordString,
-                    TokenType.KeywordNull))
-                return new UnaryExpression(new LiteralExpression(type.Content!), typeCheckOperator);  // TODO: TypeExpression
-            throw new ParserException(new UnexpectedToken(_lexer.CurrentToken,
-                TokenType.KeywordFloat,
-                TokenType.KeywordInt,
-                TokenType.KeywordBool,
-                TokenType.KeywordString,
-                TokenType.KeywordNull));
+                ? Operator.PatternMatchingNotEqualTypeCheck
+                : Operator.PatternMatchingEqualTypeCheck;
+            if (TryConsumeToken(out var type, _typeTokenTypes))
+                return new UnaryExpression(TypeMapper.MapToTypeExpression(type.Type), typeCheckOperator);
+            throw new ParserException(new UnexpectedToken(_lexer.CurrentToken, _typeTokenTypes));
         }
 
         if (TryConsumeToken(out _, TokenType.LeftParenthesis))
@@ -382,19 +413,13 @@ public partial class Parser
         if (left is null)
             return null;
 
-        if (!TryConsumeToken(out var @operator,
-                TokenType.OperatorEquals,
-                TokenType.OperatorPlusEquals,
-                TokenType.OperatorMinusEquals,
-                TokenType.OperatorAsteriskEquals,
-                TokenType.OperatorSlashEquals,
-                TokenType.OperatorPercentEquals))
+        if (!TryConsumeToken(out var @operator, _assignmentTokenTypes))
             return left;
         var right = ParseNullCoalescingExpression();
         if (right is null)
             throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
 
-        return new BinaryExpression(left, Operator.Assignment, right);  // TODO: operator mapping
+        return new BinaryExpression(left, OperatorMapper.MapAssignmentOperator(@operator.Type), right);
     }
 
     // null_coalescing
@@ -478,7 +503,7 @@ public partial class Parser
         var typeCheckOperator = TryConsumeToken(out _, TokenType.KeywordNot)
             ? Operator.NotEqualTypeCheck
             : Operator.EqualTypeCheck;
-        var right = ParsePrimaryExpression();  // TODO: TypeExpression
+        var right = TypeMapper.MapToTypeExpression(ConsumeToken(_typeTokenTypes).Type);
         if (right is null)
             throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
 
@@ -493,19 +518,13 @@ public partial class Parser
         if (left is null)
             return null;
 
-        if (!TryConsumeToken(out _,
-                TokenType.OperatorLess,
-                TokenType.OperatorLessEquals,
-                TokenType.OperatorGreater,
-                TokenType.OperatorGreaterEquals,
-                TokenType.OperatorEqualsEquals,
-                TokenType.OperatorBangEquals))  // TODO: extract common token groups
+        if (!TryConsumeToken(out var comparisonOperator, _comparisonOperators))
             return left;
         var right = ParseConcatenationExpression();
         if (right is null)
             throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
 
-        return new BinaryExpression(left, Operator.EqualComparison, right);  // TODO: operator mapping
+        return new BinaryExpression(left, OperatorMapper.MapComparisonOperator(comparisonOperator.Type), right);
     }
 
     // concatenation
@@ -533,13 +552,13 @@ public partial class Parser
         if (left is null)
             return null;
 
-        if (!TryConsumeToken(out _, TokenType.OperatorMinus, TokenType.OperatorPlus))  // TODO: extract common token groups
+        if (!TryConsumeToken(out var additiveOperator, _additiveOperator))
             return left;
         var right = ParseFactorExpression();
         if (right is null)
             throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
 
-        return new BinaryExpression(left, Operator.Addition, right);  // TODO: operator mapping
+        return new BinaryExpression(left, OperatorMapper.MapAdditiveOperator(additiveOperator.Type), right);
     }
 
     // factor
@@ -550,13 +569,13 @@ public partial class Parser
         if (left is null)
             return null;
 
-        if (!TryConsumeToken(out _, TokenType.OperatorAsterisk, TokenType.OperatorSlash, TokenType.OperatorPercent))  // TODO: extract common token groups
+        if (!TryConsumeToken(out var multiplicativeOperator, _multiplicativeOperators))
             return left;
         var right = ParseUnaryPrefixedExpression();
         if (right is null)
             throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
 
-        return new BinaryExpression(left, Operator.Multiplication, right);  // TODO: operator mapping
+        return new BinaryExpression(left, OperatorMapper.MapMultiplicativeOperator(multiplicativeOperator.Type), right);
     }
 
     // unary_prefixed
@@ -564,13 +583,13 @@ public partial class Parser
     //     | exponentiation;
     private Expression? ParseUnaryPrefixedExpression()
     {
-        if (!TryConsumeToken(out _, TokenType.OperatorPlus, TokenType.OperatorMinus, TokenType.OperatorBang))  // TODO: extract common token groups
+        if (!TryConsumeToken(out var unaryOperator, _unaryOperators))
             return ParseExponentiationExpression();
         var expression = ParseUnaryPrefixedExpression();
         if (expression is null)
             throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
 
-        return new UnaryExpression(expression, Operator.NumberPromotion);  // TODO: operator mapping
+        return new UnaryExpression(expression, OperatorMapper.MapUnaryOperator(unaryOperator.Type));
     }
 
     // exponentiation
@@ -591,18 +610,16 @@ public partial class Parser
     }
 
     // suffixed_expression
-    //     = primary_expression, [ function_call | namespace_access ];
+    //     = namespace_access, [ function_call ];
     private Expression? ParseSuffixedExpressionExpression()
     {
-        var left = ParsePrimaryExpression();
-        if (left is null)
+        var expression = ParseNamespaceAccessExpression();
+        if (expression is null)
             return null;
 
         if (TryParseFunctionCall(out var arguments))
-            return new FunctionCallExpression(left, arguments!);
-        if (TryParseNamespaceAccessExpression(out var right, out var @operator))
-            return new BinaryExpression(left, @operator!.Value, right!);
-        return left;
+            return new FunctionCallExpression(expression, arguments!);
+        return expression;
     }
 
     // function_call
@@ -635,18 +652,22 @@ public partial class Parser
     }
 
     // namespace_access
-    //     = OP_NAMESPACE_ACCESS, primary_expression;
-    private bool TryParseNamespaceAccessExpression(out Expression? parsedExpression, out Operator? @operator)
+    //     = primary_expression, { OP_NAMESPACE_ACCESS, primary_expression };
+    private Expression? ParseNamespaceAccessExpression()
     {
-        parsedExpression = null;
-        @operator = Operator.NamespaceAccess;  // TODO: operator mapping
-        if (!TryConsumeToken(out _, TokenType.OperatorDot, TokenType.OperatorQueryDot))
-            return false;
+        var left = ParsePrimaryExpression();
+        if (left is null)
+            return null;
 
-        parsedExpression = ParsePrimaryExpression();
-        if (parsedExpression is null)
+        if (!TryConsumeToken(out var operatorToken, TokenType.OperatorDot, TokenType.OperatorQueryDot))
+            return left;
+        var right = ParsePrimaryExpression();
+        if (right is null)
             throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
-        return true;
+
+        return new BinaryExpression(left,
+            operatorToken.Type == TokenType.OperatorDot ? Operator.NamespaceAccess : Operator.SafeNamespaceAccess,
+            right);
     }
 
     // primary_expression
@@ -655,16 +676,10 @@ public partial class Parser
     //     | LEFT_PARENTHESIS, expression, RIGHT_PARENTHESIS;
     private Expression? ParsePrimaryExpression()
     {
-        if (TryConsumeToken(out var literal,
-                TokenType.LiteralFloat,
-                TokenType.LiteralInteger,
-                TokenType.LiteralString,
-                TokenType.KeywordTrue,
-                TokenType.KeywordFalse,
-                TokenType.KeywordNull)) // TODO: extract
-            return new LiteralExpression(literal.Content!);  // TODO: mapping
+        if (TryConsumeToken(out var literal, _literalTokenTypes))
+            return LiteralMapper.MapToLiteralExpression(literal);
         if (TryConsumeToken(out var identifier, TokenType.Identifier))
-            return new LiteralExpression(identifier.Content!);
+            return new IdentifierExpression((string)identifier.Content!);
         if (TryConsumeToken(out _, TokenType.LeftParenthesis))
         {
             if (!TryParseExpression(out var expression))

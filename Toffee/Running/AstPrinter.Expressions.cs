@@ -148,7 +148,7 @@ public static partial class AstPrinter
     private static void PrintDynamic(FunctionCallExpression expression, int indentLevel)
     {
         Print("name", indentLevel);
-        Print(expression.Name, indentLevel + 1);
+        Print(expression.Expression, indentLevel + 1);
         foreach (var argument in expression.Arguments)
         {
             Print("argument", indentLevel);
@@ -163,6 +163,11 @@ public static partial class AstPrinter
 
     private static void PrintDynamic(LiteralExpression expression, int indentLevel)
     {
-        Print($"{expression.Value}", indentLevel);
+        Print($"{expression.Type.Humanize(LetterCasing.LowerCase)}: {expression.Value}", indentLevel);
+    }
+
+    private static void PrintDynamic(TypeExpression expression, int indentLevel)
+    {
+        Print($"type: {expression.Type.Humanize(LetterCasing.LowerCase)}", indentLevel);
     }
 }

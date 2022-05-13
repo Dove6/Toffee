@@ -2,7 +2,7 @@
 
 public abstract record Statement(bool IsTerminated = false);
 
-public record NamespaceImportStatement(IList<string> NamespaceLevels) : Statement;
+public record NamespaceImportStatement(IList<IdentifierExpression> NamespaceLevels) : Statement;
 public record VariableInitializationListStatement(IList<VariableInitialization> Items) : Statement;
 public record BreakStatement : Statement;
 public record BreakIfStatement(Expression Condition) : Statement;

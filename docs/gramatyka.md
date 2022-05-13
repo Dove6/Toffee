@@ -103,7 +103,7 @@ unary_prefixed
 exponentiation
     = suffixed_expression, { OP_CARET, suffixed_expression };
 suffixed_expression
-    = primary_expression, [ function_call | namespace_access ];
+    = namespace_access, { function_call };
 function_call
     = LEFT_PARENTHESIS, arguments_list, RIGHT_PARENTHESIS;
 arguments_list
@@ -111,7 +111,7 @@ arguments_list
 argument
     = expression;
 namespace_access
-    = OP_NAMESPACE_ACCESS, primary_expression;
+    = primary_expression, { OP_NAMESPACE_ACCESS, primary_expression };
 primary_expression
     = LITERAL
     | IDENTIFIER
