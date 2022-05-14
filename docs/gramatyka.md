@@ -101,17 +101,15 @@ unary_prefixed
     = OP_UNARY_PREFIX, unary_prefixed
     | exponentiation;
 exponentiation
-    = suffixed_expression, { OP_CARET, suffixed_expression };
-suffixed_expression
-    = namespace_access, { function_call };
-function_call
+    = namespace_access_or_function_call, { OP_CARET, namespace_access_or_function_call };
+namespace_access_or_function_call
+    = namespace_access, [ function_call_part ] { OP_DOT, namespace_access, [ function_call_part ] };
+function_call_part
     = LEFT_PARENTHESIS, arguments_list, RIGHT_PARENTHESIS;
 arguments_list
     = [ argument, { COMMA, argument } ];
 argument
     = expression;
-namespace_access
-    = primary_expression, { OP_NAMESPACE_ACCESS, primary_expression };
 primary_expression
     = LITERAL
     | IDENTIFIER
@@ -162,7 +160,7 @@ TYPE
     | KW_FUNCTION
     | KW_NULL;
 OPERATOR
-    = OP_NAMESPACE_ACCESS
+    = OP_DOT
     | OP_CARET
     | OP_UNARY_PREFIX
     | OP_MULTIPLICATIVE
@@ -174,9 +172,6 @@ OPERATOR
     | OP_QUERY_QUERY
     | OP_QUERY_GREATER
     | OP_ASSIGNMENT;
-OP_NAMESPACE_ACCESS
-    = OP_DOT
-    | OP_QUERY_DOT;
 PARENTHESES
     = LEFT_PARENTHESIS
     | RIGHT_PARENTHESIS

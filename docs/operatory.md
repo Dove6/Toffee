@@ -4,8 +4,6 @@
 |-----------|--------------|---------------------------|---------|---------|--------------|
 | 1         | ()           | wywołanie funkcji         | unarny  | sufiks  | lewostronna  |
 |           | .            | dostęp do przestrzeni     | binarny | infiks  | lewostronna  |
-|           | ?.           | bezpieczny dostęp         | binarny | infiks  | lewostronna  |
-|           | !            | wykluczenie opcjonalności | unarny  | sufiks  | lewostronna  |
 | 2         | ^            | potęgowanie               | binarny | infiks  | prawostronna |
 | 3         | +            | zachowanie znaku          | unarny  | prefiks | prawostronna |
 |           | -            | zmiana znaku              | unarny  | prefiks | prawostronna |

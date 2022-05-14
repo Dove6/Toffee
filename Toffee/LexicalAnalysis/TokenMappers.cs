@@ -43,7 +43,6 @@ public static class OperatorMapper
     private static readonly ReadOnlyDictionary<string, TokenType> OperatorMap = new(new Dictionary<string, TokenType>
     {
         { ".", TokenType.OperatorDot },
-        { "?.", TokenType.OperatorQueryDot },
         { "^", TokenType.OperatorCaret },
         { "+", TokenType.OperatorPlus },
         { "-", TokenType.OperatorMinus },

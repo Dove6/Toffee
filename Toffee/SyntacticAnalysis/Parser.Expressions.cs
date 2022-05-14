@@ -120,9 +120,9 @@ public partial class Parser
         while (TryMatchConditionalIfPart(true, out var elifPart))
             elifPartList.Add(elifPart!);
 
-        TryMatchConditionalElsePart(out var elsePart);
-
-        return new ConditionalExpression(ifPart!, elifPartList, elsePart);
+        return TryMatchConditionalElsePart(out var elsePart)
+            ? new ConditionalExpression(ifPart!, elifPartList, elsePart)
+            : new ConditionalExpression(ifPart!, elifPartList);
     }
 
     // conditional_if_part
@@ -160,12 +160,12 @@ public partial class Parser
     //     = LEFT_PARENTHESIS, expression, RIGHT_PARENTHESIS;
     private Expression ParseParenthesizedExpression()
     {
-        ConsumeToken(TokenType.LeftBrace);
+        ConsumeToken(TokenType.LeftParenthesis);
 
         if (!TryParseExpression(out var expression))
             throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
 
-        ConsumeToken(TokenType.RightBrace);
+        ConsumeToken(TokenType.RightParenthesis);
 
         return expression!;
     }
@@ -610,16 +610,16 @@ public partial class Parser
     }
 
     // exponentiation
-    //     = suffixed_expression, { OP_CARET, suffixed_expression };
+    //     = namespace_access_or_function_call, { OP_CARET, namespace_access_or_function_call };
     private Expression? ParseExponentiationExpression()
     {
-        var expression = ParseSuffixedExpressionExpression();
+        var expression = ParseNamespaceAccessOrFunctionCallExpression();
         if (expression is null)
             return null;
 
         while (TryConsumeToken(out _, TokenType.OperatorCaret))
         {
-            var right = ParseSuffixedExpressionExpression();
+            var right = ParseNamespaceAccessOrFunctionCallExpression();
             if (right is null)
                 throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
             expression = new BinaryExpression(expression, Operator.Exponentiation, right);
@@ -627,22 +627,32 @@ public partial class Parser
         return expression;
     }
 
-    // suffixed_expression
-    //     = namespace_access, [ function_call ];
-    private Expression? ParseSuffixedExpressionExpression()
+    // namespace_access_or_function_call
+    //     = namespace_access, [ function_call_part ] { OP_DOT, namespace_access, [ function_call_part ] };
+    private Expression? ParseNamespaceAccessOrFunctionCallExpression()
     {
-        var expression = ParseNamespaceAccessExpression();
+        var expression = ParsePrimaryExpression();
         if (expression is null)
             return null;
 
-        if (TryParseFunctionCall(out var arguments))
-            return new FunctionCallExpression(expression, arguments!);
+        if (TryParseFunctionCallPart(out var arguments))
+            expression = new FunctionCallExpression(expression, arguments!);
+
+        while (TryConsumeToken(out _, TokenType.OperatorDot))
+        {
+            var right = ParsePrimaryExpression();
+            if (right is null)
+                throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
+            expression = new BinaryExpression(expression, Operator.NamespaceAccess, right);
+            if (TryParseFunctionCallPart(out arguments))
+                expression = new FunctionCallExpression(expression, arguments!);
+        }
         return expression;
     }
 
-    // function_call
+    // function_call_part
     //     = LEFT_PARENTHESIS, arguments_list, RIGHT_PARENTHESIS;
-    private bool TryParseFunctionCall(out List<Expression>? functionArguments)
+    private bool TryParseFunctionCallPart(out List<Expression>? functionArguments)
     {
         functionArguments = new List<Expression>();
         if (!TryConsumeToken(out _, TokenType.LeftParenthesis))
@@ -667,26 +677,6 @@ public partial class Parser
             list.Add(nextArgument!);
         }
         return list;
-    }
-
-    // namespace_access
-    //     = primary_expression, { OP_NAMESPACE_ACCESS, primary_expression };
-    private Expression? ParseNamespaceAccessExpression()
-    {
-        var expression = ParsePrimaryExpression();
-        if (expression is null)
-            return null;
-
-        while (TryConsumeToken(out var operatorToken, TokenType.OperatorDot, TokenType.OperatorQueryDot))
-        {
-            var right = ParsePrimaryExpression();
-            if (right is null)
-                throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
-            expression = new BinaryExpression(expression,
-                operatorToken.Type == TokenType.OperatorDot ? Operator.NamespaceAccess : Operator.SafeNamespaceAccess,
-                right);
-        }
-        return expression;
     }
 
     // primary_expression

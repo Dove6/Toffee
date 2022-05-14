@@ -14,7 +14,6 @@ public class LexerTests
     [Trait("Category", "Operators")]
     [Theory]
     [InlineData(".", TokenType.OperatorDot)]
-    [InlineData("?.", TokenType.OperatorQueryDot)]
     [InlineData("^", TokenType.OperatorCaret)]
     [InlineData("+", TokenType.OperatorPlus)]
     [InlineData("-", TokenType.OperatorMinus)]
