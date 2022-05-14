@@ -109,6 +109,7 @@ public partial class Parser
                 break;
             }
             statementList.Add(parsedStatement);
+            SkipSemicolons();
         }
 
         ConsumeToken(TokenType.RightBrace);
