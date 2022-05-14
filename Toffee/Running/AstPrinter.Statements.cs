@@ -55,7 +55,6 @@ public static partial class AstPrinter
 
     private static void PrintDynamic(ExpressionStatement statement, int indentLevel)
     {
-        Print("expression", indentLevel);
-        Print(statement.Expression, indentLevel + 1);
+        Print(statement.Expression, indentLevel);
     }
 }

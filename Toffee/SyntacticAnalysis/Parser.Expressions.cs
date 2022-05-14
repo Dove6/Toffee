@@ -338,34 +338,36 @@ public partial class Parser
     //     = pattern_expression_conjunction, { KW_OR, pattern_expression_conjunction };
     private Expression? ParseDisjunctionPatternExpression()
     {
-        var left = ParseConjunctionPatternExpression();
-        if (left is null)
+        var expression = ParseConjunctionPatternExpression();
+        if (expression is null)
             return null;
 
-        if (!TryConsumeToken(out _, TokenType.KeywordOr))
-            return left;
-        var right = ParseConjunctionExpression();
-        if (right is null)
-            throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
-
-        return new BinaryExpression(left, Operator.PatternMatchingDisjunction, right);
+        while (TryConsumeToken(out _, TokenType.KeywordOr))
+        {
+            var right = ParseConjunctionPatternExpression();
+            if (right is null)
+                throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
+            expression = new BinaryExpression(expression, Operator.PatternMatchingDisjunction, right);
+        }
+        return expression;
     }
 
     // pattern_expression_conjunction
     //     = pattern_expression_non_associative, { KW_AND, pattern_expression_non_associative };
     private Expression? ParseConjunctionPatternExpression()
     {
-        var left = ParseNonAssociativePatternExpression();
-        if (left is null)
+        var expression = ParseNonAssociativePatternExpression();
+        if (expression is null)
             return null;
 
-        if (!TryConsumeToken(out _, TokenType.KeywordOr))
-            return left;
-        var right = ParseNonAssociativePatternExpression();
-        if (right is null)
-            throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
-
-        return new BinaryExpression(left, Operator.PatternMatchingConjunction, right);
+        while (TryConsumeToken(out _, TokenType.KeywordAnd))
+        {
+            var right = ParseNonAssociativePatternExpression();
+            if (right is null)
+                throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
+            expression = new BinaryExpression(expression, Operator.PatternMatchingConjunction, right);
+        }
+        return expression;
     }
 
     // pattern_expression_non_associative
@@ -415,7 +417,7 @@ public partial class Parser
 
         if (!TryConsumeToken(out var @operator, _assignmentTokenTypes))
             return left;
-        var right = ParseNullCoalescingExpression();
+        var right = ParseAssignmentExpression();
         if (right is null)
             throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
 
@@ -426,156 +428,171 @@ public partial class Parser
     //     = nullsafe_pipe, { OP_QUERY_QUERY, nullsafe_pipe };
     private Expression? ParseNullCoalescingExpression()
     {
-        var left = ParseNullsafePipeExpression();
-        if (left is null)
+        var expression = ParseNullsafePipeExpression();
+        if (expression is null)
             return null;
 
-        if (!TryConsumeToken(out _, TokenType.OperatorQueryQuery))
-            return left;
-        var right = ParseNullsafePipeExpression();
-        if (right is null)
-            throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
-
-        return new BinaryExpression(left, Operator.NullCoalescing, right);
+        while (TryConsumeToken(out _, TokenType.OperatorQueryQuery))
+        {
+            var right = ParseNullsafePipeExpression();
+            if (right is null)
+                throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
+            expression = new BinaryExpression(expression, Operator.NullCoalescing, right);
+        }
+        return expression;
     }
 
     // nullsafe_pipe
     //     = disjunction, { OP_QUERY_GREATER, disjunction };
     private Expression? ParseNullsafePipeExpression()
     {
-        var left = ParseDisjunctionExpression();
-        if (left is null)
+        var expression = ParseDisjunctionExpression();
+        if (expression is null)
             return null;
 
-        if (!TryConsumeToken(out _, TokenType.OperatorQueryGreater))
-            return left;
-        var right = ParseDisjunctionExpression();
-        if (right is null)
-            throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
-
-        return new BinaryExpression(left, Operator.NullSafePipe, right);
+        while (TryConsumeToken(out _, TokenType.OperatorQueryGreater))
+        {
+            var right = ParseDisjunctionExpression();
+            if (right is null)
+                throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
+            expression = new BinaryExpression(expression, Operator.NullSafePipe, right);
+        }
+        return expression;
     }
 
     // disjunction
     //     = conjunction, { OP_OR_OR, conjunction };
     private Expression? ParseDisjunctionExpression()
     {
-        var left = ParseConjunctionExpression();
-        if (left is null)
+        var expression = ParseConjunctionExpression();
+        if (expression is null)
             return null;
 
-        if (!TryConsumeToken(out _, TokenType.OperatorOrOr))
-            return left;
-        var right = ParseConjunctionExpression();
-        if (right is null)
-            throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
-
-        return new BinaryExpression(left, Operator.Disjunction, right);
+        while (TryConsumeToken(out _, TokenType.OperatorOrOr))
+        {
+            var right = ParseConjunctionExpression();
+            if (right is null)
+                throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
+            expression = new BinaryExpression(expression, Operator.Disjunction, right);
+        }
+        return expression;
     }
 
     // conjunction
     //     = type_check, { OP_AND_AND, type_check };
     private Expression? ParseConjunctionExpression()
     {
-        var left = ParseTypeCheckExpression();
-        if (left is null)
+        var expression = ParseTypeCheckExpression();
+        if (expression is null)
             return null;
 
-        if (!TryConsumeToken(out _, TokenType.OperatorAndAnd))
-            return left;
-        var right = ParseTypeCheckExpression();
-        if (right is null)
-            throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
-
-        return new BinaryExpression(left, Operator.Conjunction, right);
+        while (TryConsumeToken(out _, TokenType.OperatorAndAnd))
+        {
+            var right = ParseTypeCheckExpression();
+            if (right is null)
+                throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
+            expression = new BinaryExpression(expression, Operator.Conjunction, right);
+        }
+        return expression;
     }
 
     // type_check
     //     = comparison, { OP_TYPE_CHECK, TYPE };
     private Expression? ParseTypeCheckExpression()
     {
-        var left = ParseComparisonExpression();
-        if (left is null)
+        var expression = ParseComparisonExpression();
+        if (expression is null)
             return null;
 
-        if (!TryConsumeToken(out _, TokenType.KeywordIs))
-            return left;
-        var typeCheckOperator = TryConsumeToken(out _, TokenType.KeywordNot)
-            ? Operator.NotEqualTypeCheck
-            : Operator.EqualTypeCheck;
-        var right = TypeMapper.MapToTypeExpression(ConsumeToken(_typeTokenTypes).Type);
-        if (right is null)
-            throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
-
-        return new BinaryExpression(left, typeCheckOperator, right);
+        while (TryConsumeToken(out _, TokenType.KeywordIs))
+        {
+            var typeCheckOperator = TryConsumeToken(out _, TokenType.KeywordNot)
+                ? Operator.NotEqualTypeCheck
+                : Operator.EqualTypeCheck;
+            var right = TypeMapper.MapToTypeExpression(ConsumeToken(_typeTokenTypes).Type);
+            if (right is null)
+                throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
+            expression = new BinaryExpression(expression, typeCheckOperator, right);
+        }
+        return expression;
     }
 
     // comparison
     //     = concatenation, { OP_COMPARISON, concatenation };
     private Expression? ParseComparisonExpression()
     {
-        var left = ParseConcatenationExpression();
-        if (left is null)
+        var expression = ParseConcatenationExpression();
+        if (expression is null)
             return null;
 
-        if (!TryConsumeToken(out var comparisonOperator, _comparisonOperators))
-            return left;
-        var right = ParseConcatenationExpression();
-        if (right is null)
-            throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
-
-        return new BinaryExpression(left, OperatorMapper.MapComparisonOperator(comparisonOperator.Type), right);
+        while (TryConsumeToken(out var comparisonOperator, _comparisonOperators))
+        {
+            var right = ParseConcatenationExpression();
+            if (right is null)
+                throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
+            expression = new BinaryExpression(expression,
+                OperatorMapper.MapComparisonOperator(comparisonOperator.Type),
+                right);
+        }
+        return expression;
     }
 
     // concatenation
     //     = term, { OP_DOT_DOT, term };
     private Expression? ParseConcatenationExpression()
     {
-        var left = ParseTermExpression();
-        if (left is null)
+        var expression = ParseTermExpression();
+        if (expression is null)
             return null;
 
-        if (!TryConsumeToken(out _, TokenType.OperatorDotDot))
-            return left;
-        var right = ParseTermExpression();
-        if (right is null)
-            throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
-
-        return new BinaryExpression(left, Operator.Concatenation, right);
+        while (TryConsumeToken(out _, TokenType.OperatorDotDot))
+        {
+            var right = ParseTermExpression();
+            if (right is null)
+                throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
+            expression = new BinaryExpression(expression, Operator.Concatenation, right);
+        }
+        return expression;
     }
 
     // term
     //     = factor, { OP_ADDITIVE, factor };
     private Expression? ParseTermExpression()
     {
-        var left = ParseFactorExpression();
-        if (left is null)
+        var expression = ParseFactorExpression();
+        if (expression is null)
             return null;
 
-        if (!TryConsumeToken(out var additiveOperator, _additiveOperator))
-            return left;
-        var right = ParseFactorExpression();
-        if (right is null)
-            throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
-
-        return new BinaryExpression(left, OperatorMapper.MapAdditiveOperator(additiveOperator.Type), right);
+        while (TryConsumeToken(out var additiveOperator, _additiveOperator))
+        {
+            var right = ParseFactorExpression();
+            if (right is null)
+                throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
+            expression = new BinaryExpression(expression,
+                OperatorMapper.MapAdditiveOperator(additiveOperator.Type),
+                right);
+        }
+        return expression;
     }
 
     // factor
     //     = unary_prefixed, { OP_MULTIPLICATIVE, unary_prefixed };
     private Expression? ParseFactorExpression()
     {
-        var left = ParseUnaryPrefixedExpression();
-        if (left is null)
+        var expression = ParseUnaryPrefixedExpression();
+        if (expression is null)
             return null;
 
-        if (!TryConsumeToken(out var multiplicativeOperator, _multiplicativeOperators))
-            return left;
-        var right = ParseUnaryPrefixedExpression();
-        if (right is null)
-            throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
-
-        return new BinaryExpression(left, OperatorMapper.MapMultiplicativeOperator(multiplicativeOperator.Type), right);
+        while (TryConsumeToken(out var multiplicativeOperator, _multiplicativeOperators))
+        {
+            var right = ParseUnaryPrefixedExpression();
+            if (right is null)
+                throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
+            expression = new BinaryExpression(expression,
+                OperatorMapper.MapMultiplicativeOperator(multiplicativeOperator.Type),
+                right);
+        }
+        return expression;
     }
 
     // unary_prefixed
@@ -596,17 +613,18 @@ public partial class Parser
     //     = suffixed_expression, { OP_CARET, suffixed_expression };
     private Expression? ParseExponentiationExpression()
     {
-        var left = ParseSuffixedExpressionExpression();
-        if (left is null)
+        var expression = ParseSuffixedExpressionExpression();
+        if (expression is null)
             return null;
 
-        if (!TryConsumeToken(out _, TokenType.OperatorCaret))
-            return left;
-        var right = ParseSuffixedExpressionExpression();
-        if (right is null)
-            throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
-
-        return new BinaryExpression(left, Operator.Exponentiation, right);
+        while (TryConsumeToken(out _, TokenType.OperatorCaret))
+        {
+            var right = ParseSuffixedExpressionExpression();
+            if (right is null)
+                throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
+            expression = new BinaryExpression(expression, Operator.Exponentiation, right);
+        }
+        return expression;
     }
 
     // suffixed_expression
@@ -655,19 +673,20 @@ public partial class Parser
     //     = primary_expression, { OP_NAMESPACE_ACCESS, primary_expression };
     private Expression? ParseNamespaceAccessExpression()
     {
-        var left = ParsePrimaryExpression();
-        if (left is null)
+        var expression = ParsePrimaryExpression();
+        if (expression is null)
             return null;
 
-        if (!TryConsumeToken(out var operatorToken, TokenType.OperatorDot, TokenType.OperatorQueryDot))
-            return left;
-        var right = ParsePrimaryExpression();
-        if (right is null)
-            throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
-
-        return new BinaryExpression(left,
-            operatorToken.Type == TokenType.OperatorDot ? Operator.NamespaceAccess : Operator.SafeNamespaceAccess,
-            right);
+        while (TryConsumeToken(out var operatorToken, TokenType.OperatorDot, TokenType.OperatorQueryDot))
+        {
+            var right = ParsePrimaryExpression();
+            if (right is null)
+                throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
+            expression = new BinaryExpression(expression,
+                operatorToken.Type == TokenType.OperatorDot ? Operator.NamespaceAccess : Operator.SafeNamespaceAccess,
+                right);
+        }
+        return expression;
     }
 
     // primary_expression
