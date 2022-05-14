@@ -17,6 +17,13 @@ public partial class Parser
         return true;
     }
 
+    private Statement ParseStatement()
+    {
+        if (TryParseStatement(out var parsedStatement))
+            return parsedStatement!;
+        throw new ParserException(new ExpectedStatement(_lexer.CurrentToken));
+    }
+
     // unterminated_statement
     //     = namespace_import
     //     | variable_initialization_list
@@ -67,54 +74,36 @@ public partial class Parser
         if (!TryConsumeToken(out _, TokenType.KeywordInit))
             return null;
 
-        var list = new List<VariableInitialization>();
-        if (!TryParseVariableInitialization(out var firstInitialization))
-            throw new ParserException(new ExpectedStatement(_lexer.CurrentToken, typeof(VariableInitialization)));
-        list.Add(firstInitialization!);
-
+        var list = new List<VariableInitialization>
+        {
+            ParseVariableInitialization()
+        };
         while (TryConsumeToken(out _, TokenType.Comma))
-            if (TryParseVariableInitialization(out var nextInitialization))
-                list.Add(nextInitialization!);
-            else
-                throw new ParserException(new ExpectedStatement(_lexer.CurrentToken, typeof(VariableInitialization)));
+            list.Add(ParseVariableInitialization());
 
         return new VariableInitializationListStatement(list);
     }
 
     // variable_initialization
     //     = [ KW_CONST ], IDENTIFIER, [ OP_EQUALS, expression ];
-    private bool TryParseVariableInitialization(out VariableInitialization? variableInitialization)
+    private VariableInitialization ParseVariableInitialization()
     {
-        variableInitialization = null;
-
         var isConst = TryConsumeToken(out _, TokenType.KeywordConst);
+
         if (!TryConsumeToken(out var identifier, TokenType.Identifier))
-            return !isConst
-                ? false
-                : throw new ParserException(new UnexpectedToken(_lexer.CurrentToken, TokenType.Identifier));
+            throw new ParserException(new UnexpectedToken(_lexer.CurrentToken,
+                isConst ? new[] { TokenType.Identifier } : new[] { TokenType.KeywordConst, TokenType.Identifier }));
         var variableName = (string)identifier.Content!;
 
-        if (!TryConsumeToken(out _, TokenType.OperatorEquals))
-        {
-            variableInitialization = new VariableInitialization(variableName, null, isConst);
-            return true;
-        }
-
-        if (!TryParseExpression(out var initialValue))
-            throw new ParserException(new UnexpectedToken(_lexer.CurrentToken));
-        variableInitialization = new VariableInitialization(variableName, initialValue, isConst);
-        return true;
+        return TryConsumeToken(out _, TokenType.OperatorEquals)
+            ? new VariableInitialization(variableName, ParseExpression(), isConst)
+            : new VariableInitialization(variableName, null, isConst);
     }
 
     // break
     //     = KW_BREAK;
-    private Statement? ParseBreakStatement()
-    {
-        if (!TryConsumeToken(out _, TokenType.KeywordBreak))
-            return null;
-
-        return new BreakStatement();
-    }
+    private Statement? ParseBreakStatement() =>
+        TryConsumeToken(out _, TokenType.KeywordBreak) ? new BreakStatement() : null;
 
     // break_if
     //     = KW_BREAK_IF, parenthesized_expression;
@@ -134,17 +123,11 @@ public partial class Parser
         if (!TryConsumeToken(out _, TokenType.KeywordReturn))
             return null;
 
-        if (!TryParseExpression(out var parsedExpression))
-            return new ReturnStatement();
-
-        return new ReturnStatement(parsedExpression!);
+        return TryParseExpression(out var parsedExpression)
+            ? new ReturnStatement(parsedExpression!)
+            : new ReturnStatement();
     }
 
-    private Statement? ParseExpressionStatement()
-    {
-        if (!TryParseExpression(out var parsedExpression))
-            return null;
-
-        return new ExpressionStatement(parsedExpression!);
-    }
+    private Statement? ParseExpressionStatement() =>
+        TryParseExpression(out var parsedExpression) ? new ExpressionStatement(parsedExpression!) : null;
 }

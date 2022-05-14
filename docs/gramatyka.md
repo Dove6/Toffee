@@ -27,13 +27,13 @@ break_if
 return
     = KW_RETURN, expression;
 expression
-    = assignment
-    | block
+    = block
     | conditional_expression
     | for_loop_expression
     | while_loop_expression
     | function_definition
     | pattern_matching;
+    | assignment;
 block
     = LEFT_BRACE, { statement }, [ unterminated_statement ], RIGHT_BRACE;
 conditional_expression

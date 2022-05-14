@@ -64,13 +64,13 @@ public partial class Parser
     };
 
     // expression
-    //     = assignment
-    //     | block
+    //     = block
     //     | conditional_expression
     //     | for_loop_expression
     //     | while_loop_expression
     //     | function_definition
-    //     | pattern_matching;
+    //     | pattern_matching
+    //     | assignment;
     private bool TryParseExpression(out Expression? parsedExpression)
     {
         parsedExpression = null;
@@ -83,6 +83,13 @@ public partial class Parser
             return true;
         }
         return false;
+    }
+
+    private Expression ParseExpression()
+    {
+        if (TryParseExpression(out var parsedExpression))
+            return parsedExpression!;
+        throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
     }
 
     // block
@@ -137,8 +144,7 @@ public partial class Parser
             return false;
 
         var condition = ParseParenthesizedExpression();
-        if (!TryParseStatement(out var consequent))
-            throw new ParserException(new ExpectedStatement(_lexer.CurrentToken));
+        var consequent = ParseStatement();
         ifPart = new ConditionalElement(condition, consequent!);
         return true;
     }
@@ -151,8 +157,7 @@ public partial class Parser
         if (!TryConsumeToken(out _, TokenType.KeywordElse))
             return false;
 
-        if (!TryParseStatement(out elsePart))
-            throw new ParserException(new ExpectedStatement(_lexer.CurrentToken));
+        elsePart = ParseStatement();
         return true;
     }
 
@@ -161,13 +166,9 @@ public partial class Parser
     private Expression ParseParenthesizedExpression()
     {
         ConsumeToken(TokenType.LeftParenthesis);
-
-        if (!TryParseExpression(out var expression))
-            throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
-
+        var expression = ParseExpression();
         ConsumeToken(TokenType.RightParenthesis);
-
-        return expression!;
+        return expression;
     }
 
     // for_loop_expression
@@ -178,11 +179,7 @@ public partial class Parser
             return null;
 
         var (counterName, loopRange) = ParseForLoopSpecification();
-
-        if (!TryParseStatement(out var body))
-            throw new ParserException(new ExpectedStatement(_lexer.CurrentToken));
-
-        return new ForLoopExpression(loopRange, body!, counterName);
+        return new ForLoopExpression(loopRange, ParseStatement(), counterName);
     }
 
     // for_loop_specification
@@ -212,20 +209,16 @@ public partial class Parser
     //     = expression, [ COLON, expression, [ COLON, expression ] ];
     private ForLoopRange ParseForLoopRange()
     {
-        if (!TryParseExpression(out var first))
-            throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
-
+        var first = ParseExpression();
         if (!TryConsumeToken(out _, TokenType.Comma))
-            return new ForLoopRange(first!);
-        if (!TryParseExpression(out var second))
-            throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
+            return new ForLoopRange(first);
 
+        var second = ParseExpression();
         if (!TryConsumeToken(out _, TokenType.Comma))
-            return new ForLoopRange(second!, first!);
-        if (!TryParseExpression(out var third))
-            throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
+            return new ForLoopRange(second, first);
 
-        return new ForLoopRange(second!, first!, third!);
+        var third = ParseExpression();
+        return new ForLoopRange(second, first, third);
     }
 
     // while_loop_expression
@@ -236,11 +229,7 @@ public partial class Parser
             return null;
 
         var condition = ParseParenthesizedExpression();
-
-        if (!TryParseStatement(out var body))
-            throw new ParserException(new ExpectedStatement(_lexer.CurrentToken));
-
-        return new WhileLoopExpression(condition, body!);
+        return new WhileLoopExpression(condition, ParseStatement());
     }
 
     // function_definition
@@ -256,7 +245,7 @@ public partial class Parser
 
         var body = ParseBlockExpression();
         if (body is null)
-            throw new ParserException(new ExpectedExpression(_lexer.CurrentToken, typeof(BlockExpression)));
+            throw new ParserException(new ExpectedBlockExpression(_lexer.CurrentToken));
 
         return new FunctionDefinitionExpression(parameterList, (BlockExpression)body);
     }
@@ -270,10 +259,7 @@ public partial class Parser
             return list;
         list.Add(firstParameter!);
         while (TryConsumeToken(out _, TokenType.Comma))
-            if (TryParseParameter(out var nextParameter))
-                list.Add(nextParameter!);
-            else
-                throw new ParserException(new ExpectedStatement(_lexer.CurrentToken, typeof(FunctionParameter)));
+            list.Add(ParseParameter());
         return list;
     }
 
@@ -291,6 +277,14 @@ public partial class Parser
 
         parameter = new FunctionParameter((string)identifier.Content!, isConst, isNullable);
         return true;
+    }
+
+    private FunctionParameter ParseParameter()
+    {
+        if (TryParseParameter(out var parameter))
+            return parameter!;
+        throw new ParserException(
+            new UnexpectedToken(_lexer.CurrentToken, TokenType.KeywordConst, TokenType.Identifier));
     }
 
     // pattern_matching
@@ -318,17 +312,16 @@ public partial class Parser
     private bool TryParsePatternSpecification(out PatternMatchingBranch? specification)
     {
         specification = null;
+
         var isDefault = TryConsumeToken(out _, TokenType.KeywordDefault);
         var condition = (Expression?)null;
         if (!isDefault && (condition = ParseDisjunctionPatternExpression()) is null)
             return false;
 
         ConsumeToken(TokenType.Colon);
-        if (!TryParseExpression(out var consequent))
-            throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
+        var consequent = ParseExpression();
         ConsumeToken(TokenType.Semicolon);
-
-        specification = new PatternMatchingBranch(condition, consequent!);
+        specification = new PatternMatchingBranch(condition, consequent);
         return true;
     }
 
@@ -336,17 +329,12 @@ public partial class Parser
     //     = pattern_expression_disjunction;
     // pattern_expression_disjunction
     //     = pattern_expression_conjunction, { KW_OR, pattern_expression_conjunction };
-    private Expression? ParseDisjunctionPatternExpression()
+    private Expression ParseDisjunctionPatternExpression()
     {
         var expression = ParseConjunctionPatternExpression();
-        if (expression is null)
-            return null;
-
         while (TryConsumeToken(out _, TokenType.KeywordOr))
         {
             var right = ParseConjunctionPatternExpression();
-            if (right is null)
-                throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
             expression = new BinaryExpression(expression, Operator.PatternMatchingDisjunction, right);
         }
         return expression;
@@ -354,17 +342,12 @@ public partial class Parser
 
     // pattern_expression_conjunction
     //     = pattern_expression_non_associative, { KW_AND, pattern_expression_non_associative };
-    private Expression? ParseConjunctionPatternExpression()
+    private Expression ParseConjunctionPatternExpression()
     {
         var expression = ParseNonAssociativePatternExpression();
-        if (expression is null)
-            return null;
-
         while (TryConsumeToken(out _, TokenType.KeywordAnd))
         {
             var right = ParseNonAssociativePatternExpression();
-            if (right is null)
-                throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
             expression = new BinaryExpression(expression, Operator.PatternMatchingConjunction, right);
         }
         return expression;
@@ -375,7 +358,7 @@ public partial class Parser
     //     | OP_TYPE_CHECK, TYPE
     //     | expression
     //     | LEFT_PARENTHESIS, pattern_expression_disjunction, RIGHT_PARENTHESIS;
-    private Expression? ParseNonAssociativePatternExpression()
+    private Expression ParseNonAssociativePatternExpression()
     {
         if (TryConsumeToken(out var comparisonOperator, _comparisonOperators))
             if (TryConsumeToken(out var literal, _literalTokenTypes))
@@ -396,20 +379,20 @@ public partial class Parser
 
         if (TryConsumeToken(out _, TokenType.LeftParenthesis))
         {
-            var patternExpression = ParsePatternMatchingExpression();
-            if (patternExpression is null)
-                throw new ParserException(
-                    new ExpectedExpression(_lexer.CurrentToken, typeof(PatternMatchingExpression)));
+            var patternExpression = ParseDisjunctionPatternExpression();
             ConsumeToken(TokenType.RightParenthesis);
             return patternExpression;
         }
 
-        return ParseAssignmentExpression();
+        var parsedExpression = ParseAssignmentExpression();
+        if (parsedExpression is null)
+            throw new ParserException(new ExpectedPatternExpression(_lexer.CurrentToken));
+        return parsedExpression;
     }
 
     // assignment
     //     = null_coalescing, [ OP_ASSIGNMENT, assignment ];
-    private Expression? ParseAssignmentExpression()  // TODO: introduce indirect ParseExpression
+    private Expression? ParseAssignmentExpression()
     {
         var left = ParseNullCoalescingExpression();
         if (left is null)
@@ -672,9 +655,8 @@ public partial class Parser
         list.Add(firstArgument!);
         while (TryConsumeToken(out _, TokenType.Comma))
         {
-            if (!TryParseExpression(out var nextArgument))
-                throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
-            list.Add(nextArgument!);
+            var nextArgument = ParseExpression();
+            list.Add(nextArgument);
         }
         return list;
     }
@@ -689,13 +671,11 @@ public partial class Parser
             return LiteralMapper.MapToLiteralExpression(literal);
         if (TryConsumeToken(out var identifier, TokenType.Identifier))
             return new IdentifierExpression((string)identifier.Content!);
-        if (TryConsumeToken(out _, TokenType.LeftParenthesis))
-        {
-            if (!TryParseExpression(out var expression))
-                throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
-            ConsumeToken(TokenType.RightParenthesis);
-            return expression;
-        }
-        return null;
+        if (!TryConsumeToken(out _, TokenType.LeftParenthesis))
+            return null;
+
+        var expression = ParseExpression();
+        ConsumeToken(TokenType.RightParenthesis);
+        return expression;
     }
 }

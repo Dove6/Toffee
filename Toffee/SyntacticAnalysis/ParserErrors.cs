@@ -7,12 +7,11 @@ namespace Toffee.SyntacticAnalysis;
 
 public abstract record ParserError(Position Position) : Error(Position);
 
-public record UnexpectedToken(Token ActualToken, params TokenType[] ExpectedType)
-    : ParserError(ActualToken.StartPosition);
-public record ExpectedStatement(Token ActualToken, Type? ExpectedType = null)
-    : ParserError(ActualToken.StartPosition);
-public record ExpectedExpression(Token ActualToken, Type? ExpectedType = null)
-    : ParserError(ActualToken.StartPosition);
+public record UnexpectedToken(Token ActualToken, params TokenType[] ExpectedType) : ParserError(ActualToken.StartPosition);
+public record ExpectedStatement(Token ActualToken) : ParserError(ActualToken.StartPosition);
+public record ExpectedExpression(Token ActualToken) : ParserError(ActualToken.StartPosition);
+public record ExpectedBlockExpression(Token ActualToken) : ParserError(ActualToken.StartPosition);
+public record ExpectedPatternExpression(Token ActualToken) : ParserError(ActualToken.StartPosition);
 
 public static class ParserErrorExtensions
 {
