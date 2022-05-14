@@ -39,19 +39,19 @@ block
 conditional_expression
     = conditional_if_part, { conditional_elif_part }, [ conditional_else_part ];
 conditional_if_part
-    = KW_IF, parenthesized_expression, unterminated_statement;
+    = KW_IF, parenthesized_expression, expression;
 conditional_elif_part
-    = KW_ELIF, parenthesized_expression, unterminated_statement;
+    = KW_ELIF, parenthesized_expression, expression;
 conditional_else_part
-    = KW_ELSE, unterminated_statement;
+    = KW_ELSE, expression;
 for_loop_expression
-    = KW_FOR, for_loop_specification, unterminated_statement;
+    = KW_FOR, for_loop_specification, expression;
 for_loop_specification
     = LEFT_PARENTHESIS, [ IDENTIFIER, COMMA ], for_loop_range, RIGHT_PARENTHESIS;
 for_loop_range
     = expression, [ COLON, expression, [ COLON, expression ] ];
 while_loop_expression
-    = KW_WHILE, parenthesized_expression, unterminated_statement;
+    = KW_WHILE, parenthesized_expression, expression;
 function_definition
     = KW_FUNCTI, LEFT_PARENTHESIS, parameter_list, RIGHT_PARENTHESIS, block;
 parameter_list

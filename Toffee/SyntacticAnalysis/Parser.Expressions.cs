@@ -144,20 +144,20 @@ public partial class Parser
             return false;
 
         var condition = ParseParenthesizedExpression();
-        var consequent = ParseStatement();
-        ifPart = new ConditionalElement(condition, consequent!);
+        var consequent = ParseExpression();
+        ifPart = new ConditionalElement(condition, consequent);
         return true;
     }
 
     // conditional_else_part
     //     = KW_ELSE, unterminated_statement;
-    private bool TryMatchConditionalElsePart(out Statement? elsePart)
+    private bool TryMatchConditionalElsePart(out Expression? elsePart)
     {
         elsePart = null;
         if (!TryConsumeToken(out _, TokenType.KeywordElse))
             return false;
 
-        elsePart = ParseStatement();
+        elsePart = ParseExpression();
         return true;
     }
 
@@ -179,7 +179,7 @@ public partial class Parser
             return null;
 
         var (counterName, loopRange) = ParseForLoopSpecification();
-        return new ForLoopExpression(loopRange, ParseStatement(), counterName);
+        return new ForLoopExpression(loopRange, ParseExpression(), counterName);
     }
 
     // for_loop_specification
@@ -229,7 +229,7 @@ public partial class Parser
             return null;
 
         var condition = ParseParenthesizedExpression();
-        return new WhileLoopExpression(condition, ParseStatement());
+        return new WhileLoopExpression(condition, ParseExpression());
     }
 
     // function_definition

@@ -17,13 +17,6 @@ public partial class Parser
         return true;
     }
 
-    private Statement ParseStatement()
-    {
-        if (TryParseStatement(out var parsedStatement))
-            return parsedStatement!;
-        throw new ParserException(new ExpectedStatement(_lexer.CurrentToken));
-    }
-
     // unterminated_statement
     //     = namespace_import
     //     | variable_initialization_list
