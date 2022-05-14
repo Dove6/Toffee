@@ -12,7 +12,7 @@ public class Application
     private TextReader? _reader;
     private IScanner? _scanner;
     private ILexerErrorHandler? _logger;
-    private BaseLexer? _lexer;
+    private ILexer? _lexer;
     private IParser? _parser;
 
     [DefaultCommand]

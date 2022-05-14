@@ -1,6 +1,6 @@
 ﻿namespace Toffee.LexicalAnalysis;
 
-public abstract class BaseLexer
+public abstract class BaseLexer : ILexer
 {
     private int _maxLexemeLength;
     public int MaxLexemeLength
@@ -14,8 +14,9 @@ public abstract class BaseLexer
         }
     }
 
-    public bool HadError { get; protected set; }
     public Token CurrentToken { get; protected set; }
+
+    public bool HadError { get; protected set; }
     public LexerError? CurrentError { get; protected set; }
 
     protected BaseLexer(int? maxLexemeLength = null)
@@ -23,10 +24,6 @@ public abstract class BaseLexer
         MaxLexemeLength = maxLexemeLength ?? int.MaxValue;
     }
 
-    /// <summary>
-    /// Advances the position of the lexer in the token stream.
-    /// </summary>
-    /// <returns>Superseded token - the current one from before the method was called</returns>
     public abstract Token Advance();
 
     public void ResetError()

@@ -5,7 +5,7 @@ namespace Toffee.SyntacticAnalysis;
 
 public partial class Parser : IParser
 {
-    private readonly BaseLexer _lexer;
+    private readonly ILexer _lexer;
     private readonly IParserErrorHandler? _errorHandler;
 
     public Statement? CurrentStatement { get; private set; }
@@ -16,9 +16,9 @@ public partial class Parser : IParser
     private delegate Expression? ParseExpressionDelegate();
     private readonly List<ParseExpressionDelegate> _expressionParsers;
 
-    public Parser(BaseLexer lexer, IParserErrorHandler? errorHandler = null)
+    public Parser(ILexer lexer, IParserErrorHandler? errorHandler = null)
     {
-        _lexer = lexer;
+        _lexer = new CommentSkippingLexer(lexer);
         _errorHandler = errorHandler;
 
         _statementParsers = new List<ParseStatementDelegate>
