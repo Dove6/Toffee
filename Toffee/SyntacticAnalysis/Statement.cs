@@ -1,6 +1,6 @@
 ﻿namespace Toffee.SyntacticAnalysis;
 
-public abstract record Statement(bool IsTerminated = false);
+public abstract record Statement(bool IsTerminated = false);  // TODO: add Position
 
 public record NamespaceImportStatement(IList<IdentifierExpression> NamespaceLevels) : Statement;
 public record VariableInitializationListStatement(IList<VariableInitialization> Items) : Statement;

@@ -94,11 +94,13 @@ public partial class Parser
 
     // block
     //     = LEFT_BRACE, { statement }, [ unterminated_statement ], RIGHT_BRACE;
+    // TODO: LEFT_BRACE, unterminated_statement, { SEMICOLON, { SEMICOLON }, unterminated_statement }, RIGHT_BRACE;
     private Expression? ParseBlockExpression()
     {
         if (!TryConsumeToken(out _, TokenType.LeftBrace))
             return null;
 
+        // TODO: check for missing braces
         var statementList = new List<Statement>();
         var unterminatedStatement = (Statement?)null;
         while (TryParseStatement(out var parsedStatement))
@@ -166,6 +168,7 @@ public partial class Parser
     //     = LEFT_PARENTHESIS, expression, RIGHT_PARENTHESIS;
     private Expression ParseParenthesizedExpression()
     {
+        // TODO: check for missing parentheses
         ConsumeToken(TokenType.LeftParenthesis);
         var expression = ParseExpression();
         ConsumeToken(TokenType.RightParenthesis);
@@ -193,6 +196,7 @@ public partial class Parser
     /// </returns>
     private (string?, ForLoopRange) ParseForLoopSpecification()
     {
+        // TODO: check for missing parentheses
         ConsumeToken(TokenType.LeftParenthesis);
 
         var hasCounter = TryConsumeToken(out var identifier, TokenType.Identifier);
@@ -240,6 +244,7 @@ public partial class Parser
         if (!TryConsumeToken(out _, TokenType.KeywordFuncti))
             return null;
 
+        // TODO: check for missing parentheses
         ConsumeToken(TokenType.LeftParenthesis);
         var parameterList = ParseParameterList();
         ConsumeToken(TokenType.RightParenthesis);
@@ -295,6 +300,7 @@ public partial class Parser
         if (!TryConsumeToken(out _, TokenType.KeywordMatch))
             return null;
 
+        // TODO: check for missing parentheses and braces
         var argument = ParseParenthesizedExpression();
         ConsumeToken(TokenType.LeftBrace);
 
@@ -391,6 +397,7 @@ private Expression? ParseDisjunctionPatternExpression()
         if (!TryConsumeToken(out _, TokenType.LeftParenthesis))
             return ParseAssignmentExpression();
 
+        // TODO: check for missing parentheses
         var patternExpression = ParseDisjunctionPatternExpression();
         if (patternExpression is null)
             throw new ParserException(new ExpectedPatternExpression(_lexer.CurrentToken));
@@ -645,6 +652,7 @@ private Expression? ParseDisjunctionPatternExpression()
         functionArguments = new List<Expression>();
         if (!TryConsumeToken(out _, TokenType.LeftParenthesis))
             return false;
+        // TODO: check for missing parentheses
         functionArguments = ParseArgumentsList();
         ConsumeToken(TokenType.RightParenthesis);
         return true;
@@ -680,6 +688,7 @@ private Expression? ParseDisjunctionPatternExpression()
         if (!TryConsumeToken(out _, TokenType.LeftParenthesis))
             return null;
 
+        // TODO: check for missing parentheses
         var expression = ParseExpression();
         ConsumeToken(TokenType.RightParenthesis);
         return expression;

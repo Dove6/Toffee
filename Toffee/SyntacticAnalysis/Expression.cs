@@ -1,6 +1,6 @@
 ﻿namespace Toffee.SyntacticAnalysis;
 
-public abstract record Expression;
+public abstract record Expression;  // TODO: add Position
 
 public record BlockExpression(IList<Statement> Statements, Statement? UnterminatedStatement = null) : Expression;
 public record ConditionalExpression(ConditionalElement IfPart, IList<ConditionalElement> ElifParts,
