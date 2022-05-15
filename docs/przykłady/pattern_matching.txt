@@ -9,7 +9,7 @@ init const matchingExample = functi(var) {
         is int and > 8: "Liczba całkowita większa od 8";
         default:        "Brak dopasowania";
     }
-}
+};
 
 print(a);  // "Dokładnie pięć"
 print(b);  // "Liczba całkowita większa od 8"

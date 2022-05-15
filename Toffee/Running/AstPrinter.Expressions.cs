@@ -1,4 +1,5 @@
-﻿using Humanizer;
+﻿using System.Globalization;
+using Humanizer;
 using Toffee.SyntacticAnalysis;
 
 namespace Toffee.Running;
@@ -63,9 +64,11 @@ public static partial class AstPrinter
 
     private static void PrintDynamic(BlockExpression expression, int indentLevel)
     {
-        Print("terminated", indentLevel);
         foreach (var substatement in expression.Statements)
+        {
+            Print("terminated", indentLevel);
             Print(substatement, indentLevel + 1);
+        }
         if (expression.UnterminatedStatement is null)
             return;
         Print("unterminated", indentLevel);
@@ -131,6 +134,7 @@ public static partial class AstPrinter
 
     private static void PrintDynamic(BinaryExpression expression, int indentLevel)
     {
+        // TODO: shorter form (operator)
         Print(expression.Operator, indentLevel);
         Print("left", indentLevel);
         Print(expression.Left, indentLevel + 1);
@@ -140,6 +144,7 @@ public static partial class AstPrinter
 
     private static void PrintDynamic(UnaryExpression expression, int indentLevel)
     {
+        // TODO: shorter form (operator)
         Print(expression.Operator, indentLevel);
         Print("expression", indentLevel);
         Print(expression.Expression, indentLevel + 1);
@@ -147,7 +152,7 @@ public static partial class AstPrinter
 
     private static void PrintDynamic(FunctionCallExpression expression, int indentLevel)
     {
-        Print("name", indentLevel);
+        Print("expression", indentLevel);
         Print(expression.Expression, indentLevel + 1);
         foreach (var argument in expression.Arguments)
         {
@@ -158,16 +163,31 @@ public static partial class AstPrinter
 
     private static void PrintDynamic(IdentifierExpression expression, int indentLevel)
     {
+        // TODO: shorter form (name)
         Print(expression.Name, indentLevel);
     }
 
     private static void PrintDynamic(LiteralExpression expression, int indentLevel)
     {
-        Print($"{expression.Type.Humanize(LetterCasing.LowerCase)}: {expression.Value}", indentLevel);
+        // TODO: shorter form (type, value)
+        var description = expression.Type switch
+        {
+            DataType.Null => null,
+            DataType.String => $"\"{expression.Value}\"",
+            DataType.Float => ((float)expression.Value!).ToString(CultureInfo.InvariantCulture),
+            DataType.Integer => expression.Value!.ToString(),
+            DataType.Bool => expression.Value is true ? "true" : "false",
+            // TODO: exclude function from literal types
+            _ => throw new ArgumentOutOfRangeException(nameof(expression.Type), expression.Type, null)
+        };
+        if (description is not null)
+            description = $": {description}";
+        Print($"{expression.Type.Humanize(LetterCasing.LowerCase)}{description}", indentLevel);
     }
 
     private static void PrintDynamic(TypeExpression expression, int indentLevel)
     {
+        // TODO: shorter form (type)
         Print($"type: {expression.Type.Humanize(LetterCasing.LowerCase)}", indentLevel);
     }
 }

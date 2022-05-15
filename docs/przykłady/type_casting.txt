@@ -2,7 +2,7 @@
 init const integer = 5, const floatingPoint = 5., const charString = "5", const boolean = true;
 
 //typy specjalne: null, funkcja
-init const nothing = null, function = functi() { null };
+init const nothing = null, func = functi() { null };
 
 // konwersje jawne za pomocą funkcji
 

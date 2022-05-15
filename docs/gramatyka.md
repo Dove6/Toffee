@@ -78,7 +78,7 @@ pattern_expression_non_associative
     | expression
     | LEFT_PARENTHESIS, pattern_expression_disjunction, RIGHT_PARENTHESIS;
 assignment
-    = null_coalescing, [ OP_ASSIGNMENT, assignment ];
+    = null_coalescing, [ OP_ASSIGNMENT, expression ];
 null_coalescing
     = nullsafe_pipe, { OP_QUERY_QUERY, nullsafe_pipe };
 nullsafe_pipe

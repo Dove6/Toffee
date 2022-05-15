@@ -22,3 +22,4 @@ public record FunctionCallExpression(Expression Expression, IList<Expression> Ar
 public record IdentifierExpression(string Name) : Expression;
 public record LiteralExpression(DataType Type, object? Value) : Expression;
 public record TypeExpression(DataType Type) : Expression;
+// TODO: GroupingExpression

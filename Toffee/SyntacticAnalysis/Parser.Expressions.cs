@@ -211,11 +211,11 @@ public partial class Parser
     private ForLoopRange ParseForLoopRange()
     {
         var first = ParseExpression();
-        if (!TryConsumeToken(out _, TokenType.Comma))
+        if (!TryConsumeToken(out _, TokenType.Colon))
             return new ForLoopRange(first);
 
         var second = ParseExpression();
-        if (!TryConsumeToken(out _, TokenType.Comma))
+        if (!TryConsumeToken(out _, TokenType.Colon))
             return new ForLoopRange(second, first);
 
         var third = ParseExpression();
@@ -330,12 +330,17 @@ public partial class Parser
     //     = pattern_expression_disjunction;
     // pattern_expression_disjunction
     //     = pattern_expression_conjunction, { KW_OR, pattern_expression_conjunction };
-    private Expression ParseDisjunctionPatternExpression()
+private Expression? ParseDisjunctionPatternExpression()
     {
         var expression = ParseConjunctionPatternExpression();
+        if (expression is null)
+            return null;
+
         while (TryConsumeToken(out _, TokenType.KeywordOr))
         {
             var right = ParseConjunctionPatternExpression();
+            if (right is null)
+                throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
             expression = new BinaryExpression(expression, Operator.PatternMatchingDisjunction, right);
         }
         return expression;
@@ -343,12 +348,17 @@ public partial class Parser
 
     // pattern_expression_conjunction
     //     = pattern_expression_non_associative, { KW_AND, pattern_expression_non_associative };
-    private Expression ParseConjunctionPatternExpression()
+    private Expression? ParseConjunctionPatternExpression()
     {
         var expression = ParseNonAssociativePatternExpression();
+        if (expression is null)
+            return null;
+
         while (TryConsumeToken(out _, TokenType.KeywordAnd))
         {
             var right = ParseNonAssociativePatternExpression();
+            if (right is null)
+                throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
             expression = new BinaryExpression(expression, Operator.PatternMatchingConjunction, right);
         }
         return expression;
@@ -359,7 +369,7 @@ public partial class Parser
     //     | OP_TYPE_CHECK, TYPE
     //     | expression
     //     | LEFT_PARENTHESIS, pattern_expression_disjunction, RIGHT_PARENTHESIS;
-    private Expression ParseNonAssociativePatternExpression()
+    private Expression? ParseNonAssociativePatternExpression()
     {
         if (TryConsumeToken(out var comparisonOperator, _comparisonOperators))
             if (TryConsumeToken(out var literal, _literalTokenTypes))
@@ -378,34 +388,28 @@ public partial class Parser
             throw new ParserException(new UnexpectedToken(_lexer.CurrentToken, _typeTokenTypes));
         }
 
-        if (TryConsumeToken(out _, TokenType.LeftParenthesis))
-        {
-            var patternExpression = ParseDisjunctionPatternExpression();
-            ConsumeToken(TokenType.RightParenthesis);
-            return patternExpression;
-        }
+        if (!TryConsumeToken(out _, TokenType.LeftParenthesis))
+            return ParseAssignmentExpression();
 
-        var parsedExpression = ParseAssignmentExpression();
-        if (parsedExpression is null)
+        var patternExpression = ParseDisjunctionPatternExpression();
+        if (patternExpression is null)
             throw new ParserException(new ExpectedPatternExpression(_lexer.CurrentToken));
-        return parsedExpression;
+        ConsumeToken(TokenType.RightParenthesis);
+        return patternExpression;
+
     }
 
     // assignment
-    //     = null_coalescing, [ OP_ASSIGNMENT, assignment ];
+    //     = null_coalescing, [ OP_ASSIGNMENT, expression ];
     private Expression? ParseAssignmentExpression()
     {
         var left = ParseNullCoalescingExpression();
         if (left is null)
             return null;
 
-        if (!TryConsumeToken(out var @operator, _assignmentTokenTypes))
-            return left;
-        var right = ParseAssignmentExpression();
-        if (right is null)
-            throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
-
-        return new BinaryExpression(left, OperatorMapper.MapAssignmentOperator(@operator.Type), right);
+        return TryConsumeToken(out var @operator, _assignmentTokenTypes)
+            ? new BinaryExpression(left, OperatorMapper.MapAssignmentOperator(@operator.Type), ParseExpression())
+            : left;
     }
 
     // null_coalescing
@@ -665,6 +669,7 @@ public partial class Parser
     // primary_expression
     //     = LITERAL
     //     | IDENTIFIER
+    //     | TODO: type cast (TYPE, LEFT_PARENTHESIS, expression, RIGHT_PARENTHESIS)
     //     | LEFT_PARENTHESIS, expression, RIGHT_PARENTHESIS;
     private Expression? ParsePrimaryExpression()
     {

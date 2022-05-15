@@ -17,8 +17,7 @@ public static partial class AstPrinter
         Print($"{initialization.Name} ({mutability})", indentLevel);
         if (initialization.InitialValue is null)
             return;
-        Print("initial value", indentLevel + 1);
-        Print(initialization.InitialValue, indentLevel + 2);
+        Print(initialization.InitialValue, indentLevel + 1);
     }
 
     private static void PrintDynamic(Statement statement, int indentLevel)
@@ -27,30 +26,26 @@ public static partial class AstPrinter
 
     private static void PrintDynamic(NamespaceImportStatement statement, int indentLevel)
     {
-        Print("path");
         foreach (var level in statement.NamespaceLevels)
-            Print(level.Name, indentLevel + 1);
+            Print(level.Name, indentLevel);
     }
 
     private static void PrintDynamic(VariableInitializationListStatement statement, int indentLevel)
     {
-        Print("items", indentLevel);
         foreach (var initialization in statement.Items)
-            Print(initialization, indentLevel + 1);
+            Print(initialization, indentLevel);
     }
 
     private static void PrintDynamic(BreakIfStatement statement, int indentLevel)
     {
-        Print("condition", indentLevel);
-        Print(statement.Condition, indentLevel + 1);
+        Print(statement.Condition, indentLevel);
     }
 
     private static void PrintDynamic(ReturnStatement statement, int indentLevel)
     {
         if (statement.Value is null)
             return;
-        Print("value", indentLevel);
-        Print(statement.Value, indentLevel + 1);
+        Print(statement.Value, indentLevel);
     }
 
     private static void PrintDynamic(ExpressionStatement statement, int indentLevel)
