@@ -51,8 +51,8 @@ public static class OperatorMapper
     private static readonly ReadOnlyDictionary<TokenType, Operator> UnaryMap = new(new Dictionary<TokenType, Operator>
     {
         { TokenType.OperatorPlus, Operator.NumberPromotion },
-        { TokenType.OperatorMinus, Operator.LogicalNegation },
-        { TokenType.OperatorBang, Operator.ArithmeticNegation }
+        { TokenType.OperatorMinus, Operator.ArithmeticNegation },
+        { TokenType.OperatorBang, Operator.LogicalNegation }
     });
 
     public static Operator MapComparisonOperator(TokenType tokenType) => ComparisonMap[tokenType];  // TODO: throws
