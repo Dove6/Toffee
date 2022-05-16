@@ -27,4 +27,13 @@
       <ProjectReference Include="..\Toffee\Toffee.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Update="SyntacticAnalysis\ParserTests.Expressions.cs">
+        <DependentUpon>ParserTests.cs</DependentUpon>
+      </Compile>
+      <Compile Update="SyntacticAnalysis\ParserTests.Statements.cs">
+        <DependentUpon>ParserTests.cs</DependentUpon>
+      </Compile>
+    </ItemGroup>
+
 </Project>

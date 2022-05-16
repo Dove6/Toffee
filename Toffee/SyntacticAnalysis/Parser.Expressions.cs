@@ -102,8 +102,7 @@ public partial class Parser
     }
 
     // block
-    //     = LEFT_BRACE, { statement }, [ unterminated_statement ], RIGHT_BRACE;
-    // TODO: LEFT_BRACE, unterminated_statement, { SEMICOLON, { SEMICOLON }, unterminated_statement }, RIGHT_BRACE;
+    //     = LEFT_BRACE, unterminated_statement, { SEMICOLON, { SEMICOLON }, unterminated_statement }, RIGHT_BRACE;
     private Expression? ParseBlockExpression() => SupplyPosition(() =>
     {
         if (!TryConsumeToken(out _, TokenType.LeftBrace))
