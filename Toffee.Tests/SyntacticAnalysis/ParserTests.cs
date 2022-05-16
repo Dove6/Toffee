@@ -7,7 +7,7 @@ namespace Toffee.Tests.SyntacticAnalysis;
 public partial class ParserTests
 {
     private static EquivalencyAssertionOptions<T> ProvideOptions<T>(EquivalencyAssertionOptions<T> options) =>
-        options.RespectingRuntimeTypes();
+        options.RespectingRuntimeTypes().AllowingInfiniteRecursion();
 
     private static Token GetDefaultToken(TokenType type) => new(type, MapTokenTypeToContent(type));
 

@@ -17,7 +17,7 @@ public record FunctionParameter(string Name, bool IsConst = false, bool IsNullAl
 public record PatternMatchingBranch(Expression? Pattern, Expression Consequent);
 
 public record BinaryExpression(Expression Left, Operator Operator, Expression Right) : Expression;
-public record UnaryExpression(Expression Expression, Operator Operator) : Expression;
+public record UnaryExpression(Operator Operator, Expression Expression) : Expression;
 public record FunctionCallExpression(Expression Expression, IList<Expression> Arguments) : Expression;
 public record IdentifierExpression(string Name) : Expression;
 public record LiteralExpression(DataType Type, object? Value) : Expression;

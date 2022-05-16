@@ -101,9 +101,9 @@ unary_prefixed
     = OP_UNARY_PREFIX, unary_prefixed
     | exponentiation;
 exponentiation
-    = namespace_access_or_function_call, { OP_CARET, namespace_access_or_function_call };
+    = namespace_access_or_function_call, { OP_CARET, exponentiation };
 namespace_access_or_function_call
-    = namespace_access, [ function_call_part ] { OP_DOT, namespace_access, [ function_call_part ] };
+    = namespace_access, { function_call_part } { OP_DOT, namespace_access, { function_call_part } };
 function_call_part
     = LEFT_PARENTHESIS, arguments_list, RIGHT_PARENTHESIS;
 arguments_list

@@ -464,6 +464,83 @@ public partial class ParserTests
         unaryExpression.Expression.Should().BeEquivalentTo(expectedExpression, ProvideOptions);
     }
 
+    [Trait("Category", "Nesting")]
+    [Fact]
+    public void NestedExpressionsShouldBeHandledCorrectly()
+    {
+        var tokenSequence = new[]
+        {
+            new Token(TokenType.Identifier, "a"),
+            GetDefaultToken(TokenType.OperatorEquals),
+            new Token(TokenType.Identifier, "b"),
+            GetDefaultToken(TokenType.OperatorEquals),
+            new Token(TokenType.LiteralInteger, 5),
+            GetDefaultToken(TokenType.OperatorPlus),
+            GetDefaultToken(TokenType.OperatorMinus),
+            GetDefaultToken(TokenType.OperatorBang),
+            GetDefaultToken(TokenType.KeywordFalse)
+        };
+
+        var expectedTree = new BinaryExpression(
+            new IdentifierExpression("a"),
+            Operator.Assignment,
+            new BinaryExpression(
+                new IdentifierExpression("b"),
+                Operator.Assignment,
+                new BinaryExpression(
+                    new LiteralExpression(DataType.Integer, 5L),
+                    Operator.Addition,
+                    new UnaryExpression(
+                        Operator.ArithmeticNegation,
+                        new UnaryExpression(
+                            Operator.LogicalNegation,
+                            new LiteralExpression(DataType.Bool, false))))));
+
+        var lexerMock = new LexerMock(tokenSequence);
+
+        IParser parser = new Parser(lexerMock);
+
+        var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
+        expressionStatement.Should().NotBeNull();
+        expressionStatement!.IsTerminated.Should().Be(false);
+
+        expressionStatement.Expression.Should().BeEquivalentTo(expectedTree);
+    }
+
+    [Trait("Category", "Associativity")]
+    [Trait("Category", "Nesting")]
+    [Theory]
+    [MemberData(nameof(GenerateOperatorsAssociativityTestData))]
+    public void ExpressionsShouldBeParsedWithRespectToOperatorsAssociativity(Token[] tokenSequence, Expression expectedExpression)
+    {
+        var lexerMock = new LexerMock(tokenSequence);
+
+        IParser parser = new Parser(lexerMock);
+
+        var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
+        expressionStatement.Should().NotBeNull();
+        expressionStatement!.IsTerminated.Should().Be(false);
+
+        expressionStatement.Expression.Should().BeEquivalentTo(expectedExpression, ProvideOptions);
+    }
+
+    [Trait("Category", "Priority")]
+    [Trait("Category", "Nesting")]
+    [Theory]
+    [MemberData(nameof(GenerateOperatorsPriorityTestData))]
+    public void ExpressionsShouldBeParsedWithRespectToOperatorsPriority(Token[] tokenSequence, Expression expectedExpression)
+    {
+        var lexerMock = new LexerMock(tokenSequence);
+
+        IParser parser = new Parser(lexerMock);
+
+        var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
+        expressionStatement.Should().NotBeNull();
+        expressionStatement!.IsTerminated.Should().Be(false);
+
+        expressionStatement.Expression.Should().BeEquivalentTo(expectedExpression, ProvideOptions);
+    }
+
     #region Generators
 
     public static IEnumerable<object[]> GenerateBlockExpressionTestData()
@@ -1115,6 +1192,664 @@ public partial class ParserTests
                 new IdentifierExpression("c")
             }
         };
+    }
+
+    public static IEnumerable<object[]> GenerateOperatorsPriorityTestData()
+    {
+        // same priority () .
+        yield return new object[]
+        {
+            new[]
+            {
+                new Token(TokenType.Identifier, "a"),
+                GetDefaultToken(TokenType.OperatorDot),
+                new Token(TokenType.Identifier, "b"),
+                GetDefaultToken(TokenType.LeftParenthesis),
+                GetDefaultToken(TokenType.RightParenthesis),
+                GetDefaultToken(TokenType.OperatorDot),
+                new Token(TokenType.Identifier, "c")
+            },
+            new BinaryExpression(
+                new FunctionCallExpression(new BinaryExpression(
+                    new IdentifierExpression("a"),
+                    Operator.NamespaceAccess,
+                    new IdentifierExpression("b")), new List<Expression>()),
+                Operator.NamespaceAccess,
+                new IdentifierExpression("c"))
+        };
+        // . higher than ^
+        yield return new object[]
+        {
+            new[]
+            {
+                new Token(TokenType.Identifier, "a"),
+                GetDefaultToken(TokenType.OperatorCaret),
+                new Token(TokenType.Identifier, "b"),
+                GetDefaultToken(TokenType.OperatorDot),
+                new Token(TokenType.Identifier, "c")
+            },
+            new BinaryExpression(
+                new IdentifierExpression("a"),
+                Operator.Exponentiation,
+                new BinaryExpression(
+                    new IdentifierExpression("b"),
+                    Operator.NamespaceAccess,
+                    new IdentifierExpression("c")))
+        };
+        // ^ higher than unary +
+        yield return new object[]
+        {
+            new[]
+            {
+                GetDefaultToken(TokenType.OperatorPlus),
+                new Token(TokenType.Identifier, "a"),
+                GetDefaultToken(TokenType.OperatorCaret),
+                new Token(TokenType.Identifier, "b")
+            },
+            new UnaryExpression(
+                Operator.NumberPromotion,
+                new BinaryExpression(
+                    new IdentifierExpression("a"),
+                    Operator.Exponentiation,
+                    new IdentifierExpression("b")))
+        };
+        // same priority unary + unary - unary !
+        yield return new object[]
+        {
+            new[]
+            {
+                GetDefaultToken(TokenType.OperatorPlus),
+                GetDefaultToken(TokenType.OperatorMinus),
+                GetDefaultToken(TokenType.OperatorBang),
+                GetDefaultToken(TokenType.OperatorMinus),
+                GetDefaultToken(TokenType.OperatorPlus),
+                new Token(TokenType.Identifier, "a")
+            },
+            new UnaryExpression(
+                Operator.NumberPromotion,
+                new UnaryExpression(
+                    Operator.ArithmeticNegation,
+                    new UnaryExpression(
+                        Operator.LogicalNegation,
+                        new UnaryExpression(
+                            Operator.ArithmeticNegation,
+                            new UnaryExpression(
+                                Operator.NumberPromotion,
+                                new IdentifierExpression("a"))))))
+        };
+        // unary + higher than *
+        yield return new object[]
+        {
+            new[]
+            {
+                GetDefaultToken(TokenType.OperatorPlus),
+                new Token(TokenType.Identifier, "a"),
+                GetDefaultToken(TokenType.OperatorAsterisk),
+                new Token(TokenType.Identifier, "b")
+            },
+            new BinaryExpression(
+                new UnaryExpression(
+                    Operator.NumberPromotion,
+                    new IdentifierExpression("a")),
+                Operator.Multiplication,
+                new IdentifierExpression("b"))
+        };
+        // same priority * / %
+        yield return new object[]
+        {
+            new[]
+            {
+                new Token(TokenType.Identifier, "a"),
+                GetDefaultToken(TokenType.OperatorAsterisk),
+                new Token(TokenType.Identifier, "b"),
+                GetDefaultToken(TokenType.OperatorSlash),
+                new Token(TokenType.Identifier, "c"),
+                GetDefaultToken(TokenType.OperatorPercent),
+                new Token(TokenType.Identifier, "d"),
+                GetDefaultToken(TokenType.OperatorSlash),
+                new Token(TokenType.Identifier, "e"),
+                GetDefaultToken(TokenType.OperatorAsterisk),
+                new Token(TokenType.Identifier, "f")
+            },
+            new BinaryExpression(
+                new BinaryExpression(
+                    new BinaryExpression(
+                        new BinaryExpression(
+                            new BinaryExpression(
+                                new IdentifierExpression("a"),
+                                Operator.Multiplication,
+                                new IdentifierExpression("b")),
+                            Operator.Division,
+                            new IdentifierExpression("c")),
+                        Operator.Remainder,
+                        new IdentifierExpression("d")),
+                    Operator.Division,
+                    new IdentifierExpression("e")),
+                Operator.Multiplication,
+                new IdentifierExpression("f"))
+        };
+        // * higher than binary +
+        yield return new object[]
+        {
+            new[]
+            {
+                new Token(TokenType.Identifier, "a"),
+                GetDefaultToken(TokenType.OperatorPlus),
+                new Token(TokenType.Identifier, "b"),
+                GetDefaultToken(TokenType.OperatorAsterisk),
+                new Token(TokenType.Identifier, "c")
+            },
+            new BinaryExpression(
+                new IdentifierExpression("a"),
+                Operator.Addition,
+                new BinaryExpression(
+                    new IdentifierExpression("b"),
+                    Operator.Multiplication,
+                    new IdentifierExpression("c")))
+        };
+        // same priority binary + binary -
+        yield return new object[]
+        {
+            new[]
+            {
+                new Token(TokenType.Identifier, "a"),
+                GetDefaultToken(TokenType.OperatorPlus),
+                new Token(TokenType.Identifier, "b"),
+                GetDefaultToken(TokenType.OperatorMinus),
+                new Token(TokenType.Identifier, "c"),
+                GetDefaultToken(TokenType.OperatorPlus),
+                new Token(TokenType.Identifier, "d")
+            },
+            new BinaryExpression(
+                new BinaryExpression(
+                    new BinaryExpression(
+                        new IdentifierExpression("a"),
+                        Operator.Addition,
+                        new IdentifierExpression("b")),
+                    Operator.Subtraction,
+                    new IdentifierExpression("c")),
+                Operator.Addition,
+                new IdentifierExpression("d"))
+        };
+        // binary + higher than ..
+        yield return new object[]
+        {
+            new[]
+            {
+                new Token(TokenType.Identifier, "a"),
+                GetDefaultToken(TokenType.OperatorDotDot),
+                new Token(TokenType.Identifier, "b"),
+                GetDefaultToken(TokenType.OperatorPlus),
+                new Token(TokenType.Identifier, "c")
+            },
+            new BinaryExpression(
+                new IdentifierExpression("a"),
+                Operator.Concatenation,
+                new BinaryExpression(
+                    new IdentifierExpression("b"),
+                    Operator.Addition,
+                    new IdentifierExpression("c")))
+        };
+        // .. higher than <
+        yield return new object[]
+        {
+            new[]
+            {
+                new Token(TokenType.Identifier, "a"),
+                GetDefaultToken(TokenType.OperatorLess),
+                new Token(TokenType.Identifier, "b"),
+                GetDefaultToken(TokenType.OperatorDotDot),
+                new Token(TokenType.Identifier, "c")
+            },
+            new BinaryExpression(
+                new IdentifierExpression("a"),
+                Operator.LessThanComparison,
+                new BinaryExpression(
+                    new IdentifierExpression("b"),
+                    Operator.Concatenation,
+                    new IdentifierExpression("c")))
+        };
+        // same priority < <= > >= == !=
+        yield return new object[]
+        {
+            new[]
+            {
+                new Token(TokenType.Identifier, "a"),
+                GetDefaultToken(TokenType.OperatorLess),
+                new Token(TokenType.Identifier, "b"),
+                GetDefaultToken(TokenType.OperatorLessEquals),
+                new Token(TokenType.Identifier, "c"),
+                GetDefaultToken(TokenType.OperatorGreater),
+                new Token(TokenType.Identifier, "d"),
+                GetDefaultToken(TokenType.OperatorGreaterEquals),
+                new Token(TokenType.Identifier, "e"),
+                GetDefaultToken(TokenType.OperatorEqualsEquals),
+                new Token(TokenType.Identifier, "f"),
+                GetDefaultToken(TokenType.OperatorBangEquals),
+                new Token(TokenType.Identifier, "g"),
+                GetDefaultToken(TokenType.OperatorEqualsEquals),
+                new Token(TokenType.Identifier, "h"),
+                GetDefaultToken(TokenType.OperatorGreaterEquals),
+                new Token(TokenType.Identifier, "i"),
+                GetDefaultToken(TokenType.OperatorGreater),
+                new Token(TokenType.Identifier, "j"),
+                GetDefaultToken(TokenType.OperatorLessEquals),
+                new Token(TokenType.Identifier, "k"),
+                GetDefaultToken(TokenType.OperatorLess),
+                new Token(TokenType.Identifier, "l")
+            },
+            new BinaryExpression(
+                new BinaryExpression(
+                    new BinaryExpression(
+                        new BinaryExpression(
+                            new BinaryExpression(
+                                new BinaryExpression(
+                                    new BinaryExpression(
+                                        new BinaryExpression(
+                                            new BinaryExpression(
+                                                new BinaryExpression(
+                                                    new BinaryExpression(
+                                                        new IdentifierExpression("a"),
+                                                        Operator.LessThanComparison,
+                                                        new IdentifierExpression("b")),
+                                                    Operator.LessOrEqualComparison,
+                                                    new IdentifierExpression("c")),
+                                                Operator.GreaterThanComparison,
+                                                new IdentifierExpression("d")),
+                                            Operator.GreaterOrEqualComparison,
+                                            new IdentifierExpression("e")),
+                                        Operator.EqualComparison,
+                                        new IdentifierExpression("f")),
+                                    Operator.NotEqualComparison,
+                                    new IdentifierExpression("g")),
+                                Operator.EqualComparison,
+                                new IdentifierExpression("h")),
+                            Operator.GreaterOrEqualComparison,
+                            new IdentifierExpression("i")),
+                        Operator.GreaterThanComparison,
+                        new IdentifierExpression("j")),
+                    Operator.LessOrEqualComparison,
+                    new IdentifierExpression("k")),
+                Operator.LessThanComparison,
+                new IdentifierExpression("l"))
+        };
+        // < higher than is
+        yield return new object[]
+        {
+            new[]
+            {
+                new Token(TokenType.Identifier, "a"),
+                GetDefaultToken(TokenType.OperatorLess),
+                new Token(TokenType.Identifier, "b"),
+                GetDefaultToken(TokenType.KeywordIs),
+                GetDefaultToken(TokenType.KeywordInt)
+            },
+            new BinaryExpression(
+                new BinaryExpression(
+                    new IdentifierExpression("a"),
+                    Operator.LessThanComparison,
+                    new IdentifierExpression("b")
+                ),
+                Operator.EqualTypeCheck,
+                new TypeExpression(DataType.Integer))
+        };
+        // < higher than is not
+        yield return new object[]
+        {
+            new[]
+            {
+                new Token(TokenType.Identifier, "a"),
+                GetDefaultToken(TokenType.OperatorLess),
+                new Token(TokenType.Identifier, "b"),
+                GetDefaultToken(TokenType.KeywordIs),
+                GetDefaultToken(TokenType.KeywordNot),
+                GetDefaultToken(TokenType.KeywordInt)
+            },
+            new BinaryExpression(
+                new BinaryExpression(
+                    new IdentifierExpression("a"),
+                    Operator.LessThanComparison,
+                    new IdentifierExpression("b")
+                ),
+                Operator.NotEqualTypeCheck,
+                new TypeExpression(DataType.Integer))
+        };
+        // is higher than &&
+        yield return new object[]
+        {
+            new[]
+            {
+                new Token(TokenType.Identifier, "a"),
+                GetDefaultToken(TokenType.OperatorAndAnd),
+                new Token(TokenType.Identifier, "b"),
+                GetDefaultToken(TokenType.KeywordIs),
+                GetDefaultToken(TokenType.KeywordInt)
+            },
+            new BinaryExpression(
+                new IdentifierExpression("a"),
+                Operator.Conjunction,
+                new BinaryExpression(
+                    new IdentifierExpression("b"),
+                    Operator.EqualTypeCheck,
+                    new TypeExpression(DataType.Integer)))
+        };
+        // is not higher than &&
+        yield return new object[]
+        {
+            new[]
+            {
+                new Token(TokenType.Identifier, "a"),
+                GetDefaultToken(TokenType.OperatorAndAnd),
+                new Token(TokenType.Identifier, "b"),
+                GetDefaultToken(TokenType.KeywordIs),
+                GetDefaultToken(TokenType.KeywordNot),
+                GetDefaultToken(TokenType.KeywordInt)
+            },
+            new BinaryExpression(
+                new IdentifierExpression("a"),
+                Operator.Conjunction,
+                new BinaryExpression(
+                    new IdentifierExpression("b"),
+                    Operator.NotEqualTypeCheck,
+                    new TypeExpression(DataType.Integer)))
+        };
+        // && higher than ||
+        yield return new object[]
+        {
+            new[]
+            {
+                new Token(TokenType.Identifier, "a"),
+                GetDefaultToken(TokenType.OperatorOrOr),
+                new Token(TokenType.Identifier, "b"),
+                GetDefaultToken(TokenType.OperatorAndAnd),
+                new Token(TokenType.Identifier, "c")
+            },
+            new BinaryExpression(
+                new IdentifierExpression("a"),
+                Operator.Disjunction,
+                new BinaryExpression(
+                    new IdentifierExpression("b"),
+                    Operator.Conjunction,
+                    new IdentifierExpression("c")))
+        };
+        // || higher than ?>
+        yield return new object[]
+        {
+            new[]
+            {
+                new Token(TokenType.Identifier, "a"),
+                GetDefaultToken(TokenType.OperatorQueryGreater),
+                new Token(TokenType.Identifier, "b"),
+                GetDefaultToken(TokenType.OperatorOrOr),
+                new Token(TokenType.Identifier, "c")
+            },
+            new BinaryExpression(
+                new IdentifierExpression("a"),
+                Operator.NullSafePipe,
+                new BinaryExpression(
+                    new IdentifierExpression("b"),
+                    Operator.Disjunction,
+                    new IdentifierExpression("c")))
+        };
+        // ?> higher than ??
+        yield return new object[]
+        {
+            new[]
+            {
+                new Token(TokenType.Identifier, "a"),
+                GetDefaultToken(TokenType.OperatorQueryQuery),
+                new Token(TokenType.Identifier, "b"),
+                GetDefaultToken(TokenType.OperatorQueryGreater),
+                new Token(TokenType.Identifier, "c")
+            },
+            new BinaryExpression(
+                new IdentifierExpression("a"),
+                Operator.NullCoalescing,
+                new BinaryExpression(
+                    new IdentifierExpression("b"),
+                    Operator.NullSafePipe,
+                    new IdentifierExpression("c")))
+        };
+        // ?? higher than =
+        yield return new object[]
+        {
+            new[]
+            {
+                new Token(TokenType.Identifier, "a"),
+                GetDefaultToken(TokenType.OperatorEquals),
+                new Token(TokenType.Identifier, "b"),
+                GetDefaultToken(TokenType.OperatorQueryQuery),
+                new Token(TokenType.Identifier, "c")
+            },
+            new BinaryExpression(
+                new IdentifierExpression("a"),
+                Operator.Assignment,
+                new BinaryExpression(
+                    new IdentifierExpression("b"),
+                    Operator.NullCoalescing,
+                    new IdentifierExpression("c")))
+        };
+        // same priority = += -= *= /= %=
+        yield return new object[]
+        {
+            new[]
+            {
+                new Token(TokenType.Identifier, "a"),
+                GetDefaultToken(TokenType.OperatorEquals),
+                new Token(TokenType.Identifier, "b"),
+                GetDefaultToken(TokenType.OperatorPlusEquals),
+                new Token(TokenType.Identifier, "c"),
+                GetDefaultToken(TokenType.OperatorMinusEquals),
+                new Token(TokenType.Identifier, "d"),
+                GetDefaultToken(TokenType.OperatorAsteriskEquals),
+                new Token(TokenType.Identifier, "e"),
+                GetDefaultToken(TokenType.OperatorSlashEquals),
+                new Token(TokenType.Identifier, "f"),
+                GetDefaultToken(TokenType.OperatorPercentEquals),
+                new Token(TokenType.Identifier, "g"),
+                GetDefaultToken(TokenType.OperatorSlashEquals),
+                new Token(TokenType.Identifier, "h"),
+                GetDefaultToken(TokenType.OperatorAsteriskEquals),
+                new Token(TokenType.Identifier, "i"),
+                GetDefaultToken(TokenType.OperatorMinusEquals),
+                new Token(TokenType.Identifier, "j"),
+                GetDefaultToken(TokenType.OperatorPlusEquals),
+                new Token(TokenType.Identifier, "k"),
+                GetDefaultToken(TokenType.OperatorEquals),
+                new Token(TokenType.Identifier, "l")
+            },
+            new BinaryExpression(
+                new IdentifierExpression("a"),
+                Operator.Assignment,
+                new BinaryExpression(
+                    new IdentifierExpression("b"),
+                    Operator.AdditionAssignment,
+                    new BinaryExpression(
+                        new IdentifierExpression("c"),
+                        Operator.SubtractionAssignment,
+                        new BinaryExpression(
+                            new IdentifierExpression("d"),
+                            Operator.MultiplicationAssignment,
+                            new BinaryExpression(
+                                new IdentifierExpression("e"),
+                                Operator.DivisionAssignment,
+                                new BinaryExpression(
+                                    new IdentifierExpression("f"),
+                                    Operator.RemainderAssignment,
+                                    new BinaryExpression(
+                                        new IdentifierExpression("g"),
+                                        Operator.DivisionAssignment,
+                                        new BinaryExpression(
+                                            new IdentifierExpression("h"),
+                                            Operator.MultiplicationAssignment,
+                                            new BinaryExpression(
+                                                new IdentifierExpression("i"),
+                                                Operator.SubtractionAssignment,
+                                                new BinaryExpression(
+                                                    new IdentifierExpression("j"),
+                                                    Operator.AdditionAssignment,
+                                                    new BinaryExpression(
+                                                        new IdentifierExpression("k"),
+                                                        Operator.Assignment,
+                                                        new IdentifierExpression("l"))))))))))))
+        };
+    }
+
+    public static IEnumerable<object[]> GenerateOperatorsAssociativityTestData()
+    {
+        static object[] GenerateLeftBinary(TokenType tokenType, Operator @operator) =>
+            new object[]
+            {
+                new[]
+                {
+                    new Token(TokenType.Identifier, "a"),
+                    GetDefaultToken(tokenType),
+                    new Token(TokenType.Identifier, "b"),
+                    GetDefaultToken(tokenType),
+                    new Token(TokenType.Identifier, "c")
+                },
+                new BinaryExpression(
+                    new BinaryExpression(
+                        new IdentifierExpression("a"),
+                        @operator,
+                        new IdentifierExpression("b")),
+                    @operator,
+                    new IdentifierExpression("c"))
+            };
+        static object[] GenerateRightBinary(TokenType tokenType, Operator @operator) =>
+            new object[]
+            {
+                new[]
+                {
+                    new Token(TokenType.Identifier, "a"),
+                    GetDefaultToken(tokenType),
+                    new Token(TokenType.Identifier, "b"),
+                    GetDefaultToken(tokenType),
+                    new Token(TokenType.Identifier, "c")
+                },
+                new BinaryExpression(
+                    new IdentifierExpression("a"),
+                    @operator,
+                    new BinaryExpression(
+                        new IdentifierExpression("b"),
+                        @operator,
+                        new IdentifierExpression("c")))
+            };
+        static object[] GenerateRightUnary(TokenType tokenType, Operator @operator) =>
+            new object[]
+            {
+                new[]
+                {
+                    GetDefaultToken(tokenType),
+                    GetDefaultToken(tokenType),
+                    new Token(TokenType.Identifier, "a")
+                },
+                new UnaryExpression(
+                    @operator,
+                    new UnaryExpression(
+                        @operator,
+                        new IdentifierExpression("a")))
+            };
+        static object[] GenerateTypeCheck(bool isNegated = false) =>
+            new object[]
+            {
+                new[]
+                {
+                    new Token(TokenType.Identifier, "a"),
+                    GetDefaultToken(TokenType.KeywordIs),
+                    GetDefaultToken(TokenType.KeywordInt),
+                    GetDefaultToken(TokenType.KeywordIs),
+                    GetDefaultToken(TokenType.KeywordInt)
+                }.SelectMany(x =>
+                    x.Type == TokenType.KeywordIs
+                        ? isNegated ? new[] { x, GetDefaultToken(TokenType.KeywordNot) } : new[] { x }
+                        : new[] { x }).ToArray(),
+                new BinaryExpression(
+                    new BinaryExpression(
+                        new IdentifierExpression("a"),
+                        isNegated ? Operator.NotEqualTypeCheck : Operator.EqualTypeCheck,
+                        new TypeExpression(DataType.Integer)),
+                    isNegated ? Operator.NotEqualTypeCheck : Operator.EqualTypeCheck,
+                    new TypeExpression(DataType.Integer))
+            };
+
+        // .
+        yield return GenerateLeftBinary(TokenType.OperatorDot, Operator.NamespaceAccess);
+        // ()
+        yield return new object[]
+        {
+            new[]
+            {
+                new Token(TokenType.Identifier, "a"),
+                GetDefaultToken(TokenType.LeftParenthesis),
+                new Token(TokenType.Identifier, "b"),
+                GetDefaultToken(TokenType.RightParenthesis),
+                GetDefaultToken(TokenType.LeftParenthesis),
+                new Token(TokenType.Identifier, "c"),
+                GetDefaultToken(TokenType.RightParenthesis)
+            },
+            new FunctionCallExpression(
+                new FunctionCallExpression(
+                    new IdentifierExpression("a"),
+                    new List<Expression> { new IdentifierExpression("b") }),
+                new List<Expression> { new IdentifierExpression("c") })
+        };
+        // ^
+        yield return GenerateRightBinary(TokenType.OperatorCaret, Operator.Exponentiation);
+        // unary +
+        yield return GenerateRightUnary(TokenType.OperatorPlus, Operator.NumberPromotion);
+        // unary -
+        yield return GenerateRightUnary(TokenType.OperatorMinus, Operator.ArithmeticNegation);
+        // unary !
+        yield return GenerateRightUnary(TokenType.OperatorBang, Operator.LogicalNegation);
+        // *
+        yield return GenerateLeftBinary(TokenType.OperatorAsterisk, Operator.Multiplication);
+        // /
+        yield return GenerateLeftBinary(TokenType.OperatorSlash, Operator.Division);
+        // %
+        yield return GenerateLeftBinary(TokenType.OperatorPercent, Operator.Remainder);
+        // binary +
+        yield return GenerateLeftBinary(TokenType.OperatorPlus, Operator.Addition);
+        // binary -
+        yield return GenerateLeftBinary(TokenType.OperatorMinus, Operator.Subtraction);
+        // ..
+        yield return GenerateLeftBinary(TokenType.OperatorDotDot, Operator.Concatenation);
+        // <
+        yield return GenerateLeftBinary(TokenType.OperatorLess, Operator.LessThanComparison);
+        // <=
+        yield return GenerateLeftBinary(TokenType.OperatorLessEquals, Operator.LessOrEqualComparison);
+        // >
+        yield return GenerateLeftBinary(TokenType.OperatorGreater, Operator.GreaterThanComparison);
+        // >=
+        yield return GenerateLeftBinary(TokenType.OperatorGreaterEquals, Operator.GreaterOrEqualComparison);
+        // ==
+        yield return GenerateLeftBinary(TokenType.OperatorEqualsEquals, Operator.EqualComparison);
+        // !=
+        yield return GenerateLeftBinary(TokenType.OperatorBangEquals, Operator.NotEqualComparison);
+        // is
+        yield return GenerateTypeCheck();
+        // is not
+        yield return GenerateTypeCheck(true);
+        // &&
+        yield return GenerateLeftBinary(TokenType.OperatorAndAnd, Operator.Conjunction);
+        // ||
+        yield return GenerateLeftBinary(TokenType.OperatorOrOr, Operator.Disjunction);
+        // ?>
+        yield return GenerateLeftBinary(TokenType.OperatorQueryGreater, Operator.NullSafePipe);
+        // ??
+        yield return GenerateLeftBinary(TokenType.OperatorQueryQuery, Operator.NullCoalescing);
+        // =
+        yield return GenerateRightBinary(TokenType.OperatorEquals, Operator.Assignment);
+        // +=
+        yield return GenerateRightBinary(TokenType.OperatorPlusEquals, Operator.AdditionAssignment);
+        // -=
+        yield return GenerateRightBinary(TokenType.OperatorMinusEquals, Operator.SubtractionAssignment);
+        // *=
+        yield return GenerateRightBinary(TokenType.OperatorAsteriskEquals, Operator.MultiplicationAssignment);
+        // /=
+        yield return GenerateRightBinary(TokenType.OperatorSlashEquals, Operator.DivisionAssignment);
+        // %=
+        yield return GenerateRightBinary(TokenType.OperatorPercentEquals, Operator.RemainderAssignment);
     }
 
     #endregion Generators

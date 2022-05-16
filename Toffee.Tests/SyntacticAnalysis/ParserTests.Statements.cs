@@ -185,6 +185,8 @@ public partial class ParserTests
         statement.Should().BeEquivalentTo(expectedStatement);
     }
 
+    #region Generators
+
     public static IEnumerable<object[]> GenerateVariableInitializationListStatementTestData()
     {
         var initToken = GetDefaultToken(TokenType.KeywordInit);
@@ -380,4 +382,6 @@ public partial class ParserTests
         //     typeof(TypeExpression)
         // };
     }
+
+    #endregion Generators
 }

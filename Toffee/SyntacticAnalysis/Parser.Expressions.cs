@@ -386,8 +386,8 @@ private Expression? ParseDisjunctionPatternExpression()
     {
         if (TryConsumeToken(out var comparisonOperator, _comparisonOperators))
             if (TryConsumeToken(out var literal, _literalTokenTypes))
-                return new UnaryExpression(LiteralMapper.MapToLiteralExpression(literal),
-                    OperatorMapper.MapPatternMatchingComparisonOperator(comparisonOperator.Type));
+                return new UnaryExpression(OperatorMapper.MapPatternMatchingComparisonOperator(comparisonOperator.Type),
+                    LiteralMapper.MapToLiteralExpression(literal));
             else
                 throw new ParserException(new UnexpectedToken(_lexer.CurrentToken, _literalTokenTypes));
 
@@ -397,7 +397,7 @@ private Expression? ParseDisjunctionPatternExpression()
                 ? Operator.PatternMatchingNotEqualTypeCheck
                 : Operator.PatternMatchingEqualTypeCheck;
             if (TryConsumeToken(out var type, _typeTokenTypes))
-                return new UnaryExpression(TypeMapper.MapToTypeExpression(type.Type), typeCheckOperator);
+                return new UnaryExpression(typeCheckOperator, TypeMapper.MapToTypeExpression(type.Type));
             throw new ParserException(new UnexpectedToken(_lexer.CurrentToken, _typeTokenTypes));
         }
 
@@ -608,36 +608,34 @@ private Expression? ParseDisjunctionPatternExpression()
         if (expression is null)
             throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
 
-        return new UnaryExpression(expression, OperatorMapper.MapUnaryOperator(unaryOperator.Type));
+        return new UnaryExpression(OperatorMapper.MapUnaryOperator(unaryOperator.Type), expression);
     }
 
     // exponentiation
-    //     = namespace_access_or_function_call, { OP_CARET, namespace_access_or_function_call };
+    //     = namespace_access_or_function_call, { OP_CARET, exponentiation };
     private Expression? ParseExponentiationExpression()
     {
         var expression = ParseNamespaceAccessOrFunctionCallExpression();
         if (expression is null)
             return null;
 
-        while (TryConsumeToken(out _, TokenType.OperatorCaret))
-        {
-            var right = ParseNamespaceAccessOrFunctionCallExpression();
-            if (right is null)
-                throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
-            expression = new BinaryExpression(expression, Operator.Exponentiation, right);
-        }
-        return expression;
+        if (!TryConsumeToken(out _, TokenType.OperatorCaret))
+            return expression;
+        var right = ParseExponentiationExpression();
+        if (right is null)
+            throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
+        return new BinaryExpression(expression, Operator.Exponentiation, right);
     }
 
     // namespace_access_or_function_call
-    //     = namespace_access, [ function_call_part ] { OP_DOT, namespace_access, [ function_call_part ] };
+    //     = namespace_access, { function_call_part } { OP_DOT, namespace_access, { function_call_part } };
     private Expression? ParseNamespaceAccessOrFunctionCallExpression()
     {
         var expression = ParsePrimaryExpression();
         if (expression is null)
             return null;
 
-        if (TryParseFunctionCallPart(out var arguments))
+        while (TryParseFunctionCallPart(out var arguments))
             expression = new FunctionCallExpression(expression, arguments!);
 
         while (TryConsumeToken(out _, TokenType.OperatorDot))
@@ -646,7 +644,7 @@ private Expression? ParseDisjunctionPatternExpression()
             if (right is null)
                 throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
             expression = new BinaryExpression(expression, Operator.NamespaceAccess, right);
-            if (TryParseFunctionCallPart(out arguments))
+            while (TryParseFunctionCallPart(out var arguments))
                 expression = new FunctionCallExpression(expression, arguments!);
         }
         return expression;
