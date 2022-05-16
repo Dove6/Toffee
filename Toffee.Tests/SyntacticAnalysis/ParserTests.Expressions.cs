@@ -57,7 +57,7 @@ public partial class ParserTests
     }
 
     [Trait("Category", "Type expressions")]
-    [Theory(Skip = /* TODO: */ "types cannot function as standalone expressions and should be tested alongside casts")]
+    [Theory]
     [InlineData(TokenType.KeywordInt, DataType.Integer)]
     [InlineData(TokenType.KeywordFloat, DataType.Float)]
     [InlineData(TokenType.KeywordString, DataType.String)]
@@ -66,9 +66,14 @@ public partial class ParserTests
     [InlineData(TokenType.KeywordNull, DataType.Null)]
     public void TypeExpressionsShouldBeParsedCorrectly(TokenType typeTokenType, DataType type)
     {
-        var typeToken = GetDefaultToken(typeTokenType);
+        var tokenSequence = new[]
+        {
+            new Token(TokenType.Identifier, "a"),
+            GetDefaultToken(TokenType.KeywordIs),
+            GetDefaultToken(typeTokenType)
+        };
 
-        var lexerMock = new LexerMock(typeToken);
+        var lexerMock = new LexerMock(tokenSequence);
 
         IParser parser = new Parser(lexerMock);
 
@@ -76,9 +81,12 @@ public partial class ParserTests
         expressionStatement.Should().NotBeNull();
         expressionStatement!.IsTerminated.Should().Be(false);
 
-        var expression = expressionStatement.Expression.As<TypeExpression>();
-        expression.Should().NotBeNull();
-        expression!.Type.Should().Be(type);
+        var binaryExpression = expressionStatement.Expression.As<BinaryExpression>();
+        binaryExpression.Should().NotBeNull();
+
+        var typeExpression = binaryExpression.Right.As<TypeExpression>();
+        typeExpression.Should().NotBeNull();
+        typeExpression!.Type.Should().Be(type);
     }
 
     [Trait("Category", "Binary expressions")]
@@ -573,6 +581,35 @@ public partial class ParserTests
         expressionStatement!.IsTerminated.Should().Be(false);
 
         expressionStatement.Expression.Should().BeEquivalentTo(expectedExpression, ProvideOptions);
+    }
+
+    [Trait("Category", "Type cast expressions")]
+    [Theory]
+    [InlineData(TokenType.KeywordInt, DataType.Integer)]
+    [InlineData(TokenType.KeywordFloat, DataType.Float)]
+    [InlineData(TokenType.KeywordString, DataType.String)]
+    [InlineData(TokenType.KeywordBool, DataType.Bool)]
+    public void TypeCastExpressionsShouldBeParsedCorrectly(TokenType literalTokenType, DataType expectedCastType)
+    {
+        var tokenSequence = new[]
+        {
+            GetDefaultToken(literalTokenType),
+            GetDefaultToken(TokenType.LeftParenthesis),
+            new Token(TokenType.Identifier, "a"),
+            GetDefaultToken(TokenType.RightParenthesis)
+        };
+
+        var lexerMock = new LexerMock(tokenSequence);
+
+        IParser parser = new Parser(lexerMock);
+
+        var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
+        expressionStatement.Should().NotBeNull();
+        expressionStatement!.IsTerminated.Should().Be(false);
+
+        var expression = expressionStatement.Expression.As<TypeCastExpression>();
+        expression.Should().NotBeNull();
+        expression.Type.Should().Be(expectedCastType);
     }
 
     #region Generators

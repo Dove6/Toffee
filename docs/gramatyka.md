@@ -113,7 +113,7 @@ argument
 primary_expression
     = LITERAL
     | IDENTIFIER
-    | LEFT_PARENTHESIS, expression, RIGHT_PARENTHESIS;
+    | [ CASTING_TYPE ], LEFT_PARENTHESIS, expression, RIGHT_PARENTHESIS;
 ```
 
 ## Leksemy
@@ -153,12 +153,14 @@ KEYWORD
     | KW_FALSE
     | KW_TRUE;
 TYPE
+    = CASTING_TYPE
+    | KW_FUNCTION
+    | KW_NULL;
+CASTING_TYPE
     = KW_INT
     | KW_FLOAT
     | KW_STRING
-    | KW_BOOL
-    | KW_FUNCTION
-    | KW_NULL;
+    | KW_BOOL;
 OPERATOR
     = OP_DOT
     | OP_CARET

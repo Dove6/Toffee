@@ -371,16 +371,18 @@ public partial class ParserTests
             },
             typeof(LiteralExpression)
         };
-        // TODO: type cast
-        // type
-        // yield return new object[]
-        // {
-        //     new[]
-        //     {
-        //         GetDefaultToken(TokenType.KeywordInt)
-        //     },
-        //     typeof(TypeExpression)
-        // };
+        // type cast
+        yield return new object[]
+        {
+            new[]
+            {
+                GetDefaultToken(TokenType.KeywordInt),
+                GetDefaultToken(TokenType.LeftParenthesis),
+                new Token(TokenType.Identifier, "a"),
+                GetDefaultToken(TokenType.RightParenthesis)
+            },
+            typeof(TypeCastExpression)
+        };
     }
 
     #endregion Generators

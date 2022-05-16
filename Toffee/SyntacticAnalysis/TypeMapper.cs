@@ -11,8 +11,10 @@ public static class TypeMapper
         { TokenType.KeywordFloat, DataType.Float },
         { TokenType.KeywordString, DataType.String },
         { TokenType.KeywordBool, DataType.Bool },
+        { TokenType.KeywordFunction, DataType.Function},
         { TokenType.KeywordNull, DataType.Null }
     });
 
     public static TypeExpression MapToTypeExpression(TokenType type) => new(TypeMap[type]);  // TODO: throws
+    public static DataType MapToCastingType(TokenType type) => TypeMap[type]; // TODO: throws
 }

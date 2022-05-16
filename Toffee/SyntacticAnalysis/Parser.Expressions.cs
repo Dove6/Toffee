@@ -50,6 +50,7 @@ public partial class Parser
         TokenType.KeywordInt,
         TokenType.KeywordBool,
         TokenType.KeywordString,
+        TokenType.KeywordFunction,
         TokenType.KeywordNull
     };
 
@@ -61,6 +62,14 @@ public partial class Parser
         TokenType.OperatorAsteriskEquals,
         TokenType.OperatorSlashEquals,
         TokenType.OperatorPercentEquals
+    };
+
+    private readonly TokenType[] _castingTypeTokenTypes =
+    {
+        TokenType.KeywordInt,
+        TokenType.KeywordFloat,
+        TokenType.KeywordString,
+        TokenType.KeywordBool
     };
 
     // expression
@@ -681,14 +690,15 @@ private Expression? ParseDisjunctionPatternExpression() => SupplyPosition(() =>
     // primary_expression
     //     = LITERAL
     //     | IDENTIFIER
-    //     | TODO: type cast (TYPE, LEFT_PARENTHESIS, expression, RIGHT_PARENTHESIS)
-    //     | LEFT_PARENTHESIS, expression, RIGHT_PARENTHESIS;
+    //     | [ CASTING_TYPE ], LEFT_PARENTHESIS, expression, RIGHT_PARENTHESIS;
     private Expression? ParsePrimaryExpression() => SupplyPosition(() =>
     {
         if (TryConsumeToken(out var literal, _literalTokenTypes))
             return LiteralMapper.MapToLiteralExpression(literal);
         if (TryConsumeToken(out var identifier, TokenType.Identifier))
             return new IdentifierExpression((string)identifier.Content!);
+        if (TryConsumeToken(out var castingType, _castingTypeTokenTypes))
+            return new TypeCastExpression(TypeMapper.MapToCastingType(castingType.Type), ParseParenthesizedExpression());
         if (!TryConsumeToken(out _, TokenType.LeftParenthesis))
             return null;
 

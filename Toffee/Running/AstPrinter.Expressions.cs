@@ -60,6 +60,11 @@ public partial class AstPrinter
         Print($"operator: {@operator.ToString().Humanize(LetterCasing.LowerCase)}", indentLevel);
     }
 
+    private static void Print(DataType type, int indentLevel)
+    {
+        Print($"type: {type.Humanize(LetterCasing.LowerCase)}", indentLevel);
+    }
+
     private static void PrintDynamic(Expression expression, int indentLevel)
     {
     }
@@ -143,18 +148,15 @@ public partial class AstPrinter
     {
         // TODO: shorter form (operator)
         Print(expression.Operator, indentLevel);
-        Print("left", indentLevel);
-        Print(expression.Left, indentLevel + 1);
-        Print("right", indentLevel);
-        Print(expression.Right, indentLevel + 1);
+        Print(expression.Left, indentLevel);
+        Print(expression.Right, indentLevel);
     }
 
     private void PrintDynamic(UnaryExpression expression, int indentLevel)
     {
         // TODO: shorter form (operator)
         Print(expression.Operator, indentLevel);
-        Print("expression", indentLevel);
-        Print(expression.Expression, indentLevel + 1);
+        Print(expression.Expression, indentLevel);
     }
 
     private void PrintDynamic(FunctionCallExpression expression, int indentLevel)
@@ -192,9 +194,15 @@ public partial class AstPrinter
         Print($"{expression.Type.Humanize(LetterCasing.LowerCase)}{description}", indentLevel);
     }
 
+    private void PrintDynamic(TypeCastExpression expression, int indentLevel)
+    {
+        Print(expression.Type, indentLevel);
+        Print(expression.Expression, indentLevel);
+    }
+
     private static void PrintDynamic(TypeExpression expression, int indentLevel)
     {
         // TODO: shorter form (type)
-        Print($"type: {expression.Type.Humanize(LetterCasing.LowerCase)}", indentLevel);
+        Print(expression.Type, indentLevel);
     }
 }

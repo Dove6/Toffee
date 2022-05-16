@@ -27,4 +27,5 @@ public record UnaryExpression(Operator Operator, Expression Expression) : Expres
 public record FunctionCallExpression(Expression Expression, IList<Expression> Arguments) : Expression(new Position());
 public record IdentifierExpression(string Name) : Expression(new Position());
 public record LiteralExpression(DataType Type, object? Value) : Expression(new Position());
+public record TypeCastExpression(DataType Type, Expression Expression) : Expression(new Position());
 public record TypeExpression(DataType Type) : Expression(new Position());
