@@ -183,7 +183,7 @@ public partial class AstPrinter
         {
             DataType.Null => null,
             DataType.String => $"\"{expression.Value}\"",
-            DataType.Float => ((float)expression.Value!).ToString(CultureInfo.InvariantCulture),
+            DataType.Float => ((double)expression.Value!).ToString(CultureInfo.InvariantCulture),
             DataType.Integer => expression.Value!.ToString(),
             DataType.Bool => expression.Value is true ? "true" : "false",
             // TODO: exclude function from literal types
