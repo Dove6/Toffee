@@ -21,10 +21,10 @@ public record ForLoopRange(Expression PastTheEnd, Expression? Start = null, Expr
 public record FunctionParameter(string Name, bool IsConst = false, bool IsNullAllowed = true);
 public record PatternMatchingBranch(Expression? Pattern, Expression Consequent);
 
+public record GroupingExpression(Expression Expression) : Expression(new Position());
 public record BinaryExpression(Expression Left, Operator Operator, Expression Right) : Expression(new Position());
 public record UnaryExpression(Operator Operator, Expression Expression) : Expression(new Position());
 public record FunctionCallExpression(Expression Expression, IList<Expression> Arguments) : Expression(new Position());
 public record IdentifierExpression(string Name) : Expression(new Position());
 public record LiteralExpression(DataType Type, object? Value) : Expression(new Position());
 public record TypeExpression(DataType Type) : Expression(new Position());
-// TODO: GroupingExpression

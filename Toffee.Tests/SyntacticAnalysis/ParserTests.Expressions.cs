@@ -474,7 +474,7 @@ public partial class ParserTests
             GetDefaultToken(TokenType.OperatorEquals),
             new Token(TokenType.Identifier, "b"),
             GetDefaultToken(TokenType.OperatorEquals),
-            new Token(TokenType.LiteralInteger, 5),
+            new Token(TokenType.LiteralInteger, 5L),
             GetDefaultToken(TokenType.OperatorPlus),
             GetDefaultToken(TokenType.OperatorMinus),
             GetDefaultToken(TokenType.OperatorBang),
@@ -530,6 +530,40 @@ public partial class ParserTests
     [MemberData(nameof(GenerateOperatorsPriorityTestData))]
     public void ExpressionsShouldBeParsedWithRespectToOperatorsPriority(Token[] tokenSequence, Expression expectedExpression)
     {
+        var lexerMock = new LexerMock(tokenSequence);
+
+        IParser parser = new Parser(lexerMock);
+
+        var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
+        expressionStatement.Should().NotBeNull();
+        expressionStatement!.IsTerminated.Should().Be(false);
+
+        expressionStatement.Expression.Should().BeEquivalentTo(expectedExpression, ProvideOptions);
+    }
+
+    [Trait("Category", "Grouping expressions")]
+    [Trait("Category", "Nesting")]
+    [Fact]
+    public void GroupingExpressionsShouldBeParsedCorrectly()
+    {
+        var tokenSequence = new[]
+        {
+            GetDefaultToken(TokenType.LeftParenthesis),
+            GetDefaultToken(TokenType.LeftParenthesis),
+            GetDefaultToken(TokenType.LeftParenthesis),
+            new Token(TokenType.Identifier, "a"),
+            GetDefaultToken(TokenType.RightParenthesis),
+            GetDefaultToken(TokenType.OperatorPlus),
+            new Token(TokenType.LiteralInteger, 5L),
+            GetDefaultToken(TokenType.RightParenthesis),
+            GetDefaultToken(TokenType.RightParenthesis)
+        };
+
+        var expectedExpression = new GroupingExpression(new GroupingExpression(new BinaryExpression(
+            new GroupingExpression(new IdentifierExpression("a")),
+            Operator.Addition,
+            new LiteralExpression(DataType.Integer, 5L))));
+
         var lexerMock = new LexerMock(tokenSequence);
 
         IParser parser = new Parser(lexerMock);

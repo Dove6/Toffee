@@ -134,6 +134,11 @@ public partial class AstPrinter
         Print(expression.Default, indentLevel);
     }
 
+    private void PrintDynamic(GroupingExpression expression, int indentLevel)
+    {
+        Print(expression.Expression, indentLevel);
+    }
+
     private void PrintDynamic(BinaryExpression expression, int indentLevel)
     {
         // TODO: shorter form (operator)

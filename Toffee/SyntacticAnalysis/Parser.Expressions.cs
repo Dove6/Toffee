@@ -409,7 +409,7 @@ private Expression? ParseDisjunctionPatternExpression() => SupplyPosition(() =>
         if (patternExpression is null)
             throw new ParserException(new ExpectedPatternExpression(_lexer.CurrentToken));
         ConsumeToken(TokenType.RightParenthesis);
-        return patternExpression;
+        return new GroupingExpression(patternExpression);
     });
 
     // assignment
@@ -695,7 +695,7 @@ private Expression? ParseDisjunctionPatternExpression() => SupplyPosition(() =>
         // TODO: check for missing parentheses
         var expression = ParseExpression();
         ConsumeToken(TokenType.RightParenthesis);
-        return expression;
+        return new GroupingExpression(expression);
     });
 
     private Expression? SupplyPosition(Func<Expression?> parseMethod)
