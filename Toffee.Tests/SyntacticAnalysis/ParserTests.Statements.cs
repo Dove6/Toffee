@@ -55,7 +55,7 @@ public partial class ParserTests
     [Fact]
     public void EmptyReturnStatementsShouldBeParsedCorrectly()
     {
-        var returnToken = new Token(TokenType.KeywordReturn);
+        var returnToken = GetDefaultToken(TokenType.KeywordReturn);
 
         var lexerMock = new LexerMock(returnToken);
 
@@ -71,7 +71,7 @@ public partial class ParserTests
     [Fact]
     public void ReturnStatementsContainingExpressionsShouldBeParsedCorrectly()
     {
-        var returnToken = new Token(TokenType.KeywordReturn);
+        var returnToken = GetDefaultToken(TokenType.KeywordReturn);
 
         const string identifierName = "a";
         var identifierToken = new Token(TokenType.Identifier, identifierName);
@@ -94,7 +94,7 @@ public partial class ParserTests
     [Fact]
     public void BreakStatementsShouldBeParsedCorrectly()
     {
-        var breakToken = new Token(TokenType.KeywordBreak);
+        var breakToken = GetDefaultToken(TokenType.KeywordBreak);
 
         var lexerMock = new LexerMock(breakToken);
 
@@ -109,7 +109,7 @@ public partial class ParserTests
     [Fact]
     public void BreakIfStatementsShouldBeParsedCorrectly()
     {
-        var breakIfToken = new Token(TokenType.KeywordBreakIf);
+        var breakIfToken = GetDefaultToken(TokenType.KeywordBreakIf);
 
         var leftParenthesisToken = GetDefaultToken(TokenType.LeftParenthesis);
 
@@ -144,6 +144,45 @@ public partial class ParserTests
         expressionStatement.Should().NotBeNull();
         expressionStatement!.IsTerminated.Should().Be(false);
         expressionStatement.Expression.Should().BeOfType(expectedExpressionType);
+    }
+
+    [Trait("Category", "Comments")]
+    [Fact]
+    public void CommentsShouldBeIgnoredWhileParsing()
+    {
+        var initToken = GetDefaultToken(TokenType.KeywordInit);
+        var constToken = GetDefaultToken(TokenType.KeywordConst);
+        var identifierToken = new Token(TokenType.Identifier, "a");
+        var equalToken = GetDefaultToken(TokenType.OperatorEquals);
+        var leftTermToken = new Token(TokenType.LiteralInteger, 123L);
+        var plusToken = GetDefaultToken(TokenType.OperatorPlus);
+        var rightTermToken = new Token(TokenType.LiteralFloat, 3.14);
+
+        var expectedStatement = new VariableInitializationListStatement(new List<VariableInitialization>
+        {
+            new("a",
+                new BinaryExpression(new LiteralExpression(DataType.Integer, 123L),
+                    Operator.Addition,
+                        new LiteralExpression(DataType.Float, 3.14)),
+                    true)
+        });
+
+        var comments = new[]
+        {
+            new Token(TokenType.LineComment, "line comment"),
+            new Token(TokenType.BlockComment, "block comment")
+        };
+
+        var lexerMock =
+            new LexerMock(
+                new[] { initToken, constToken, identifierToken, equalToken, leftTermToken, plusToken, rightTermToken }
+                    .SelectMany((x, i) => new[] { x, comments[i % 2] }).ToArray());
+
+        IParser parser = new Parser(lexerMock);
+
+        var statement = parser.CurrentStatement.As<VariableInitializationListStatement>();
+        statement.Should().NotBeNull();
+        statement.Should().BeEquivalentTo(expectedStatement);
     }
 
     public static IEnumerable<object[]> GenerateVariableInitializationListStatementTestData()
@@ -250,37 +289,37 @@ public partial class ParserTests
     public static IEnumerable<object[]> GenerateExpressionStatementTestData()
     {
         // block
-        yield return new object[]
+        yield return new[]
         {
             GenerateBlockExpressionTestData().First()[0],
             typeof(BlockExpression)
         };
         // if
-        yield return new object[]
+        yield return new[]
         {
             GenerateConditionalExpressionTestData().First()[0],
             typeof(ConditionalExpression)
         };
         // for
-        yield return new object[]
+        yield return new[]
         {
             GenerateForLoopExpressionTestData().First()[0],
             typeof(ForLoopExpression)
         };
         // while
-        yield return new object[]
+        yield return new[]
         {
             GenerateWhileLoopExpressionTestData().First()[0],
             typeof(WhileLoopExpression)
         };
         // functi
-        yield return new object[]
+        yield return new[]
         {
             GenerateFunctionDefinitionExpressionTestData().First()[0],
             typeof(FunctionDefinitionExpression)
         };
         // match
-        yield return new object[]
+        yield return new[]
         {
             GeneratePatternMatchingExpressionTestData().First()[0],
             typeof(PatternMatchingExpression)
@@ -307,7 +346,7 @@ public partial class ParserTests
             typeof(UnaryExpression)
         };
         // call
-        yield return new object[]
+        yield return new[]
         {
             GenerateFunctionCallExpressionTestData().First()[0],
             typeof(FunctionCallExpression)

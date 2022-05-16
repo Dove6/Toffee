@@ -327,6 +327,145 @@ public partial class ParserTests
         functionCallExpression.Arguments.ToArray().Should().BeEquivalentTo(expectedArguments, ProvideOptions);
     }
 
+    [Trait("Category", "Binary expressions")]
+    [Trait("Category", "Pattern matching expressions")]
+    [Theory]
+    [InlineData(TokenType.KeywordOr, Operator.PatternMatchingDisjunction)]
+    [InlineData(TokenType.KeywordAnd, Operator.PatternMatchingConjunction)]
+    public void BinaryPatternMatchingExpressionsShouldBeParsedCorrectly(TokenType operatorTokenType, Operator expectedOperator)
+    {
+        const string leftIdentifierName = "b";
+        const string rightIdentifierName = "c";
+
+        var tokenSequence = new[]
+        {
+            GetDefaultToken(TokenType.KeywordMatch),
+            GetDefaultToken(TokenType.LeftParenthesis),
+            new Token(TokenType.Identifier, "a"),
+            GetDefaultToken(TokenType.RightParenthesis),
+            GetDefaultToken(TokenType.LeftBrace),
+            new Token(TokenType.Identifier, leftIdentifierName),
+            GetDefaultToken(operatorTokenType),
+            new Token(TokenType.Identifier, rightIdentifierName),
+            GetDefaultToken(TokenType.Colon),
+            new Token(TokenType.Identifier, "d"),
+            GetDefaultToken(TokenType.Semicolon),
+            GetDefaultToken(TokenType.RightBrace)
+        };
+
+        var expectedLeftExpression = new IdentifierExpression(leftIdentifierName);
+        var expectedRightExpression = new IdentifierExpression(rightIdentifierName);
+
+        var lexerMock = new LexerMock(tokenSequence);
+
+        IParser parser = new Parser(lexerMock);
+
+        var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
+        expressionStatement.Should().NotBeNull();
+        expressionStatement!.IsTerminated.Should().Be(false);
+
+        var patternMatchingExpression = expressionStatement.Expression.As<PatternMatchingExpression>();
+        patternMatchingExpression.Should().NotBeNull();
+        patternMatchingExpression.Branches.Should().HaveCount(1);
+
+        var binaryExpression = patternMatchingExpression.Branches[0].Pattern.As<BinaryExpression>();
+        binaryExpression.Should().NotBeNull();
+        binaryExpression!.Left.Should().BeEquivalentTo(expectedLeftExpression, ProvideOptions);
+        binaryExpression.Operator.Should().Be(expectedOperator);
+        binaryExpression.Right.Should().BeEquivalentTo(expectedRightExpression, ProvideOptions);
+    }
+
+    [Trait("Category", "Unary expressions")]
+    [Trait("Category", "Pattern matching expressions")]
+    [Theory]
+    [InlineData(TokenType.OperatorLess, Operator.PatternMatchingLessThanComparison)]
+    [InlineData(TokenType.OperatorLessEquals, Operator.PatternMatchingLessOrEqualComparison)]
+    [InlineData(TokenType.OperatorGreater, Operator.PatternMatchingGreaterThanComparison)]
+    [InlineData(TokenType.OperatorGreaterEquals, Operator.PatternMatchingGreaterOrEqualComparison)]
+    [InlineData(TokenType.OperatorEqualsEquals, Operator.PatternMatchingEqualComparison)]
+    [InlineData(TokenType.OperatorBangEquals, Operator.PatternMatchingNotEqualComparison)]
+    public void UnaryPatternMatchingExpressionsShouldBeParsedCorrectly(TokenType operatorTokenType, Operator expectedOperator)
+    {
+        var tokenSequence = new[]
+        {
+            GetDefaultToken(TokenType.KeywordMatch),
+            GetDefaultToken(TokenType.LeftParenthesis),
+            new Token(TokenType.Identifier, "a"),
+            GetDefaultToken(TokenType.RightParenthesis),
+            GetDefaultToken(TokenType.LeftBrace),
+            GetDefaultToken(operatorTokenType),
+            new Token(TokenType.LiteralInteger, 5L),
+            GetDefaultToken(TokenType.Colon),
+            new Token(TokenType.Identifier, "d"),
+            GetDefaultToken(TokenType.Semicolon),
+            GetDefaultToken(TokenType.RightBrace)
+        };
+
+        var expectedExpression = new LiteralExpression(DataType.Integer, 5L);
+
+        var lexerMock = new LexerMock(tokenSequence);
+
+        IParser parser = new Parser(lexerMock);
+
+        var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
+        expressionStatement.Should().NotBeNull();
+        expressionStatement!.IsTerminated.Should().Be(false);
+
+        var patternMatchingExpression = expressionStatement.Expression.As<PatternMatchingExpression>();
+        patternMatchingExpression.Should().NotBeNull();
+        patternMatchingExpression.Branches.Should().HaveCount(1);
+
+        var unaryExpression = patternMatchingExpression.Branches[0].Pattern.As<UnaryExpression>();
+        unaryExpression.Should().NotBeNull();
+        unaryExpression.Operator.Should().Be(expectedOperator);
+        unaryExpression.Expression.Should().BeEquivalentTo(expectedExpression, ProvideOptions);
+    }
+
+    [Trait("Category", "Unary expressions")]
+    [Trait("Category", "Pattern matching expressions")]
+    [Theory]
+    [InlineData(new[] { TokenType.KeywordIs }, TokenType.KeywordInt, Operator.PatternMatchingEqualTypeCheck, DataType.Integer)]
+    [InlineData(new[] { TokenType.KeywordIs, TokenType.KeywordNot }, TokenType.KeywordNull, Operator.PatternMatchingNotEqualTypeCheck, DataType.Null)]
+    public void TypeCheckingUnaryPatternMatchingExpressionsShouldBeParsedCorrectly(TokenType[] operatorTokenTypes, TokenType typeTokenType, Operator expectedOperator, DataType expectedType)
+    {
+        var tokenSequence = new[]
+        {
+            GetDefaultToken(TokenType.KeywordMatch),
+            GetDefaultToken(TokenType.LeftParenthesis),
+            new Token(TokenType.Identifier, "a"),
+            GetDefaultToken(TokenType.RightParenthesis),
+            GetDefaultToken(TokenType.LeftBrace)
+        }.Concat(operatorTokenTypes.Select(GetDefaultToken)).Concat(new[]
+        {
+            GetDefaultToken(typeTokenType),
+            GetDefaultToken(TokenType.Colon),
+            new Token(TokenType.Identifier, "d"),
+            GetDefaultToken(TokenType.Semicolon),
+            GetDefaultToken(TokenType.RightBrace)
+        }).ToArray();
+
+        var expectedExpression = new TypeExpression(expectedType);
+
+        var lexerMock = new LexerMock(tokenSequence);
+
+        IParser parser = new Parser(lexerMock);
+
+        var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
+        expressionStatement.Should().NotBeNull();
+        expressionStatement!.IsTerminated.Should().Be(false);
+
+        var patternMatchingExpression = expressionStatement.Expression.As<PatternMatchingExpression>();
+        patternMatchingExpression.Should().NotBeNull();
+        patternMatchingExpression.Branches.Should().HaveCount(1);
+
+        var unaryExpression = patternMatchingExpression.Branches[0].Pattern.As<UnaryExpression>();
+        unaryExpression.Should().NotBeNull();
+        unaryExpression.Operator.Should().Be(expectedOperator);
+        unaryExpression.Expression.Should().BeEquivalentTo(expectedExpression, ProvideOptions);
+    }
+
+    #region Generators
+
     public static IEnumerable<object[]> GenerateBlockExpressionTestData()
     {
         var leftBraceToken = GetDefaultToken(TokenType.LeftBrace);
@@ -977,4 +1116,6 @@ public partial class ParserTests
             }
         };
     }
+
+    #endregion Generators
 }
