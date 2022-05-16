@@ -9,10 +9,13 @@ public partial class ParserTests
     private static EquivalencyAssertionOptions<T> ProvideOptions<T>(EquivalencyAssertionOptions<T> options) =>
         options.RespectingRuntimeTypes();
 
+    private static Token GetDefaultToken(TokenType type) => new(type, MapTokenTypeToContent(type));
+
     private static string MapTokenTypeToContent(TokenType type)
     {
         return type switch
         {
+            TokenType.EndOfText => "ETX",
             TokenType.OperatorDot => ".",
             TokenType.OperatorCaret => "^",
             TokenType.OperatorPlus => "+",
@@ -37,7 +40,6 @@ public partial class ParserTests
             TokenType.OperatorAsteriskEquals => "*=",
             TokenType.OperatorSlashEquals => "/=",
             TokenType.OperatorPercentEquals => "%=",
-            TokenType.EndOfText => "ETX",
             TokenType.OperatorBang => "!",
             TokenType.LeftParenthesis => "(",
             TokenType.RightParenthesis => ")",

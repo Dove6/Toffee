@@ -199,22 +199,21 @@ public partial class Parser
         // TODO: check for missing parentheses
         ConsumeToken(TokenType.LeftParenthesis);
 
-        var hasCounter = TryConsumeToken(out var identifier, TokenType.Identifier);
-        if (hasCounter)
-            ConsumeToken(TokenType.Comma);
+        var firstElement = ParseExpression();
+        var hasCounter = firstElement is IdentifierExpression && TryConsumeToken(out _, TokenType.Comma);
 
-        var range = ParseForLoopRange();
+        var range = ParseForLoopRange(hasCounter ? null : firstElement);
 
         ConsumeToken(TokenType.RightParenthesis);
 
-        return (hasCounter ? (string)identifier.Content! : null, range);
+        return (hasCounter ? (firstElement as IdentifierExpression)!.Name : null, range);
     }
 
     // for_loop_range
     //     = expression, [ COLON, expression, [ COLON, expression ] ];
-    private ForLoopRange ParseForLoopRange()
+    private ForLoopRange ParseForLoopRange(Expression? first)
     {
-        var first = ParseExpression();
+        first ??= ParseExpression();
         if (!TryConsumeToken(out _, TokenType.Colon))
             return new ForLoopRange(first);
 
@@ -305,11 +304,19 @@ public partial class Parser
         ConsumeToken(TokenType.LeftBrace);
 
         var patternSpecificationList = new List<PatternMatchingBranch>();
+        var defaultConsequent = (Expression?)null;
         while (TryParsePatternSpecification(out var specification))
-            patternSpecificationList.Add(specification!);
+        {
+            if (specification!.Pattern is null)
+            {
+                defaultConsequent = specification.Consequent;
+                break;
+            }
+            patternSpecificationList.Add(specification);
+        }
 
         ConsumeToken(TokenType.RightBrace);
-        return new PatternMatchingExpression(argument, patternSpecificationList);
+        return new PatternMatchingExpression(argument, patternSpecificationList, defaultConsequent);
     }
 
     // pattern_specification
