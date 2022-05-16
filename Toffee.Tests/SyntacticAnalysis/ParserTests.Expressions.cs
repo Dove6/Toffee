@@ -504,7 +504,7 @@ public partial class ParserTests
         expressionStatement.Should().NotBeNull();
         expressionStatement!.IsTerminated.Should().Be(false);
 
-        expressionStatement.Expression.Should().BeEquivalentTo(expectedTree);
+        expressionStatement.Expression.Should().BeEquivalentTo(expectedTree, ProvideOptions);
     }
 
     [Trait("Category", "Associativity")]

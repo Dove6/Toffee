@@ -4,15 +4,17 @@ using Toffee.SyntacticAnalysis;
 
 namespace Toffee.Running;
 
-public static partial class AstPrinter
+public partial class AstPrinter
 {
-    public static void Print(Expression expression, int indentLevel = 0)
+    public void Print(Expression expression, int indentLevel = 0)
     {
-        Print(expression.GetType().Name.Humanize(LetterCasing.LowerCase), indentLevel);
+        var position = $"{_inputName}:{expression.Position.Line}:{expression.Position.Column}";
+        var header = $"{expression.GetType().Name.Humanize(LetterCasing.LowerCase)} [{position}]";
+        Print(header, indentLevel);
         PrintDynamic(expression as dynamic, indentLevel + 1);
     }
 
-    private static void Print(ConditionalElement conditional, int indentLevel)
+    private void Print(ConditionalElement conditional, int indentLevel)
     {
         Print("condition", indentLevel);
         Print(conditional.Condition, indentLevel + 1);
@@ -20,7 +22,7 @@ public static partial class AstPrinter
         Print(conditional.Consequent, indentLevel + 1);
     }
 
-    private static void Print(ForLoopRange range, int indentLevel)
+    private void Print(ForLoopRange range, int indentLevel)
     {
         if (range.Start is not null)
         {
@@ -42,7 +44,7 @@ public static partial class AstPrinter
         Print($"{parameter.Name} ({mutability}, {optionality})", indentLevel);
     }
 
-    private static void Print(PatternMatchingBranch branch, int indentLevel)
+    private void Print(PatternMatchingBranch branch, int indentLevel)
     {
         Print("pattern", indentLevel);
         if (branch.Pattern is null)
@@ -62,7 +64,7 @@ public static partial class AstPrinter
     {
     }
 
-    private static void PrintDynamic(BlockExpression expression, int indentLevel)
+    private void PrintDynamic(BlockExpression expression, int indentLevel)
     {
         foreach (var substatement in expression.Statements)
         {
@@ -75,7 +77,7 @@ public static partial class AstPrinter
         Print(expression.UnterminatedStatement, indentLevel + 1);
     }
 
-    private static void PrintDynamic(ConditionalExpression expression, int indentLevel)
+    private void PrintDynamic(ConditionalExpression expression, int indentLevel)
     {
         Print("if", indentLevel);
         Print(expression.IfPart, indentLevel + 1);
@@ -90,7 +92,7 @@ public static partial class AstPrinter
         Print(expression.ElsePart, indentLevel + 1);
     }
 
-    private static void PrintDynamic(ForLoopExpression expression, int indentLevel)
+    private void PrintDynamic(ForLoopExpression expression, int indentLevel)
     {
         Print(expression.CounterName is not null ? $"counter: {expression.CounterName}" : "no counter",
             indentLevel);
@@ -100,7 +102,7 @@ public static partial class AstPrinter
         Print(expression.Body, indentLevel + 1);
     }
 
-    private static void PrintDynamic(WhileLoopExpression expression, int indentLevel)
+    private void PrintDynamic(WhileLoopExpression expression, int indentLevel)
     {
         Print("condition", indentLevel);
         Print(expression.Condition, indentLevel + 1);
@@ -108,7 +110,7 @@ public static partial class AstPrinter
         Print(expression.Body, indentLevel + 1);
     }
 
-    private static void PrintDynamic(FunctionDefinitionExpression expression, int indentLevel)
+    private void PrintDynamic(FunctionDefinitionExpression expression, int indentLevel)
     {
         Print($"{(expression.Parameters.Count == 0 ? "no " : "")}parameters", indentLevel);
         foreach (var parameter in expression.Parameters)
@@ -117,7 +119,7 @@ public static partial class AstPrinter
         Print(expression.Body, indentLevel + 1);
     }
 
-    private static void PrintDynamic(PatternMatchingExpression expression, int indentLevel)
+    private void PrintDynamic(PatternMatchingExpression expression, int indentLevel)
     {
         Print("argument", indentLevel);
         Print(expression.Argument, indentLevel + 1);
@@ -132,7 +134,7 @@ public static partial class AstPrinter
         Print(expression.Default, indentLevel);
     }
 
-    private static void PrintDynamic(BinaryExpression expression, int indentLevel)
+    private void PrintDynamic(BinaryExpression expression, int indentLevel)
     {
         // TODO: shorter form (operator)
         Print(expression.Operator, indentLevel);
@@ -142,7 +144,7 @@ public static partial class AstPrinter
         Print(expression.Right, indentLevel + 1);
     }
 
-    private static void PrintDynamic(UnaryExpression expression, int indentLevel)
+    private void PrintDynamic(UnaryExpression expression, int indentLevel)
     {
         // TODO: shorter form (operator)
         Print(expression.Operator, indentLevel);
@@ -150,7 +152,7 @@ public static partial class AstPrinter
         Print(expression.Expression, indentLevel + 1);
     }
 
-    private static void PrintDynamic(FunctionCallExpression expression, int indentLevel)
+    private void PrintDynamic(FunctionCallExpression expression, int indentLevel)
     {
         Print("expression", indentLevel);
         Print(expression.Expression, indentLevel + 1);

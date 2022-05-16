@@ -3,15 +3,17 @@ using Toffee.SyntacticAnalysis;
 
 namespace Toffee.Running;
 
-public static partial class AstPrinter
+public partial class AstPrinter
 {
-    public static void Print(Statement statement, int indentLevel = 0)
+    public void Print(Statement statement, int indentLevel = 0)
     {
-        Print(statement.GetType().Name.Humanize(LetterCasing.LowerCase), indentLevel);
+        var position = $"{_inputName}:{statement.Position.Line}:{statement.Position.Column}";
+        var header = $"{statement.GetType().Name.Humanize(LetterCasing.LowerCase)} [{position}]";
+        Print(header, indentLevel);
         PrintDynamic(statement as dynamic, indentLevel + 1);
     }
 
-    private static void Print(VariableInitialization initialization, int indentLevel)
+    private void Print(VariableInitialization initialization, int indentLevel)
     {
         var mutability = initialization.IsConst ? "immutable" : "mutable";
         Print($"{initialization.Name} ({mutability})", indentLevel);
@@ -30,25 +32,25 @@ public static partial class AstPrinter
             Print(level.Name, indentLevel);
     }
 
-    private static void PrintDynamic(VariableInitializationListStatement statement, int indentLevel)
+    private void PrintDynamic(VariableInitializationListStatement statement, int indentLevel)
     {
         foreach (var initialization in statement.Items)
             Print(initialization, indentLevel);
     }
 
-    private static void PrintDynamic(BreakIfStatement statement, int indentLevel)
+    private void PrintDynamic(BreakIfStatement statement, int indentLevel)
     {
         Print(statement.Condition, indentLevel);
     }
 
-    private static void PrintDynamic(ReturnStatement statement, int indentLevel)
+    private void PrintDynamic(ReturnStatement statement, int indentLevel)
     {
         if (statement.Value is null)
             return;
         Print(statement.Value, indentLevel);
     }
 
-    private static void PrintDynamic(ExpressionStatement statement, int indentLevel)
+    private void PrintDynamic(ExpressionStatement statement, int indentLevel)
     {
         Print(statement.Expression, indentLevel);
     }

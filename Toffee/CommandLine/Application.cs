@@ -9,6 +9,7 @@ namespace Toffee.CommandLine;
 
 public class Application
 {
+    private string? _sourceName;
     private TextReader? _reader;
     private IScanner? _scanner;
     private ILexerErrorHandler? _logger;
@@ -25,9 +26,9 @@ public class Application
         _reader = scriptFilename is null
             ? Console.In
             : new StreamReader(scriptFilename.Name);
-        var sourceName = scriptFilename?.Name ?? "STDIN";
+        _sourceName = scriptFilename?.Name ?? "STDIN";
         _scanner = new Scanner(_reader);
-        _logger = new ConsoleErrorHandler(sourceName);
+        _logger = new ConsoleErrorHandler(_sourceName);
         _lexer = new Lexer(_scanner, _logger, maxLexemeLength);
         _parser = new Parser(_lexer);
         RunParser();
@@ -56,9 +57,10 @@ public class Application
 
     private void RunParser()
     {
+        var printer = new AstPrinter(_sourceName!);
         while (_parser!.CurrentStatement is not null)
         {
-            AstPrinter.Print(_parser.CurrentStatement);
+            printer.Print(_parser.CurrentStatement);
             _parser.Advance();
         }
     }

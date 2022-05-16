@@ -182,7 +182,7 @@ public partial class ParserTests
 
         var statement = parser.CurrentStatement.As<VariableInitializationListStatement>();
         statement.Should().NotBeNull();
-        statement.Should().BeEquivalentTo(expectedStatement);
+        statement.Should().BeEquivalentTo(expectedStatement, ProvideOptions);
     }
 
     #region Generators

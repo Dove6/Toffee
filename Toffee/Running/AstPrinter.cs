@@ -1,7 +1,14 @@
 ﻿namespace Toffee.Running;
 
-public static partial class AstPrinter
+public partial class AstPrinter
 {
+    private readonly string _inputName;
+
+    public AstPrinter(string inputName)
+    {
+        _inputName = inputName;
+    }
+
     private static void Print(string text, int indentLevel = 0)
     {
         var indentation = new string(' ', indentLevel * 2);

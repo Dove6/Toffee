@@ -95,7 +95,7 @@ public partial class Parser
     // block
     //     = LEFT_BRACE, { statement }, [ unterminated_statement ], RIGHT_BRACE;
     // TODO: LEFT_BRACE, unterminated_statement, { SEMICOLON, { SEMICOLON }, unterminated_statement }, RIGHT_BRACE;
-    private Expression? ParseBlockExpression()
+    private Expression? ParseBlockExpression() => SupplyPosition(() =>
     {
         if (!TryConsumeToken(out _, TokenType.LeftBrace))
             return null;
@@ -117,11 +117,11 @@ public partial class Parser
         ConsumeToken(TokenType.RightBrace);
 
         return new BlockExpression(statementList, unterminatedStatement);
-    }
+    });
 
     // conditional_expression
     //     = conditional_if_part, { conditional_elif_part }, [ conditional_else_part ];
-    private Expression? ParseConditionalExpression()
+    private Expression? ParseConditionalExpression() => SupplyPosition(() =>
     {
         if (!TryMatchConditionalIfPart(false, out var ifPart))
             return null;
@@ -133,7 +133,7 @@ public partial class Parser
         return TryMatchConditionalElsePart(out var elsePart)
             ? new ConditionalExpression(ifPart!, elifPartList, elsePart)
             : new ConditionalExpression(ifPart!, elifPartList);
-    }
+    });
 
     // conditional_if_part
     //     = KW_IF, parenthesized_expression, unterminated_statement;
@@ -166,25 +166,25 @@ public partial class Parser
 
     // parenthesized_expression
     //     = LEFT_PARENTHESIS, expression, RIGHT_PARENTHESIS;
-    private Expression ParseParenthesizedExpression()
+    private Expression ParseParenthesizedExpression() => SupplyPosition(() =>
     {
         // TODO: check for missing parentheses
         ConsumeToken(TokenType.LeftParenthesis);
         var expression = ParseExpression();
         ConsumeToken(TokenType.RightParenthesis);
         return expression;
-    }
+    })!;
 
     // for_loop_expression
     //     = KW_FOR, for_loop_specification, unterminated_statement;
-    private Expression? ParseForLoopExpression()
+    private Expression? ParseForLoopExpression() => SupplyPosition(() =>
     {
         if (!TryConsumeToken(out _, TokenType.KeywordFor))
             return null;
 
         var (counterName, loopRange) = ParseForLoopSpecification();
         return new ForLoopExpression(loopRange, ParseExpression(), counterName);
-    }
+    });
 
     // for_loop_specification
     //     = LEFT_PARENTHESIS, [ IDENTIFIER, COMMA ], for_loop_range, RIGHT_PARENTHESIS;
@@ -227,18 +227,18 @@ public partial class Parser
 
     // while_loop_expression
     //     = KW_WHILE, parenthesized_expression, unterminated_statement;
-    private Expression? ParseWhileLoopExpression()
+    private Expression? ParseWhileLoopExpression() => SupplyPosition(() =>
     {
         if (!TryConsumeToken(out _, TokenType.KeywordWhile))
             return null;
 
         var condition = ParseParenthesizedExpression();
         return new WhileLoopExpression(condition, ParseExpression());
-    }
+    });
 
     // function_definition
     //     = KW_FUNCTI, LEFT_PARENTHESIS, parameter_list, RIGHT_PARENTHESIS, block;
-    private Expression? ParseFunctionDefinitionExpression()
+    private Expression? ParseFunctionDefinitionExpression() => SupplyPosition(() =>
     {
         if (!TryConsumeToken(out _, TokenType.KeywordFuncti))
             return null;
@@ -253,7 +253,7 @@ public partial class Parser
             throw new ParserException(new ExpectedBlockExpression(_lexer.CurrentToken));
 
         return new FunctionDefinitionExpression(parameterList, (BlockExpression)body);
-    }
+    });
 
     // parameter_list
     //     = [ parameter, { COMMA, parameter } ];
@@ -294,7 +294,7 @@ public partial class Parser
 
     // pattern_matching
     //     = KW_MATCH, LEFT_PARENTHESIS, expression, RIGHT_PARENTHESIS, LEFT_BRACE, { pattern_specification }, [ default_pattern_specification ], RIGHT_BRACE;
-    private Expression? ParsePatternMatchingExpression()
+    private Expression? ParsePatternMatchingExpression() => SupplyPosition(() =>
     {
         if (!TryConsumeToken(out _, TokenType.KeywordMatch))
             return null;
@@ -317,7 +317,7 @@ public partial class Parser
 
         ConsumeToken(TokenType.RightBrace);
         return new PatternMatchingExpression(argument, patternSpecificationList, defaultConsequent);
-    }
+    });
 
     // pattern_specification
     //     = pattern_expression, COLON, expression, SEMICOLON;
@@ -343,7 +343,7 @@ public partial class Parser
     //     = pattern_expression_disjunction;
     // pattern_expression_disjunction
     //     = pattern_expression_conjunction, { KW_OR, pattern_expression_conjunction };
-private Expression? ParseDisjunctionPatternExpression()
+private Expression? ParseDisjunctionPatternExpression() => SupplyPosition(() =>
     {
         var expression = ParseConjunctionPatternExpression();
         if (expression is null)
@@ -357,11 +357,11 @@ private Expression? ParseDisjunctionPatternExpression()
             expression = new BinaryExpression(expression, Operator.PatternMatchingDisjunction, right);
         }
         return expression;
-    }
+    });
 
     // pattern_expression_conjunction
     //     = pattern_expression_non_associative, { KW_AND, pattern_expression_non_associative };
-    private Expression? ParseConjunctionPatternExpression()
+    private Expression? ParseConjunctionPatternExpression() => SupplyPosition(() =>
     {
         var expression = ParseNonAssociativePatternExpression();
         if (expression is null)
@@ -375,14 +375,14 @@ private Expression? ParseDisjunctionPatternExpression()
             expression = new BinaryExpression(expression, Operator.PatternMatchingConjunction, right);
         }
         return expression;
-    }
+    });
 
     // pattern_expression_non_associative
     //     = OP_COMPARISON, LITERAL
     //     | OP_TYPE_CHECK, TYPE
     //     | expression
     //     | LEFT_PARENTHESIS, pattern_expression_disjunction, RIGHT_PARENTHESIS;
-    private Expression? ParseNonAssociativePatternExpression()
+    private Expression? ParseNonAssociativePatternExpression() => SupplyPosition(() =>
     {
         if (TryConsumeToken(out var comparisonOperator, _comparisonOperators))
             if (TryConsumeToken(out var literal, _literalTokenTypes))
@@ -410,12 +410,11 @@ private Expression? ParseDisjunctionPatternExpression()
             throw new ParserException(new ExpectedPatternExpression(_lexer.CurrentToken));
         ConsumeToken(TokenType.RightParenthesis);
         return patternExpression;
-
-    }
+    });
 
     // assignment
     //     = null_coalescing, [ OP_ASSIGNMENT, expression ];
-    private Expression? ParseAssignmentExpression()
+    private Expression? ParseAssignmentExpression() => SupplyPosition(() =>
     {
         var left = ParseNullCoalescingExpression();
         if (left is null)
@@ -424,29 +423,29 @@ private Expression? ParseDisjunctionPatternExpression()
         return TryConsumeToken(out var @operator, _assignmentTokenTypes)
             ? new BinaryExpression(left, OperatorMapper.MapAssignmentOperator(@operator.Type), ParseExpression())
             : left;
-    }
+    });
 
     // null_coalescing
     //     = nullsafe_pipe, { OP_QUERY_QUERY, nullsafe_pipe };
-    private Expression? ParseNullCoalescingExpression()
+    private Expression? ParseNullCoalescingExpression() => SupplyPosition(() =>
     {
-        var expression = ParseNullsafePipeExpression();
+        var expression = ParseNullSafePipeExpression();
         if (expression is null)
             return null;
 
         while (TryConsumeToken(out _, TokenType.OperatorQueryQuery))
         {
-            var right = ParseNullsafePipeExpression();
+            var right = ParseNullSafePipeExpression();
             if (right is null)
                 throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
             expression = new BinaryExpression(expression, Operator.NullCoalescing, right);
         }
         return expression;
-    }
+    });
 
     // nullsafe_pipe
     //     = disjunction, { OP_QUERY_GREATER, disjunction };
-    private Expression? ParseNullsafePipeExpression()
+    private Expression? ParseNullSafePipeExpression() => SupplyPosition(() =>
     {
         var expression = ParseDisjunctionExpression();
         if (expression is null)
@@ -460,11 +459,11 @@ private Expression? ParseDisjunctionPatternExpression()
             expression = new BinaryExpression(expression, Operator.NullSafePipe, right);
         }
         return expression;
-    }
+    });
 
     // disjunction
     //     = conjunction, { OP_OR_OR, conjunction };
-    private Expression? ParseDisjunctionExpression()
+    private Expression? ParseDisjunctionExpression() => SupplyPosition(() =>
     {
         var expression = ParseConjunctionExpression();
         if (expression is null)
@@ -478,11 +477,11 @@ private Expression? ParseDisjunctionPatternExpression()
             expression = new BinaryExpression(expression, Operator.Disjunction, right);
         }
         return expression;
-    }
+    });
 
     // conjunction
     //     = type_check, { OP_AND_AND, type_check };
-    private Expression? ParseConjunctionExpression()
+    private Expression? ParseConjunctionExpression() => SupplyPosition(() =>
     {
         var expression = ParseTypeCheckExpression();
         if (expression is null)
@@ -496,11 +495,11 @@ private Expression? ParseDisjunctionPatternExpression()
             expression = new BinaryExpression(expression, Operator.Conjunction, right);
         }
         return expression;
-    }
+    });
 
     // type_check
     //     = comparison, { OP_TYPE_CHECK, TYPE };
-    private Expression? ParseTypeCheckExpression()
+    private Expression? ParseTypeCheckExpression() => SupplyPosition(() =>
     {
         var expression = ParseComparisonExpression();
         if (expression is null)
@@ -517,11 +516,11 @@ private Expression? ParseDisjunctionPatternExpression()
             expression = new BinaryExpression(expression, typeCheckOperator, right);
         }
         return expression;
-    }
+    });
 
     // comparison
     //     = concatenation, { OP_COMPARISON, concatenation };
-    private Expression? ParseComparisonExpression()
+    private Expression? ParseComparisonExpression() => SupplyPosition(() =>
     {
         var expression = ParseConcatenationExpression();
         if (expression is null)
@@ -537,11 +536,11 @@ private Expression? ParseDisjunctionPatternExpression()
                 right);
         }
         return expression;
-    }
+    });
 
     // concatenation
     //     = term, { OP_DOT_DOT, term };
-    private Expression? ParseConcatenationExpression()
+    private Expression? ParseConcatenationExpression() => SupplyPosition(() =>
     {
         var expression = ParseTermExpression();
         if (expression is null)
@@ -555,11 +554,11 @@ private Expression? ParseDisjunctionPatternExpression()
             expression = new BinaryExpression(expression, Operator.Concatenation, right);
         }
         return expression;
-    }
+    });
 
     // term
     //     = factor, { OP_ADDITIVE, factor };
-    private Expression? ParseTermExpression()
+    private Expression? ParseTermExpression() => SupplyPosition(() =>
     {
         var expression = ParseFactorExpression();
         if (expression is null)
@@ -575,11 +574,11 @@ private Expression? ParseDisjunctionPatternExpression()
                 right);
         }
         return expression;
-    }
+    });
 
     // factor
     //     = unary_prefixed, { OP_MULTIPLICATIVE, unary_prefixed };
-    private Expression? ParseFactorExpression()
+    private Expression? ParseFactorExpression() => SupplyPosition(() =>
     {
         var expression = ParseUnaryPrefixedExpression();
         if (expression is null)
@@ -595,12 +594,12 @@ private Expression? ParseDisjunctionPatternExpression()
                 right);
         }
         return expression;
-    }
+    });
 
     // unary_prefixed
     //     = OP_UNARY_PREFIX, unary_prefixed
     //     | exponentiation;
-    private Expression? ParseUnaryPrefixedExpression()
+    private Expression? ParseUnaryPrefixedExpression() => SupplyPosition(() =>
     {
         if (!TryConsumeToken(out var unaryOperator, _unaryOperators))
             return ParseExponentiationExpression();
@@ -609,11 +608,11 @@ private Expression? ParseDisjunctionPatternExpression()
             throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
 
         return new UnaryExpression(OperatorMapper.MapUnaryOperator(unaryOperator.Type), expression);
-    }
+    });
 
     // exponentiation
     //     = namespace_access_or_function_call, { OP_CARET, exponentiation };
-    private Expression? ParseExponentiationExpression()
+    private Expression? ParseExponentiationExpression() => SupplyPosition(() =>
     {
         var expression = ParseNamespaceAccessOrFunctionCallExpression();
         if (expression is null)
@@ -625,11 +624,11 @@ private Expression? ParseDisjunctionPatternExpression()
         if (right is null)
             throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
         return new BinaryExpression(expression, Operator.Exponentiation, right);
-    }
+    });
 
     // namespace_access_or_function_call
     //     = namespace_access, { function_call_part } { OP_DOT, namespace_access, { function_call_part } };
-    private Expression? ParseNamespaceAccessOrFunctionCallExpression()
+    private Expression? ParseNamespaceAccessOrFunctionCallExpression() => SupplyPosition(() =>
     {
         var expression = ParsePrimaryExpression();
         if (expression is null)
@@ -648,7 +647,7 @@ private Expression? ParseDisjunctionPatternExpression()
                 expression = new FunctionCallExpression(expression, arguments!);
         }
         return expression;
-    }
+    });
 
     // function_call_part
     //     = LEFT_PARENTHESIS, arguments_list, RIGHT_PARENTHESIS;
@@ -684,7 +683,7 @@ private Expression? ParseDisjunctionPatternExpression()
     //     | IDENTIFIER
     //     | TODO: type cast (TYPE, LEFT_PARENTHESIS, expression, RIGHT_PARENTHESIS)
     //     | LEFT_PARENTHESIS, expression, RIGHT_PARENTHESIS;
-    private Expression? ParsePrimaryExpression()
+    private Expression? ParsePrimaryExpression() => SupplyPosition(() =>
     {
         if (TryConsumeToken(out var literal, _literalTokenTypes))
             return LiteralMapper.MapToLiteralExpression(literal);
@@ -697,5 +696,12 @@ private Expression? ParseDisjunctionPatternExpression()
         var expression = ParseExpression();
         ConsumeToken(TokenType.RightParenthesis);
         return expression;
+    });
+
+    private Expression? SupplyPosition(Func<Expression?> parseMethod)
+    {
+        var expressionPosition = _lexer.CurrentToken.StartPosition;
+        var expression = parseMethod();
+        return expression is null ? null : expression with { Position = expressionPosition };
     }
 }

@@ -42,7 +42,7 @@ public partial class Parser
     //     = KW_PULL, namespace;
     // namespace
     //     = IDENTIFIER, { OP_DOT, IDENTIFIER };
-    private Statement? ParseNamespaceImportStatement()
+    private Statement? ParseNamespaceImportStatement() => SupplyPosition(() =>
     {
         if (!TryConsumeToken(out _, TokenType.KeywordPull))
             return null;
@@ -58,11 +58,11 @@ public partial class Parser
         }
 
         return new NamespaceImportStatement(list);
-    }
+    });
 
     // variable_initialization_list
     //     = KW_INIT, variable_initialization, { COMMA, variable_initialization };
-    private Statement? ParseVariableInitializationListStatement()
+    private Statement? ParseVariableInitializationListStatement() => SupplyPosition(() =>
     {
         if (!TryConsumeToken(out _, TokenType.KeywordInit))
             return null;
@@ -75,7 +75,7 @@ public partial class Parser
             list.Add(ParseVariableInitialization());
 
         return new VariableInitializationListStatement(list);
-    }
+    });
 
     // variable_initialization
     //     = [ KW_CONST ], IDENTIFIER, [ OP_EQUALS, expression ];
@@ -96,23 +96,23 @@ public partial class Parser
 
     // break
     //     = KW_BREAK;
-    private Statement? ParseBreakStatement() =>
-        TryConsumeToken(out _, TokenType.KeywordBreak) ? new BreakStatement() : null;
+    private Statement? ParseBreakStatement() => SupplyPosition(() =>
+        TryConsumeToken(out _, TokenType.KeywordBreak) ? new BreakStatement() : null);
 
     // break_if
     //     = KW_BREAK_IF, parenthesized_expression;
-    private Statement? ParseBreakIfStatement()
+    private Statement? ParseBreakIfStatement() => SupplyPosition(() =>
     {
         if (!TryConsumeToken(out _, TokenType.KeywordBreakIf))
             return null;
 
         var condition = ParseParenthesizedExpression();
         return new BreakIfStatement(condition);
-    }
+    });
 
     // return
     //     = KW_RETURN, expression;
-    private Statement? ParseReturnStatement()
+    private Statement? ParseReturnStatement() => SupplyPosition(() =>
     {
         if (!TryConsumeToken(out _, TokenType.KeywordReturn))
             return null;
@@ -120,8 +120,15 @@ public partial class Parser
         return TryParseExpression(out var parsedExpression)
             ? new ReturnStatement(parsedExpression!)
             : new ReturnStatement();
-    }
+    });
 
-    private Statement? ParseExpressionStatement() =>
-        TryParseExpression(out var parsedExpression) ? new ExpressionStatement(parsedExpression!) : null;
+    private Statement? ParseExpressionStatement() => SupplyPosition(() =>
+        TryParseExpression(out var parsedExpression) ? new ExpressionStatement(parsedExpression!) : null);
+
+    private Statement? SupplyPosition(Func<Statement?> parseMethod)
+    {
+        var statementPosition = _lexer.CurrentToken.StartPosition;
+        var statement = parseMethod();
+        return statement is null ? null : statement with { Position = statementPosition };
+    }
 }

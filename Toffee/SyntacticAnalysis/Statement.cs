@@ -1,12 +1,14 @@
-﻿namespace Toffee.SyntacticAnalysis;
+﻿using Toffee.Scanning;
 
-public abstract record Statement(bool IsTerminated = false);  // TODO: add Position
+namespace Toffee.SyntacticAnalysis;
 
-public record NamespaceImportStatement(IList<IdentifierExpression> NamespaceLevels) : Statement;
-public record VariableInitializationListStatement(IList<VariableInitialization> Items) : Statement;
-public record BreakStatement : Statement;
-public record BreakIfStatement(Expression Condition) : Statement;
-public record ReturnStatement(Expression? Value = null) : Statement;
-public record ExpressionStatement(Expression Expression) : Statement;
+public abstract record Statement(Position Position, bool IsTerminated = false);
 
-public record VariableInitialization(string Name, Expression? InitialValue = null, bool IsConst = false) : Statement;
+public record NamespaceImportStatement(IList<IdentifierExpression> NamespaceLevels) : Statement(new Position());
+public record VariableInitializationListStatement(IList<VariableInitialization> Items) : Statement(new Position());
+public record BreakStatement() : Statement(new Position());
+public record BreakIfStatement(Expression Condition) : Statement(new Position());
+public record ReturnStatement(Expression? Value = null) : Statement(new Position());
+public record ExpressionStatement(Expression Expression) : Statement(new Position());
+
+public record VariableInitialization(string Name, Expression? InitialValue = null, bool IsConst = false) : Statement(new Position());
