@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using Moq;
+using Toffee.ErrorHandling;
 using Toffee.LexicalAnalysis;
-using Toffee.Logging;
 using Toffee.Scanning;
 using Xunit;
 
@@ -14,7 +14,6 @@ public class LexerTests
     [Trait("Category", "Operators")]
     [Theory]
     [InlineData(".", TokenType.OperatorDot)]
-    [InlineData("?.", TokenType.OperatorQueryDot)]
     [InlineData("^", TokenType.OperatorCaret)]
     [InlineData("+", TokenType.OperatorPlus)]
     [InlineData("-", TokenType.OperatorMinus)]

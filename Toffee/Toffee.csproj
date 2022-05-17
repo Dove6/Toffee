@@ -13,4 +13,31 @@
       <PackageReference Include="CommandDotNet.NameCasing" Version="3.0.1" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Update="LexicalAnalysis\Lexer.KeywordsAndIdentifiers.cs">
+        <DependentUpon>Lexer.cs</DependentUpon>
+      </Compile>
+      <Compile Update="LexicalAnalysis\Lexer.Numbers.cs">
+        <DependentUpon>Lexer.cs</DependentUpon>
+      </Compile>
+      <Compile Update="LexicalAnalysis\Lexer.OperatorsAndComments.cs">
+        <DependentUpon>Lexer.cs</DependentUpon>
+      </Compile>
+      <Compile Update="LexicalAnalysis\Lexer.Strings.cs">
+        <DependentUpon>Lexer.cs</DependentUpon>
+      </Compile>
+      <Compile Update="SyntacticAnalysis\Parser.Expressions.cs">
+        <DependentUpon>Parser.cs</DependentUpon>
+      </Compile>
+      <Compile Update="SyntacticAnalysis\Parser.Statements.cs">
+        <DependentUpon>Parser.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Running\AstPrinter.Statements.cs">
+        <DependentUpon>AstPrinter.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Running\AstPrinter.Expressions.cs">
+        <DependentUpon>AstPrinter.cs</DependentUpon>
+      </Compile>
+    </ItemGroup>
+
 </Project>

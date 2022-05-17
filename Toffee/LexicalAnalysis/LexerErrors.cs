@@ -1,9 +1,11 @@
 ﻿using System.Collections.ObjectModel;
+using Toffee.ErrorHandling;
 using Toffee.Scanning;
 
 namespace Toffee.LexicalAnalysis;
 
-public abstract record LexerError(Position Position);
+public abstract record LexerError(Position Position) : Error(Position);
+
 public record UnexpectedEndOfText(Position Position, TokenType BuiltTokenType) : LexerError(Position);
 public record ExceededMaxLexemeLength(Position Position, int MaxLexemeLength) : LexerError(Position);
 public record UnknownToken(Position Position, string Content) : LexerError(Position);

@@ -5,12 +5,9 @@ print(add(3, 8));  // 11
 
 // słowo kluczowe return może być podane bez wyrażenia (zostaje zwrócony null) lub z wyrażeniem
 init const fib = functi(n) {
-    if (n < 0)
-        return;
-    if (n == 0)
-        return 0;
-    if (n == 1)
-        return(1);
+    if (n < 0) { return; };
+    if (n == 0) { return 0; };
+    if (n == 1) { return(1); };
     fib(n - 2) + fib(n - 1)
 };
 print(fib(4));  // 3
