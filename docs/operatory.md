@@ -4,8 +4,6 @@
 |-----------|--------------|---------------------------|---------|---------|--------------|
 | 1         | ()           | wywołanie funkcji         | unarny  | sufiks  | lewostronna  |
 |           | .            | dostęp do przestrzeni     | binarny | infiks  | lewostronna  |
-|           | ?.           | bezpieczny dostęp         | binarny | infiks  | lewostronna  |
-|           | !            | wykluczenie opcjonalności | unarny  | sufiks  | lewostronna  |
 | 2         | ^            | potęgowanie               | binarny | infiks  | prawostronna |
 | 3         | +            | zachowanie znaku          | unarny  | prefiks | prawostronna |
 |           | -            | zmiana znaku              | unarny  | prefiks | prawostronna |
@@ -20,15 +18,15 @@
 |           | &lt;=        | porównanie                | binarny | infiks  | lewostronna  |
 |           | &gt;         | porównanie                | binarny | infiks  | lewostronna  |
 |           | &gt;=        | porównanie                | binarny | infiks  | lewostronna  |
-| 8         | ==           | porównanie                | binarny | infiks  | lewostronna  |
+|           | ==           | porównanie                | binarny | infiks  | lewostronna  |
 |           | !=           | porównanie                | binarny | infiks  | lewostronna  |
-| 9         | is           | sprawdzenie typu          | binarny | infiks  | lewostronna  |
+| 8         | is           | sprawdzenie typu          | binarny | infiks  | lewostronna  |
 |           | is not       | sprawdzenie typu          | binarny | infiks  | lewostronna  |
-| 10        | &amp;&amp;   | koniunkcja                | binarny | infiks  | lewostronna  |
-| 11        | &#124;&#124; | alternatywa               | binarny | infiks  | lewostronna  |
-| 12        | ?&gt;        | null-safe pipe            | binarny | infiks  | lewostronna  |
-| 13        | ??           | null coalescing           | binarny | infiks  | lewostronna  |
-| 14        | =            | przypisanie               | binarny | infiks  | prawostronna |
+| 9         | &amp;&amp;   | koniunkcja                | binarny | infiks  | lewostronna  |
+| 10        | &#124;&#124; | alternatywa               | binarny | infiks  | lewostronna  |
+| 11        | ?&gt;        | null-safe pipe            | binarny | infiks  | lewostronna  |
+| 12        | ??           | null coalescing           | binarny | infiks  | lewostronna  |
+| 13        | =            | przypisanie               | binarny | infiks  | prawostronna |
 |           | +=           | przypisanie sumy          | binarny | infiks  | prawostronna |
 |           | -=           | przypisanie różnicy       | binarny | infiks  | prawostronna |
 |           | *=           | przypisanie iloczynu      | binarny | infiks  | prawostronna |

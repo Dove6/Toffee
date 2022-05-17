@@ -13,7 +13,7 @@ init three = 3, fifteen = a + 10;
 // ewaluacja od lewej do prawej, więc możliwe użycie zmiennej/stałej utworzonej wcześniej w tej samej linii
 init eight = 8, twentyFour = three * eight;
 
-const one = 1;
+init const one = 1;
 one = 5;  // błąd!
 
 init j;  // domyślnie null

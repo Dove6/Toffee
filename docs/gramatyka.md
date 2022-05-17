@@ -27,31 +27,31 @@ break_if
 return
     = KW_RETURN, expression;
 expression
-    = assignment
-    | block
+    = block
     | conditional_expression
     | for_loop_expression
     | while_loop_expression
     | function_definition
     | pattern_matching;
+    | assignment;
 block
-    = LEFT_BRACE, { statement }, [ unterminated_statement ], RIGHT_BRACE;
+    = LEFT_BRACE, unterminated_statement, { SEMICOLON, { SEMICOLON }, unterminated_statement }, RIGHT_BRACE
 conditional_expression
-    = KW_IF, parenthesized_expression, unterminated_statement, { conditional_elif_part }, [ conditional_else_part ];
+    = conditional_if_part, { conditional_elif_part }, [ conditional_else_part ];
+conditional_if_part
+    = KW_IF, parenthesized_expression, expression;
 conditional_elif_part
-    = KW_ELIF, parenthesized_expression, unterminated_statement;
+    = KW_ELIF, parenthesized_expression, expression;
 conditional_else_part
-    = KW_ELSE, unterminated_statement;
+    = KW_ELSE, expression;
 for_loop_expression
-    = KW_FOR, for_loop_specification, unterminated_statement;
+    = KW_FOR, for_loop_specification, expression;
 for_loop_specification
     = LEFT_PARENTHESIS, [ IDENTIFIER, COMMA ], for_loop_range, RIGHT_PARENTHESIS;
 for_loop_range
-    = NUMBER, [ COLON, NUMBER, [ COLON, NUMBER ] ];
+    = expression, [ COLON, expression, [ COLON, expression ] ];
 while_loop_expression
-    = KW_WHILE, parenthesized_expression, unterminated_statement;
-parenthesized_expression
-    = LEFT_PARENTHESIS, expression, RIGHT_PARENTHESIS;
+    = KW_WHILE, parenthesized_expression, expression;
 function_definition
     = KW_FUNCTI, LEFT_PARENTHESIS, parameter_list, RIGHT_PARENTHESIS, block;
 parameter_list
@@ -59,12 +59,15 @@ parameter_list
 parameter
     = [ KW_CONST ], IDENTIFIER, [ OP_BANG ];
 pattern_matching
-    = KW_MATCH, LEFT_PARENTHESIS, expression, RIGHT_PARENTHESIS, LEFT_BRACE, { pattern_specification }, RIGHT_BRACE;
+    = KW_MATCH, parenthesized_expression, LEFT_BRACE, { pattern_specification }, [ default_pattern_specification ], RIGHT_BRACE;
+parenthesized_expression
+    = LEFT_PARENTHESIS, expression, RIGHT_PARENTHESIS;
 pattern_specification
     = pattern_expression, COLON, expression, SEMICOLON;
+default_pattern_specification
+    = KW_DEFAULT, COLON, expression, SEMICOLON;
 pattern_expression
-    = pattern_expression_disjunction
-    | KW_DEFAULT;
+    = pattern_expression_disjunction;
 pattern_expression_disjunction
     = pattern_expression_conjunction, { KW_OR, pattern_expression_conjunction };
 pattern_expression_conjunction
@@ -75,7 +78,7 @@ pattern_expression_non_associative
     | expression
     | LEFT_PARENTHESIS, pattern_expression_disjunction, RIGHT_PARENTHESIS;
 assignment
-    = null_coalescing, [ OP_ASSIGNMENT, assignment ];
+    = null_coalescing, [ OP_ASSIGNMENT, expression ];
 null_coalescing
     = nullsafe_pipe, { OP_QUERY_QUERY, nullsafe_pipe };
 nullsafe_pipe
@@ -98,21 +101,19 @@ unary_prefixed
     = OP_UNARY_PREFIX, unary_prefixed
     | exponentiation;
 exponentiation
-    = suffixed_expression, { OP_CARET, suffixed_expression };
-suffixed_expression
-    = primary_expression, [ function_call | namespace_access ];
-function_call
+    = namespace_access_or_function_call, { OP_CARET, exponentiation };
+namespace_access_or_function_call
+    = namespace_access, { function_call_part } { OP_DOT, namespace_access, { function_call_part } };
+function_call_part
     = LEFT_PARENTHESIS, arguments_list, RIGHT_PARENTHESIS;
 arguments_list
     = [ argument, { COMMA, argument } ];
 argument
     = expression;
-namespace_access
-    = OP_NAMESPACE_ACCESS, primary_expression;
 primary_expression
     = LITERAL
     | IDENTIFIER
-    | LEFT_PARENTHESIS, expression, RIGHT_PARENTHESIS;
+    | [ CASTING_TYPE ], LEFT_PARENTHESIS, expression, RIGHT_PARENTHESIS;
 ```
 
 ## Leksemy
@@ -152,14 +153,16 @@ KEYWORD
     | KW_FALSE
     | KW_TRUE;
 TYPE
+    = CASTING_TYPE
+    | KW_FUNCTION
+    | KW_NULL;
+CASTING_TYPE
     = KW_INT
     | KW_FLOAT
     | KW_STRING
-    | KW_BOOL
-    | KW_FUNCTION
-    | KW_NULL;
+    | KW_BOOL;
 OPERATOR
-    = OP_NAMESPACE_ACCESS
+    = OP_DOT
     | OP_CARET
     | OP_UNARY_PREFIX
     | OP_MULTIPLICATIVE
@@ -171,9 +174,6 @@ OPERATOR
     | OP_QUERY_QUERY
     | OP_QUERY_GREATER
     | OP_ASSIGNMENT;
-OP_NAMESPACE_ACCESS
-    = OP_DOT
-    | OP_QUERY_DOT;
 PARENTHESES
     = LEFT_PARENTHESIS
     | RIGHT_PARENTHESIS

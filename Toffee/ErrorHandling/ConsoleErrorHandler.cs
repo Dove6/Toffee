@@ -1,9 +1,10 @@
 ﻿using Toffee.LexicalAnalysis;
 using Toffee.Scanning;
+using Toffee.SyntacticAnalysis;
 
-namespace Toffee.Logging;
+namespace Toffee.ErrorHandling;
 
-public class ConsoleErrorHandler : ILexerErrorHandler
+public class ConsoleErrorHandler : ILexerErrorHandler, IParserErrorHandler
 {
     private readonly string? _sourceName;
 
@@ -17,6 +18,12 @@ public class ConsoleErrorHandler : ILexerErrorHandler
 
     public void Handle(LexerWarning lexerWarning) =>
         Log(LogLevel.Warning, lexerWarning.Position, lexerWarning.ToMessage(), lexerWarning);
+
+    public void Handle(ParserError parserError) =>
+        Log(LogLevel.Error, parserError.Position, parserError.ToMessage(), parserError);
+
+    public void Handle(ParserWarning parserWarning) =>
+        Log(LogLevel.Warning, parserWarning.Position, parserWarning.ToMessage(), parserWarning);
 
     private void Log(LogLevel level, Position position, string message, params object?[] attachments)
     {

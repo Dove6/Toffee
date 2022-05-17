@@ -56,7 +56,7 @@ j = for (5) {
 
 // pętla while
 while (true) {
-    print("Ten tekst zostanie wypisany jednokrotnie.")
+    print("Ten tekst zostanie wypisany jednokrotnie.");
     break;
 };
 // działa "zwyczajnie", w roli wyrażenia zwraca wartość sprawdzanego warunku

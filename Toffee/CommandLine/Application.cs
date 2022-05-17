@@ -1,16 +1,20 @@
 ﻿using CommandDotNet;
+using Toffee.ErrorHandling;
 using Toffee.LexicalAnalysis;
-using Toffee.Logging;
+using Toffee.Running;
 using Toffee.Scanning;
+using Toffee.SyntacticAnalysis;
 
 namespace Toffee.CommandLine;
 
 public class Application
 {
+    private string? _sourceName;
     private TextReader? _reader;
     private IScanner? _scanner;
     private ILexerErrorHandler? _logger;
-    private LexerBase? _lexer;
+    private ILexer? _lexer;
+    private IParser? _parser;
 
     [DefaultCommand]
     public void Execute(
@@ -22,11 +26,12 @@ public class Application
         _reader = scriptFilename is null
             ? Console.In
             : new StreamReader(scriptFilename.Name);
-        var sourceName = scriptFilename?.Name ?? "STDIN";
+        _sourceName = scriptFilename?.Name ?? "STDIN";
         _scanner = new Scanner(_reader);
-        _logger = new ConsoleErrorHandler(sourceName);
+        _logger = new ConsoleErrorHandler(_sourceName);
         _lexer = new Lexer(_scanner, _logger, maxLexemeLength);
-        RunLexer();
+        _parser = new Parser(_lexer);
+        RunParser();
     }
 
     private void RunLexer()
@@ -47,6 +52,16 @@ public class Application
                 $"content: {contentDescription}, " +
                 $"position: {positionDescription}");
             _lexer.Advance();
+        }
+    }
+
+    private void RunParser()
+    {
+        var printer = new AstPrinter(_sourceName!);
+        while (_parser!.CurrentStatement is not null)
+        {
+            printer.Print(_parser.CurrentStatement);
+            _parser.Advance();
         }
     }
 }

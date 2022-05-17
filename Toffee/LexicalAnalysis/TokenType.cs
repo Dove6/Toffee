@@ -13,7 +13,6 @@ public enum TokenType
     LiteralFloat,
 
     OperatorDot,
-    OperatorQueryDot,
     OperatorCaret,
     OperatorPlus,
     OperatorMinus,
