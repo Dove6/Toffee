@@ -27,8 +27,9 @@ public partial class ParserTests
         var expectedNamespaceSegments = namespaceSegments.Select(x => new IdentifierExpression(x)).ToArray();
 
         var lexerMock = new LexerMock(interleavedNamespaceSegments.Prepend(pullToken).ToArray());
-
         IParser parser = new Parser(lexerMock);
+
+        parser.Advance();
 
         var namespaceImportStatement = parser.CurrentStatement.As<NamespaceImportStatement>();
         namespaceImportStatement.Should().NotBeNull();
@@ -42,8 +43,9 @@ public partial class ParserTests
     public void VariableInitializationListStatementsShouldBeParsedCorrectly(Token[] tokenSequence, VariableInitialization[] expectedVariableList)
     {
         var lexerMock = new LexerMock(tokenSequence);
-
         IParser parser = new Parser(lexerMock);
+
+        parser.Advance();
 
         var returnStatement = parser.CurrentStatement.As<VariableInitializationListStatement>();
         returnStatement.Should().NotBeNull();
@@ -58,8 +60,9 @@ public partial class ParserTests
         var returnToken = GetDefaultToken(TokenType.KeywordReturn);
 
         var lexerMock = new LexerMock(returnToken);
-
         IParser parser = new Parser(lexerMock);
+
+        parser.Advance();
 
         var returnStatement = parser.CurrentStatement.As<ReturnStatement>();
         returnStatement.Should().NotBeNull();
@@ -77,8 +80,9 @@ public partial class ParserTests
         var identifierToken = new Token(TokenType.Identifier, identifierName);
 
         var lexerMock = new LexerMock(returnToken, identifierToken);
-
         IParser parser = new Parser(lexerMock);
+
+        parser.Advance();
 
         var returnStatement = parser.CurrentStatement.As<ReturnStatement>();
         returnStatement.Should().NotBeNull();
@@ -97,8 +101,9 @@ public partial class ParserTests
         var breakToken = GetDefaultToken(TokenType.KeywordBreak);
 
         var lexerMock = new LexerMock(breakToken);
-
         IParser parser = new Parser(lexerMock);
+
+        parser.Advance();
 
         var breakStatement = parser.CurrentStatement.As<BreakStatement>();
         breakStatement.Should().NotBeNull();
@@ -119,8 +124,9 @@ public partial class ParserTests
         var rightParenthesisToken = GetDefaultToken(TokenType.RightParenthesis);
 
         var lexerMock = new LexerMock(breakIfToken, leftParenthesisToken, identifierToken, rightParenthesisToken);
-
         IParser parser = new Parser(lexerMock);
+
+        parser.Advance();
 
         var breakIfStatement = parser.CurrentStatement.As<BreakIfStatement>();
         breakIfStatement.Should().NotBeNull();
@@ -137,8 +143,9 @@ public partial class ParserTests
     public void ExpressionStatementsShouldBeParsedCorrectly(Token[] tokenSequence, Type expectedExpressionType)
     {
         var lexerMock = new LexerMock(tokenSequence);
-
         IParser parser = new Parser(lexerMock);
+
+        parser.Advance();
 
         var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
@@ -177,8 +184,9 @@ public partial class ParserTests
             new LexerMock(
                 new[] { initToken, constToken, identifierToken, equalToken, leftTermToken, plusToken, rightTermToken }
                     .SelectMany((x, i) => new[] { x, comments[i % 2] }).ToArray());
-
         IParser parser = new Parser(lexerMock);
+
+        parser.Advance();
 
         var statement = parser.CurrentStatement.As<VariableInitializationListStatement>();
         statement.Should().NotBeNull();

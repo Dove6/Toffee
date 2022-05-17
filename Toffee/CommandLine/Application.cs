@@ -58,10 +58,7 @@ public class Application
     private void RunParser()
     {
         var printer = new AstPrinter(_sourceName!);
-        while (_parser!.CurrentStatement is not null)
-        {
-            printer.Print(_parser.CurrentStatement);
-            _parser.Advance();
-        }
+        while (_parser!.Advance() is not null)
+            printer.Print(_parser.CurrentStatement!);
     }
 }

@@ -79,4 +79,6 @@ public partial class ParserTests
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
         };
     }
+
+    // TODO: negative tests
 }

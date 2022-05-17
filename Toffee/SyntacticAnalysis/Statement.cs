@@ -2,7 +2,7 @@
 
 namespace Toffee.SyntacticAnalysis;
 
-public abstract record Statement(Position Position, bool IsTerminated = false);
+public abstract record Statement(Position Position, bool IsTerminated = false);  // TODO: add end position
 
 public record NamespaceImportStatement(IList<IdentifierExpression> NamespaceLevels) : Statement(new Position());
 public record VariableInitializationListStatement(IList<VariableInitialization> Items) : Statement(new Position());

@@ -11,38 +11,12 @@ public partial class Parser : IParser
     public Statement? CurrentStatement { get; private set; }
 
     private delegate Statement? ParseStatementDelegate();
-    private readonly List<ParseStatementDelegate> _statementParsers;
-
     private delegate Expression? ParseExpressionDelegate();
-    private readonly List<ParseExpressionDelegate> _expressionParsers;
 
     public Parser(ILexer lexer, IParserErrorHandler? errorHandler = null)
     {
         _lexer = new CommentSkippingLexer(lexer);
         _errorHandler = errorHandler;
-
-        _statementParsers = new List<ParseStatementDelegate>
-        {
-            ParseNamespaceImportStatement,
-            ParseVariableInitializationListStatement,
-            ParseBreakStatement,
-            ParseBreakIfStatement,
-            ParseReturnStatement,
-            ParseExpressionStatement
-        };
-
-        _expressionParsers = new List<ParseExpressionDelegate>
-        {
-            ParseBlockExpression,
-            ParseConditionalExpression,
-            ParseForLoopExpression,
-            ParseWhileLoopExpression,
-            ParseFunctionDefinitionExpression,
-            ParsePatternMatchingExpression,
-            ParseAssignmentExpression
-        };
-
-        Advance();
     }
 
     private bool TryEnsureToken(params TokenType[] expectedType) =>
@@ -50,14 +24,14 @@ public partial class Parser : IParser
 
     private void EnsureToken(params TokenType[] expectedType)
     {
-        if (!expectedType.Contains(_lexer.CurrentToken.Type))
+        if (!TryEnsureToken(expectedType))
             throw new ParserException(new UnexpectedToken(_lexer.CurrentToken, expectedType));
     }
 
     private bool TryConsumeToken(out Token matchedToken, params TokenType[] expectedType)
     {
         matchedToken = new Token(TokenType.Unknown);
-        if (!expectedType.Contains(_lexer.CurrentToken.Type))
+        if (!TryEnsureToken(expectedType))
             return false;
         matchedToken = _lexer.Advance();
         return true;
@@ -65,18 +39,20 @@ public partial class Parser : IParser
 
     private Token ConsumeToken(params TokenType[] expectedType)
     {
-        if (!expectedType.Contains(_lexer.CurrentToken.Type))
+        if (!TryConsumeToken(out var matchedToken, expectedType))
             throw new ParserException(new UnexpectedToken(_lexer.CurrentToken, expectedType));
-        return _lexer.Advance();
+        return matchedToken;
     }
 
     private void EmitError(ParserError error)
     {
+        // TODO: actually use the method
         _errorHandler?.Handle(error);
     }
 
     private void EmitWarning(ParserWarning warning)
     {
+        // TODO: actually use the method
         _errorHandler?.Handle(warning);
     }
 
@@ -88,7 +64,6 @@ public partial class Parser : IParser
 
     public Statement? Advance()
     {
-        var supersededStatement = CurrentStatement;
         SkipSemicolons();
 
         if (_lexer.CurrentToken.Type == TokenType.EndOfText)
@@ -98,6 +73,6 @@ public partial class Parser : IParser
         else
             throw new ParserException(new ExpectedStatement(_lexer.CurrentToken));
 
-        return supersededStatement;
+        return CurrentStatement;
     }
 }

@@ -2,7 +2,7 @@
 
 namespace Toffee.SyntacticAnalysis;
 
-public abstract record Expression(Position Position);
+public abstract record Expression(Position Position);  // TODO: add end position
 
 public record BlockExpression(IList<Statement> Statements, Statement? UnterminatedStatement = null)
     : Expression(new Position());

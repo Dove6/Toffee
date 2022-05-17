@@ -23,8 +23,9 @@ public partial class ParserTests
         var literalToken = new Token(literalTokenType, literalTokenContent);
 
         var lexerMock = new LexerMock(literalToken);
-
         IParser parser = new Parser(lexerMock);
+
+        parser.Advance();
 
         var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
@@ -44,8 +45,9 @@ public partial class ParserTests
         var identifierToken = new Token(TokenType.Identifier, identifierName);
 
         var lexerMock = new LexerMock(identifierToken);
-
         IParser parser = new Parser(lexerMock);
+
+        parser.Advance();
 
         var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
@@ -74,8 +76,9 @@ public partial class ParserTests
         };
 
         var lexerMock = new LexerMock(tokenSequence);
-
         IParser parser = new Parser(lexerMock);
+
+        parser.Advance();
 
         var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
@@ -128,8 +131,9 @@ public partial class ParserTests
         var expectedRightExpression = new IdentifierExpression(rightIdentifierName);
 
         var lexerMock = new LexerMock(leftToken, opToken, rightToken);
-
         IParser parser = new Parser(lexerMock);
+
+        parser.Advance();
 
         var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
@@ -156,8 +160,9 @@ public partial class ParserTests
         var expectedExpression = new IdentifierExpression(identifierName);
 
         var lexerMock = new LexerMock(opToken, token);
-
         IParser parser = new Parser(lexerMock);
+
+        parser.Advance();
 
         var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
@@ -185,8 +190,9 @@ public partial class ParserTests
         var expectedRightExpression = new TypeExpression(expectedType);
 
         var lexerMock = new LexerMock(opTokens.Prepend(leftToken).Append(rightToken).ToArray());
-
         IParser parser = new Parser(lexerMock);
+
+        parser.Advance();
 
         var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
@@ -205,8 +211,9 @@ public partial class ParserTests
     public void BlockExpressionsShouldBeParsedCorrectly(Token[] tokenSequence, Statement[] expectedStatementList, Statement? expectedUnterminatedStatement)
     {
         var lexerMock = new LexerMock(tokenSequence);
-
         IParser parser = new Parser(lexerMock);
+
+        parser.Advance();
 
         var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
@@ -224,8 +231,9 @@ public partial class ParserTests
     public void ConditionalExpressionsShouldBeParsedCorrectly(Token[] tokenSequence, ConditionalElement expectedIfPart, ConditionalElement[] expectedElifParts, Expression? expectedElsePart)
     {
         var lexerMock = new LexerMock(tokenSequence);
-
         IParser parser = new Parser(lexerMock);
+
+        parser.Advance();
 
         var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
@@ -244,8 +252,9 @@ public partial class ParserTests
     public void ForLoopExpressionsShouldBeParsedCorrectly(Token[] tokenSequence, string? expectedCounterName, ForLoopRange expectedRange, Expression expectedBody)
     {
         var lexerMock = new LexerMock(tokenSequence);
-
         IParser parser = new Parser(lexerMock);
+
+        parser.Advance();
 
         var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
@@ -264,8 +273,9 @@ public partial class ParserTests
     public void WhileLoopExpressionsShouldBeParsedCorrectly(Token[] tokenSequence, Expression expectedCondition, Expression expectedBody)
     {
         var lexerMock = new LexerMock(tokenSequence);
-
         IParser parser = new Parser(lexerMock);
+
+        parser.Advance();
 
         var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
@@ -283,8 +293,9 @@ public partial class ParserTests
     public void FunctionDefinitionExpressionsShouldBeParsedCorrectly(Token[] tokenSequence, FunctionParameter[] expectedParameters, BlockExpression expectedBody)
     {
         var lexerMock = new LexerMock(tokenSequence);
-
         IParser parser = new Parser(lexerMock);
+
+        parser.Advance();
 
         var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
@@ -302,8 +313,9 @@ public partial class ParserTests
     public void PatternMatchingExpressionsShouldBeParsedCorrectly(Token[] tokenSequence, Expression expectedArgument, PatternMatchingBranch[] expectedBranches, Expression? expectedDefault)
     {
         var lexerMock = new LexerMock(tokenSequence);
-
         IParser parser = new Parser(lexerMock);
+
+        parser.Advance();
 
         var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
@@ -322,8 +334,9 @@ public partial class ParserTests
     public void FunctionCallExpressionsShouldBeParsedCorrectly(Token[] tokenSequence, Expression expectedCalledExpression, Expression[] expectedArguments)
     {
         var lexerMock = new LexerMock(tokenSequence);
-
         IParser parser = new Parser(lexerMock);
+
+        parser.Advance();
 
         var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
@@ -365,8 +378,9 @@ public partial class ParserTests
         var expectedRightExpression = new IdentifierExpression(rightIdentifierName);
 
         var lexerMock = new LexerMock(tokenSequence);
-
         IParser parser = new Parser(lexerMock);
+
+        parser.Advance();
 
         var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
@@ -412,8 +426,9 @@ public partial class ParserTests
         var expectedExpression = new LiteralExpression(DataType.Integer, 5L);
 
         var lexerMock = new LexerMock(tokenSequence);
-
         IParser parser = new Parser(lexerMock);
+
+        parser.Advance();
 
         var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
@@ -455,8 +470,9 @@ public partial class ParserTests
         var expectedExpression = new TypeExpression(expectedType);
 
         var lexerMock = new LexerMock(tokenSequence);
-
         IParser parser = new Parser(lexerMock);
+
+        parser.Advance();
 
         var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
@@ -505,8 +521,9 @@ public partial class ParserTests
                             new LiteralExpression(DataType.Bool, false))))));
 
         var lexerMock = new LexerMock(tokenSequence);
-
         IParser parser = new Parser(lexerMock);
+
+        parser.Advance();
 
         var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
@@ -522,8 +539,9 @@ public partial class ParserTests
     public void ExpressionsShouldBeParsedWithRespectToOperatorsAssociativity(Token[] tokenSequence, Expression expectedExpression)
     {
         var lexerMock = new LexerMock(tokenSequence);
-
         IParser parser = new Parser(lexerMock);
+
+        parser.Advance();
 
         var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
@@ -539,8 +557,9 @@ public partial class ParserTests
     public void ExpressionsShouldBeParsedWithRespectToOperatorsPriority(Token[] tokenSequence, Expression expectedExpression)
     {
         var lexerMock = new LexerMock(tokenSequence);
-
         IParser parser = new Parser(lexerMock);
+
+        parser.Advance();
 
         var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
@@ -573,8 +592,9 @@ public partial class ParserTests
             new LiteralExpression(DataType.Integer, 5L))));
 
         var lexerMock = new LexerMock(tokenSequence);
-
         IParser parser = new Parser(lexerMock);
+
+        parser.Advance();
 
         var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
@@ -600,8 +620,9 @@ public partial class ParserTests
         };
 
         var lexerMock = new LexerMock(tokenSequence);
-
         IParser parser = new Parser(lexerMock);
+
+        parser.Advance();
 
         var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
@@ -611,6 +632,10 @@ public partial class ParserTests
         expression.Should().NotBeNull();
         expression.Type.Should().Be(expectedCastType);
     }
+
+    // TODO: test if position of a token equals position of its first lexeme
+
+    // TODO: reorganize IEnumerable tests
 
     #region Generators
 

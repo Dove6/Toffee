@@ -27,7 +27,17 @@ public partial class Parser
     private bool TryParseUnterminatedStatement(out Statement? parsedStatement)
     {
         parsedStatement = null;
-        foreach (var parser in _statementParsers)
+        var statementParsers = new List<ParseStatementDelegate>
+        {
+            ParseNamespaceImportStatement,
+            ParseVariableInitializationListStatement,
+            ParseBreakStatement,
+            ParseBreakIfStatement,
+            ParseReturnStatement,
+            ParseExpressionStatement
+        };
+
+        foreach (var parser in statementParsers)
         {
             var parserResult = parser();
             if (parserResult is null)

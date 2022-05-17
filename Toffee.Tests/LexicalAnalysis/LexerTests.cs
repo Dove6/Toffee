@@ -48,7 +48,7 @@ public class LexerTests
     public void OperatorsShouldBeRecognizedCorrectly(string input, TokenType expectedTokenType)
     {
         var scannerMock = new ScannerMock(input);
-        var lexer = new Lexer(scannerMock);
+        var lexer = new Lexer(scannerMock);  // TODO: test using interface
 
         Assert.Equal(expectedTokenType, lexer.CurrentToken.Type);
     }

@@ -83,7 +83,18 @@ public partial class Parser
     private bool TryParseExpression(out Expression? parsedExpression)
     {
         parsedExpression = null;
-        foreach (var parser in _expressionParsers)
+        var expressionParsers = new List<ParseExpressionDelegate>
+        {
+            ParseBlockExpression,
+            ParseConditionalExpression,
+            ParseForLoopExpression,
+            ParseWhileLoopExpression,
+            ParseFunctionDefinitionExpression,
+            ParsePatternMatchingExpression,
+            ParseAssignmentExpression
+        };
+
+        foreach (var parser in expressionParsers)  // TODO: make these iterations LINQ-styled
         {
             var parserResult = parser();
             if (parserResult is null)
@@ -636,6 +647,7 @@ private Expression? ParseDisjunctionPatternExpression() => SupplyPosition(() =>
 
     // namespace_access_or_function_call
     //     = namespace_access, { function_call_part } { OP_DOT, namespace_access, { function_call_part } };
+    // TODO: bring back more restrictive grammar while maintaining liberal method content (for emitting helpful errors)
     private Expression? ParseNamespaceAccessOrFunctionCallExpression() => SupplyPosition(() =>
     {
         var expression = ParsePrimaryExpression();
