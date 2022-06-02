@@ -44,16 +44,21 @@ public partial class Parser : IParser
         return matchedToken;
     }
 
-    private void EmitError(ParserError error)
-    {
-        // TODO: actually use the method
-        _errorHandler?.Handle(error);
-    }
+    private void EmitError(ParserError error) => _errorHandler?.Handle(error);
 
-    private void EmitWarning(ParserWarning warning)
+    // TODO: actually use the method
+    private void EmitWarning(ParserWarning warning) => _errorHandler?.Handle(warning);
+
+    private void InterceptParserError(Action throwingAction)
     {
-        // TODO: actually use the method
-        _errorHandler?.Handle(warning);
+        try
+        {
+            throwingAction();
+        }
+        catch (ParserException e)
+        {
+            EmitError(e.Error);
+        }
     }
 
     private void SkipSemicolons()
@@ -66,6 +71,8 @@ public partial class Parser : IParser
     {
         SkipSemicolons();
 
+        // TODO: panic mode
+        // TODO: check for semicolon
         if (_lexer.CurrentToken.Type == TokenType.EndOfText)
             CurrentStatement = null;
         else if (TryParseStatement(out var parsedStatement))

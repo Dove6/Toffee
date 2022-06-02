@@ -113,13 +113,12 @@ public partial class Parser
     }
 
     // block
-    //     = LEFT_BRACE, unterminated_statement, { SEMICOLON, { SEMICOLON }, unterminated_statement }, RIGHT_BRACE;
+    //     = LEFT_BRACE, unterminated_statement, { SEMICOLON, [ unterminated_statement ] }, RIGHT_BRACE;
     private Expression? ParseBlockExpression() => SupplyPosition(() =>
     {
         if (!TryConsumeToken(out _, TokenType.LeftBrace))
             return null;
 
-        // TODO: check for missing braces
         var statementList = new List<Statement>();
         var unterminatedStatement = (Statement?)null;
         while (TryParseStatement(out var parsedStatement))
@@ -133,7 +132,7 @@ public partial class Parser
             SkipSemicolons();
         }
 
-        ConsumeToken(TokenType.RightBrace);
+        InterceptParserError(() => ConsumeToken(TokenType.RightBrace));
 
         return new BlockExpression(statementList, unterminatedStatement);
     });
@@ -187,10 +186,9 @@ public partial class Parser
     //     = LEFT_PARENTHESIS, expression, RIGHT_PARENTHESIS;
     private Expression ParseParenthesizedExpression() => SupplyPosition(() =>
     {
-        // TODO: check for missing parentheses
-        ConsumeToken(TokenType.LeftParenthesis);
+        InterceptParserError(() => ConsumeToken(TokenType.LeftParenthesis));
         var expression = ParseExpression();
-        ConsumeToken(TokenType.RightParenthesis);
+        InterceptParserError(() => ConsumeToken(TokenType.RightParenthesis));
         return expression;
     })!;
 
@@ -215,15 +213,14 @@ public partial class Parser
     /// </returns>
     private (string?, ForLoopRange) ParseForLoopSpecification()
     {
-        // TODO: check for missing parentheses
-        ConsumeToken(TokenType.LeftParenthesis);
+        InterceptParserError(() => ConsumeToken(TokenType.LeftParenthesis));
 
         var firstElement = ParseExpression();
         var hasCounter = firstElement is IdentifierExpression && TryConsumeToken(out _, TokenType.Comma);
 
         var range = ParseForLoopRange(hasCounter ? null : firstElement);
 
-        ConsumeToken(TokenType.RightParenthesis);
+        InterceptParserError(() => ConsumeToken(TokenType.RightParenthesis));
 
         return (hasCounter ? (firstElement as IdentifierExpression)!.Name : null, range);
     }
@@ -262,10 +259,9 @@ public partial class Parser
         if (!TryConsumeToken(out _, TokenType.KeywordFuncti))
             return null;
 
-        // TODO: check for missing parentheses
-        ConsumeToken(TokenType.LeftParenthesis);
+        InterceptParserError(() => ConsumeToken(TokenType.LeftParenthesis));
         var parameterList = ParseParameterList();
-        ConsumeToken(TokenType.RightParenthesis);
+        InterceptParserError(() => ConsumeToken(TokenType.RightParenthesis));
 
         var body = ParseBlockExpression();
         if (body is null)
@@ -318,9 +314,8 @@ public partial class Parser
         if (!TryConsumeToken(out _, TokenType.KeywordMatch))
             return null;
 
-        // TODO: check for missing parentheses and braces
         var argument = ParseParenthesizedExpression();
-        ConsumeToken(TokenType.LeftBrace);
+        InterceptParserError(() => ConsumeToken(TokenType.LeftBrace));
 
         var patternSpecificationList = new List<PatternMatchingBranch>();
         var defaultConsequent = (Expression?)null;
@@ -334,7 +329,7 @@ public partial class Parser
             patternSpecificationList.Add(specification);
         }
 
-        ConsumeToken(TokenType.RightBrace);
+        InterceptParserError(() => ConsumeToken(TokenType.RightBrace));
         return new PatternMatchingExpression(argument, patternSpecificationList, defaultConsequent);
     });
 
@@ -423,11 +418,10 @@ private Expression? ParseDisjunctionPatternExpression() => SupplyPosition(() =>
         if (!TryConsumeToken(out _, TokenType.LeftParenthesis))
             return ParseAssignmentExpression();
 
-        // TODO: check for missing parentheses
         var patternExpression = ParseDisjunctionPatternExpression();
         if (patternExpression is null)
             throw new ParserException(new ExpectedPatternExpression(_lexer.CurrentToken));
-        ConsumeToken(TokenType.RightParenthesis);
+        InterceptParserError(() => ConsumeToken(TokenType.RightParenthesis));
         return new GroupingExpression(patternExpression);
     });
 
@@ -646,8 +640,7 @@ private Expression? ParseDisjunctionPatternExpression() => SupplyPosition(() =>
     });
 
     // namespace_access_or_function_call
-    //     = namespace_access, { function_call_part } { OP_DOT, namespace_access, { function_call_part } };
-    // TODO: bring back more restrictive grammar while maintaining liberal method content (for emitting helpful errors)
+    //     = primary_expression, { function_call_part } { OP_DOT, primary_expression, { function_call_part } };
     private Expression? ParseNamespaceAccessOrFunctionCallExpression() => SupplyPosition(() =>
     {
         var expression = ParsePrimaryExpression();
@@ -676,9 +669,8 @@ private Expression? ParseDisjunctionPatternExpression() => SupplyPosition(() =>
         functionArguments = new List<Expression>();
         if (!TryConsumeToken(out _, TokenType.LeftParenthesis))
             return false;
-        // TODO: check for missing parentheses
         functionArguments = ParseArgumentsList();
-        ConsumeToken(TokenType.RightParenthesis);
+        InterceptParserError(() => ConsumeToken(TokenType.RightParenthesis));
         return true;
     }
 
@@ -713,9 +705,8 @@ private Expression? ParseDisjunctionPatternExpression() => SupplyPosition(() =>
         if (!TryConsumeToken(out _, TokenType.LeftParenthesis))
             return null;
 
-        // TODO: check for missing parentheses
         var expression = ParseExpression();
-        ConsumeToken(TokenType.RightParenthesis);
+        InterceptParserError(() => ConsumeToken(TokenType.RightParenthesis));
         return new GroupingExpression(expression);
     });
 

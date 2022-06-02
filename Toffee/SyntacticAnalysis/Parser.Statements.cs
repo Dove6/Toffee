@@ -98,10 +98,14 @@ public partial class Parser
                 isConst ? new[] { TokenType.Identifier } : new[] { TokenType.KeywordConst, TokenType.Identifier }));
         var variableName = (string)identifier.Content!;
 
-        // TODO: check for other operators containing =, eg. ==, +=
-        return TryConsumeToken(out _, TokenType.OperatorEquals)
-            ? new VariableInitialization(variableName, ParseExpression(), isConst)
-            : new VariableInitialization(variableName, null, isConst);
+        if (!TryConsumeToken(out var assignmentToken, _assignmentTokenTypes))
+            return new VariableInitialization(variableName, null, isConst);
+        if (!TryParseExpression(out var initialValue))
+            EmitError(new ExpectedExpression(_lexer.CurrentToken));
+        if (TryConsumeToken(out _, TokenType.OperatorEquals))
+            return new VariableInitialization(variableName, initialValue, isConst);
+        EmitError(new UnexpectedToken(assignmentToken, TokenType.OperatorEquals));
+        return new VariableInitialization(variableName, initialValue, isConst);
     }
 
     // break
