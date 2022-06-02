@@ -534,7 +534,8 @@ private Expression? ParseDisjunctionPatternExpression() => SupplyPosition(() =>
     });
 
     // unary_prefixed
-    //     = { OP_UNARY_PREFIX }, exponentiation;
+    //     = OP_UNARY_PREFIX, unary_prefixed
+    //     | exponentiation;
     private Expression? ParseUnaryPrefixedExpression() => SupplyPosition(() =>
     {
         var unaryOperators = new Stack<Token>();
@@ -549,6 +550,14 @@ private Expression? ParseDisjunctionPatternExpression() => SupplyPosition(() =>
             throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
         }
 
+        if (expression is LiteralExpression { Type: DataType.Integer, Value: > 9223372036854775807ul } badLiteral)
+        {
+            if (badLiteral.Value is not 9223372036854775808ul
+                    || !unaryOperators.TryPeek(out var nearestOperator)
+                        || nearestOperator.Type != TokenType.OperatorMinus)
+                EmitError(new IntegerLiteralOutOfRange(badLiteral));
+        }
+
         while (unaryOperators.TryPop(out var unaryOperator))
             expression = new UnaryExpression(OperatorMapper.MapUnaryOperator(unaryOperator.Type), expression);
         return expression;
@@ -558,16 +567,24 @@ private Expression? ParseDisjunctionPatternExpression() => SupplyPosition(() =>
     //     = namespace_access_or_function_call, { OP_CARET, exponentiation };
     private Expression? ParseExponentiationExpression() => SupplyPosition(() =>
     {
+        var components = new Stack<Expression>();
         var expression = ParseNamespaceAccessOrFunctionCallExpression();
         if (expression is null)
             return null;
 
-        if (!TryConsumeToken(out _, TokenType.OperatorCaret))
-            return expression;
-        var right = ParseExponentiationExpression();
-        if (right is null)
-            throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
-        return new BinaryExpression(expression, Operator.Exponentiation, right);
+        while (TryConsumeToken(out _, TokenType.OperatorCaret))
+        {
+            if (expression is LiteralExpression { Type: DataType.Integer, Value: > 9223372036854775807ul } badLiteral)
+                EmitError(new IntegerLiteralOutOfRange(badLiteral));
+            components.Push(expression);
+            expression = ParseNamespaceAccessOrFunctionCallExpression();
+            if (expression is null)
+                throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
+        }
+
+        while (components.TryPop(out var left))
+            expression = new BinaryExpression(left, Operator.Exponentiation, expression);
+        return expression;
     });
 
     // namespace_access_or_function_call
@@ -578,22 +595,27 @@ private Expression? ParseDisjunctionPatternExpression() => SupplyPosition(() =>
         if (expression is null)
             return null;
 
+        var lastNonFunctionElement = expression;
         while (TryParseFunctionCallPart(out var arguments))
             expression = new FunctionCallExpression(expression, arguments!);
         var lastElement = expression;
 
+        var consumedAnyDot = false;
         while (TryConsumeToken(out _, TokenType.OperatorDot))
         {
+            consumedAnyDot = true;
             if (lastElement is not IdentifierExpression)
                 EmitError(new ExpectedIdentifier(lastElement));
             var right = ParsePrimaryExpression();
             if (right is null)
                 throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
-            lastElement = right;
+            lastNonFunctionElement = lastElement = right;
             expression = new BinaryExpression(expression, Operator.NamespaceAccess, right);
             while (TryParseFunctionCallPart(out var arguments))
                 lastElement = expression = new FunctionCallExpression(expression, arguments!);
         }
+        if (consumedAnyDot && lastNonFunctionElement is not IdentifierExpression)
+            EmitError(new ExpectedIdentifier(lastNonFunctionElement));
         return expression;
     });
 

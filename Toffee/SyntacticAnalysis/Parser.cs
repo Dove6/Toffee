@@ -96,8 +96,8 @@ public partial class Parser : IParser
         if (_lexer.CurrentToken.Type == TokenType.EndOfText)
             return CurrentStatement = null;
 
-        Statement? parsedStatement = null;
-        while (!InterceptParserError(() => TryParseStatement(out parsedStatement)))
+        Statement? parsedStatement;
+        while ((parsedStatement = InterceptParserError(ParseStatement)) is null)
         {
             SkipUntilNextStatement();
             SkipSemicolons();

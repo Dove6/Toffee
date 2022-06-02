@@ -6,7 +6,6 @@ public sealed partial class Lexer
 {
     private Token? MatchNumber()
     {
-        // TODO: handle <-9223372036854775808 and >9223372036854775808 "literals" in parser
         if (!IsDigitGivenRadix(10, _scanner.CurrentCharacter))
             return null;
 

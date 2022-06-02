@@ -98,7 +98,8 @@ term
 factor
     = unary_prefixed, { OP_MULTIPLICATIVE, unary_prefixed };
 unary_prefixed
-    = { OP_UNARY_PREFIX }, exponentiation;
+    = OP_UNARY_PREFIX, unary_prefixed
+    | exponentiation;
 exponentiation
     = namespace_access_or_function_call, { OP_CARET, exponentiation };
 namespace_access_or_function_call
