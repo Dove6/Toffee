@@ -1,11 +1,11 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Collections.Immutable;
 using Toffee.LexicalAnalysis;
 
 namespace Toffee.SyntacticAnalysis;
 
 public static class LiteralMapper
 {
-    private static readonly ReadOnlyDictionary<TokenType, DataType> TypeMap = new(new Dictionary<TokenType, DataType>
+    private static readonly ImmutableDictionary<TokenType, DataType> TypeMap = new Dictionary<TokenType, DataType>
     {
         { TokenType.LiteralInteger, DataType.Integer },
         { TokenType.LiteralFloat, DataType.Float },
@@ -13,11 +13,13 @@ public static class LiteralMapper
         { TokenType.KeywordTrue, DataType.Bool },
         { TokenType.KeywordFalse, DataType.Bool },
         { TokenType.KeywordNull, DataType.Null }
-    });
+    }.ToImmutableDictionary();
+
+    public static TokenType[] LiteralTokenTypes { get; } = TypeMap.Keys.ToArray();
 
     public static LiteralExpression MapToLiteralExpression(Token literalToken)
     {
-        var literalType = TypeMap[literalToken.Type];  // TODO: throws
+        var literalType = TypeMap[literalToken.Type];
         var literalValue = literalType switch
         {
             DataType.Bool => literalToken.Type == TokenType.KeywordTrue,

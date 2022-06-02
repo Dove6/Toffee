@@ -98,7 +98,7 @@ public partial class Parser
                 isConst ? new[] { TokenType.Identifier } : new[] { TokenType.KeywordConst, TokenType.Identifier }));
         var variableName = (string)identifier.Content!;
 
-        if (!TryConsumeToken(out var assignmentToken, _assignmentTokenTypes))
+        if (!TryConsumeToken(out var assignmentToken, OperatorMapper.AssignmentTokenTypes))
             return new VariableInitialization(variableName, null, isConst);
         if (!TryParseExpression(out var initialValue))
             EmitError(new ExpectedExpression(_lexer.CurrentToken));

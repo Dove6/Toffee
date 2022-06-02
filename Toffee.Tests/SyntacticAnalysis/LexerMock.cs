@@ -14,7 +14,7 @@ public class LexerMock : ILexer
     public int MaxLexemeLength
     {
         get => int.MaxValue;
-        set => throw new NotImplementedException();
+        set => throw new NotSupportedException();
     }
 
     public bool HadError => false;
@@ -37,5 +37,5 @@ public class LexerMock : ILexer
         return supersededToken;
     }
 
-    public void ResetError() => throw new NotImplementedException();
+    public void ResetError() => throw new NotSupportedException();
 }

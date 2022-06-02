@@ -48,7 +48,7 @@ public class LexerTests
     public void OperatorsShouldBeRecognizedCorrectly(string input, TokenType expectedTokenType)
     {
         var scannerMock = new ScannerMock(input);
-        var lexer = new Lexer(scannerMock);  // TODO: test using interface
+        ILexer lexer = new Lexer(scannerMock);
 
         Assert.Equal(expectedTokenType, lexer.CurrentToken.Type);
     }
@@ -61,7 +61,7 @@ public class LexerTests
     public void CommentsShouldBeRecognizedCorrectly(string input, TokenType expectedTokenType)
     {
         var scannerMock = new ScannerMock(input);
-        var lexer = new Lexer(scannerMock);
+        ILexer lexer = new Lexer(scannerMock);
 
         Assert.Equal(expectedTokenType, lexer.CurrentToken.Type);
     }
@@ -82,7 +82,7 @@ public class LexerTests
     public void ContentOfCommentsShouldBePreservedProperly(string input, bool isBlock, string expectedContent)
     {
         var scannerMock = new ScannerMock(input);
-        var lexer = new Lexer(scannerMock);
+        ILexer lexer = new Lexer(scannerMock);
 
         Assert.Equal(isBlock ? TokenType.BlockComment : TokenType.LineComment, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
@@ -92,7 +92,7 @@ public class LexerTests
     public void EmptyInputShouldResultInEtxToken()
     {
         var scannerMock = new ScannerMock("");
-        var lexer = new Lexer(scannerMock);
+        ILexer lexer = new Lexer(scannerMock);
 
         Assert.Equal(TokenType.EndOfText, lexer.CurrentToken.Type);
 
@@ -108,7 +108,7 @@ public class LexerTests
     public void WhiteSpacesShouldBeSkipped(string input)
     {
         var scannerMock = new ScannerMock(input);
-        var lexer = new Lexer(scannerMock);
+        ILexer lexer = new Lexer(scannerMock);
 
         Assert.Equal(TokenType.EndOfText, lexer.CurrentToken.Type);
     }
@@ -134,7 +134,7 @@ public class LexerTests
     public void IntegersShouldBeRecognizedCorrectly(string input, ulong expectedContent)
     {
         var scannerMock = new ScannerMock(input);
-        var lexer = new Lexer(scannerMock);
+        ILexer lexer = new Lexer(scannerMock);
 
         Assert.Equal(TokenType.LiteralInteger, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
@@ -156,7 +156,7 @@ public class LexerTests
     public void FloatsShouldBeRecognizedCorrectly(string input, double expectedContent)
     {
         var scannerMock = new ScannerMock(input);
-        var lexer = new Lexer(scannerMock);
+        ILexer lexer = new Lexer(scannerMock);
 
         Assert.Equal(TokenType.LiteralFloat, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
@@ -183,7 +183,7 @@ public class LexerTests
     public void StringsShouldBeRecognizedCorrectly(string input, string expectedContent)
     {
         var scannerMock = new ScannerMock(input);
-        var lexer = new Lexer(scannerMock);
+        ILexer lexer = new Lexer(scannerMock);
 
         Assert.Equal(TokenType.LiteralString, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
@@ -199,7 +199,7 @@ public class LexerTests
     public void BoundariesOfEscapeSequencesInStringShouldBeRecognizedCorrectly(string input, string expectedContent)
     {
         var scannerMock = new ScannerMock(input);
-        var lexer = new Lexer(scannerMock);
+        ILexer lexer = new Lexer(scannerMock);
 
         Assert.Equal(TokenType.LiteralString, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
@@ -236,7 +236,7 @@ public class LexerTests
     public void KeywordsShouldBeRecognizedCorrectly(string input, TokenType expectedTokenType)
     {
         var scannerMock = new ScannerMock(input);
-        var lexer = new Lexer(scannerMock);
+        ILexer lexer = new Lexer(scannerMock);
 
         Assert.Equal(expectedTokenType, lexer.CurrentToken.Type);
     }
@@ -253,7 +253,7 @@ public class LexerTests
     public void IdentifiersBasedOnKeywordsShouldBeRecognizedCorrectly(string input)
     {
         var scannerMock = new ScannerMock(input);
-        var lexer = new Lexer(scannerMock);
+        ILexer lexer = new Lexer(scannerMock);
 
         Assert.Equal(TokenType.Identifier, lexer.CurrentToken.Type);
         Assert.Equal(input, lexer.CurrentToken.Content);
@@ -271,7 +271,7 @@ public class LexerTests
             x.Handle(Capture.In(capturedAttachments)));
 
         var scannerMock = new ScannerMock(input);
-        var lexer = new Lexer(scannerMock, logger.Object);
+        ILexer lexer = new Lexer(scannerMock, logger.Object);
 
         Assert.Equal(TokenType.LiteralString, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
@@ -287,7 +287,7 @@ public class LexerTests
     public void NumberLiteralOverflowShouldBeDetectedProperly(string input, TokenType expectedTokenType, object expectedContent, uint expectedOffset)
     {
         var scannerMock = new ScannerMock(input);
-        var lexer = new Lexer(scannerMock);
+        ILexer lexer = new Lexer(scannerMock);
 
         Assert.Equal(expectedTokenType, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
@@ -306,7 +306,7 @@ public class LexerTests
     public void ExcessLexemeLengthShouldBeDetectedProperly(string input, int lengthLimit, TokenType expectedTokenType, string expectedContent, uint expectedOffset)
     {
         var scannerMock = new ScannerMock(input);
-        var lexer = new Lexer(scannerMock, maxLexemeLength: lengthLimit);
+        ILexer lexer = new Lexer(scannerMock, maxLexemeLength: lengthLimit);
 
         Assert.Equal(expectedTokenType, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
@@ -324,7 +324,7 @@ public class LexerTests
     public void MissingNonDecimalDigitsShouldBeDetectedProperly(string input, char prefix, object expectedContent, uint expectedOffset)
     {
         var scannerMock = new ScannerMock(input);
-        var lexer = new Lexer(scannerMock);
+        ILexer lexer = new Lexer(scannerMock);
 
         Assert.Equal(TokenType.LiteralInteger, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
@@ -341,7 +341,7 @@ public class LexerTests
     public void InvalidNonDecimalPrefixesShouldBeDetectedProperly(string input, char prefix, object expectedContent, uint expectedOffset)
     {
         var scannerMock = new ScannerMock(input);
-        var lexer = new Lexer(scannerMock);
+        ILexer lexer = new Lexer(scannerMock);
 
         Assert.Equal(TokenType.LiteralInteger, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
@@ -358,7 +358,7 @@ public class LexerTests
     public void UnexpectedEndOfTextShouldBeDetectedProperly(string input, TokenType expectedTokenType, object expectedContent, uint expectedOffset)
     {
         var scannerMock = new ScannerMock(input);
-        var lexer = new Lexer(scannerMock);
+        ILexer lexer = new Lexer(scannerMock);
 
         Assert.Equal(expectedTokenType, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
@@ -378,7 +378,7 @@ public class LexerTests
     public void UnknownTokensShouldBeDetectedProperly(string input, object expectedContent, uint expectedOffset)
     {
         var scannerMock = new ScannerMock(input);
-        var lexer = new Lexer(scannerMock);
+        ILexer lexer = new Lexer(scannerMock);
 
         Assert.Equal(TokenType.Unknown, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
@@ -396,7 +396,7 @@ public class LexerTests
     public void MissingExponentShouldBeDetectedProperly(string input, object expectedContent, uint expectedOffset)
     {
         var scannerMock = new ScannerMock(input);
-        var lexer = new Lexer(scannerMock);
+        ILexer lexer = new Lexer(scannerMock);
 
         Assert.Equal(TokenType.LiteralFloat, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
@@ -419,7 +419,7 @@ public class LexerTests
     public void TokenInSequenceShouldHaveNoImpactOnItsSuccessor(string input, TokenType expectedTokenType, object expectedContent)
     {
         var scannerMock = new ScannerMock(input);
-        var lexer = new Lexer(scannerMock);
+        ILexer lexer = new Lexer(scannerMock);
 
         lexer.Advance();
 
@@ -442,7 +442,7 @@ public class LexerTests
     public void SupersededTokenShouldBeReturnedByAdvanceMethodCorrectly(string input, TokenType expectedTokenType, object expectedContent)
     {
         var scannerMock = new ScannerMock(input);
-        var lexer = new Lexer(scannerMock);
+        ILexer lexer = new Lexer(scannerMock);
 
         var supersededToken = lexer.Advance();
 
@@ -455,7 +455,7 @@ public class LexerTests
     public void PositionShouldBeCalculatedCorrectly(string input, uint tokenIndex, Token expectedToken)
     {
         var scannerMock = new ScannerMock(input);
-        var lexer = new Lexer(scannerMock);
+        ILexer lexer = new Lexer(scannerMock);
 
         for (var i = 0u; i < tokenIndex; i++)
             lexer.Advance();
