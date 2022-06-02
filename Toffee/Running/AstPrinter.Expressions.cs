@@ -13,11 +13,12 @@ public partial class AstPrinter
 
     private void PrintHeader(Expression expression, int indentLevel = 0, string? details = null)
     {
-        var position = $"{_inputName}:{expression.Position.Line}:{expression.Position.Column}";
+        var startPosition = $"{_inputName}:{expression.StartPosition.Line}:{expression.StartPosition.Column}";
+        var endPosition = $"{expression.EndPosition.Line}:{expression.EndPosition.Column}";
         var header = $"{expression.GetType().Name.Humanize(LetterCasing.LowerCase)}";
         if (!string.IsNullOrEmpty(details))
             header += $" ({details})";
-        header += $" [{position}]";
+        header += $" [{startPosition} - {endPosition}]";
         Print(header, indentLevel);
     }
 

@@ -143,6 +143,8 @@ public partial class Parser
     {
         var statementPosition = _lexer.CurrentToken.StartPosition;
         var statement = parseMethod();
-        return statement is null ? null : statement with { Position = statementPosition };
+        return statement is null
+            ? null
+            : statement with { StartPosition = statementPosition, EndPosition = _lastTokenEndPosition };
     }
 }

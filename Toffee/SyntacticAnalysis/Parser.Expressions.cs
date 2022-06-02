@@ -714,6 +714,8 @@ private Expression? ParseDisjunctionPatternExpression() => SupplyPosition(() =>
     {
         var expressionPosition = _lexer.CurrentToken.StartPosition;
         var expression = parseMethod();
-        return expression is null ? null : expression with { Position = expressionPosition };
+        return expression is null
+            ? null
+            : expression with { StartPosition = expressionPosition, EndPosition = _lastTokenEndPosition };
     }
 }

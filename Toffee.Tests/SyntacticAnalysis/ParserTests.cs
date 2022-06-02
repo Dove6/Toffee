@@ -9,7 +9,7 @@ public partial class ParserTests
     private static EquivalencyAssertionOptions<T> ProvideOptions<T>(EquivalencyAssertionOptions<T> options) =>
         options.RespectingRuntimeTypes()
             .AllowingInfiniteRecursion()
-            .Excluding(info => info.Name == "Position");
+            .Excluding(info => info.Name == "StartPosition" || info.Name == "EndPosition");
 
     private static Token GetDefaultToken(TokenType type) => new(type, MapTokenTypeToContent(type));
 

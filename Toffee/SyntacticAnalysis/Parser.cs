@@ -1,5 +1,6 @@
 ﻿using Toffee.ErrorHandling;
 using Toffee.LexicalAnalysis;
+using Toffee.Scanning;
 
 namespace Toffee.SyntacticAnalysis;
 
@@ -7,6 +8,8 @@ public partial class Parser : IParser
 {
     private readonly ILexer _lexer;
     private readonly IParserErrorHandler? _errorHandler;
+
+    private Position _lastTokenEndPosition = new();
 
     public Statement? CurrentStatement { get; private set; }
 
@@ -34,6 +37,7 @@ public partial class Parser : IParser
         if (!TryEnsureToken(expectedType))
             return false;
         matchedToken = _lexer.Advance();
+        _lastTokenEndPosition = matchedToken.EndPosition;
         return true;
     }
 
@@ -64,7 +68,7 @@ public partial class Parser : IParser
     private void SkipSemicolons()
     {
         while (_lexer.CurrentToken.Type == TokenType.Semicolon)
-            _lexer.Advance();
+            _lastTokenEndPosition = _lexer.Advance().EndPosition;
     }
 
     public Statement? Advance()

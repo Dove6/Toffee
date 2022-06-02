@@ -7,8 +7,9 @@ public partial class AstPrinter
 {
     public void Print(Statement statement, int indentLevel = 0)
     {
-        var position = $"{_inputName}:{statement.Position.Line}:{statement.Position.Column}";
-        var header = $"{statement.GetType().Name.Humanize(LetterCasing.LowerCase)} [{position}]";
+        var startPosition = $"{_inputName}:{statement.StartPosition.Line}:{statement.StartPosition.Column}";
+        var endPosition = $"{statement.EndPosition.Line}:{statement.EndPosition.Column}";
+        var header = $"{statement.GetType().Name.Humanize(LetterCasing.LowerCase)} [{startPosition} - {endPosition}]";
         Print(header, indentLevel);
         PrintDynamic(statement as dynamic, indentLevel + 1);
     }
