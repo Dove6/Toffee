@@ -6,7 +6,6 @@ public interface ILexer
 
     Token CurrentToken { get; }
 
-    bool HadError { get; }
     LexerError? CurrentError { get; }
 
     /// <summary>
@@ -14,6 +13,4 @@ public interface ILexer
     /// </summary>
     /// <returns>Superseded token - the current one from before the method was called</returns>
     Token Advance();
-
-    void ResetError();
 }

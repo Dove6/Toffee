@@ -17,7 +17,6 @@ public class LexerMock : ILexer
         set => throw new NotSupportedException();
     }
 
-    public bool HadError => false;
     public LexerError? CurrentError => null;
 
     public Token CurrentToken => (_currentOutputIndex < _outputBuffer.Length
@@ -36,6 +35,4 @@ public class LexerMock : ILexer
         _currentOutputIndex++;
         return supersededToken;
     }
-
-    public void ResetError() => throw new NotSupportedException();
 }

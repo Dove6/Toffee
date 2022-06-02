@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Moq;
-using Toffee.ErrorHandling;
 using Toffee.LexicalAnalysis;
 using Toffee.Scanning;
 using Xunit;
@@ -265,17 +263,13 @@ public class LexerTests
     [InlineData(@"""abcdefghijklmnopqrstuvw\xyz""", "abcdefghijklmnopqrstuvwyz", typeof(MissingHexCharCode), 24u)]
     public void IssuesInEscapeSequencesInStringsShouldBeDetectedProperly(string input, string expectedContent, Type expectedWarningType, uint expectedOffset)
     {
-        var capturedAttachments = new List<LexerWarning>();
-        var logger = new Mock<ILexerErrorHandler>();
-        logger.Setup(x =>
-            x.Handle(Capture.In(capturedAttachments)));
-
+        var loggerMock = new LexerErrorHandlerMock();
         var scannerMock = new ScannerMock(input);
-        ILexer lexer = new Lexer(scannerMock, logger.Object);
+        ILexer lexer = new Lexer(scannerMock, loggerMock);
 
         Assert.Equal(TokenType.LiteralString, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
-        var warning = capturedAttachments.First(x => x.GetType() == expectedWarningType);
+        var warning = loggerMock.HandledWarnings.First(x => x.GetType() == expectedWarningType);
         Assert.Equal(new Position(expectedOffset, 1, expectedOffset), warning.Position);
     }
 

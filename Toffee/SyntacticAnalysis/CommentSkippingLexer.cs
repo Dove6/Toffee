@@ -13,8 +13,6 @@ public class CommentSkippingLexer : ILexer
     }
 
     public Token CurrentToken => _lexer.CurrentToken;
-
-    public bool HadError => _lexer.HadError;
     public LexerError? CurrentError => _lexer.CurrentError;
 
     public CommentSkippingLexer(ILexer lexer)
@@ -35,6 +33,4 @@ public class CommentSkippingLexer : ILexer
         SkipComments();
         return returnedToken;
     }
-
-    public void ResetError() => _lexer.ResetError();
 }
