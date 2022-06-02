@@ -8,10 +8,17 @@ public partial class AstPrinter
 {
     public void Print(Expression expression, int indentLevel = 0)
     {
+        PrintDynamic(expression as dynamic, indentLevel);
+    }
+
+    private void PrintHeader(Expression expression, int indentLevel = 0, string? details = null)
+    {
         var position = $"{_inputName}:{expression.Position.Line}:{expression.Position.Column}";
-        var header = $"{expression.GetType().Name.Humanize(LetterCasing.LowerCase)} [{position}]";
+        var header = $"{expression.GetType().Name.Humanize(LetterCasing.LowerCase)}";
+        if (!string.IsNullOrEmpty(details))
+            header += $" ({details})";
+        header += $" [{position}]";
         Print(header, indentLevel);
-        PrintDynamic(expression as dynamic, indentLevel + 1);
     }
 
     private void Print(ConditionalElement conditional, int indentLevel)
@@ -55,11 +62,6 @@ public partial class AstPrinter
         Print(branch.Consequent, indentLevel + 1);
     }
 
-    private static void Print(Operator @operator, int indentLevel)
-    {
-        Print($"operator: {@operator.ToString().Humanize(LetterCasing.LowerCase)}", indentLevel);
-    }
-
     private static void Print(DataType type, int indentLevel)
     {
         Print($"type: {type.Humanize(LetterCasing.LowerCase)}", indentLevel);
@@ -71,114 +73,118 @@ public partial class AstPrinter
 
     private void PrintDynamic(BlockExpression expression, int indentLevel)
     {
+        PrintHeader(expression, indentLevel);
         foreach (var substatement in expression.Statements)
         {
-            Print("terminated", indentLevel);
-            Print(substatement, indentLevel + 1);
+            Print("terminated", indentLevel + 1);
+            Print(substatement, indentLevel + 2);
         }
         if (expression.UnterminatedStatement is null)
             return;
-        Print("unterminated", indentLevel);
-        Print(expression.UnterminatedStatement, indentLevel + 1);
+        Print("unterminated", indentLevel + 1);
+        Print(expression.UnterminatedStatement, indentLevel + 2);
     }
 
     private void PrintDynamic(ConditionalExpression expression, int indentLevel)
     {
-        Print("if", indentLevel);
-        Print(expression.IfPart, indentLevel + 1);
+        PrintHeader(expression, indentLevel);
+        Print("if", indentLevel + 1);
+        Print(expression.IfPart, indentLevel + 2);
         foreach (var elifPart in expression.ElifParts)
         {
-            Print("elif", indentLevel);
-            Print(elifPart, indentLevel + 1);
+            Print("elif", indentLevel + 1);
+            Print(elifPart, indentLevel + 2);
         }
         if (expression.ElsePart is null)
             return;
-        Print("else", indentLevel);
-        Print(expression.ElsePart, indentLevel + 1);
+        Print("else", indentLevel + 1);
+        Print(expression.ElsePart, indentLevel + 2);
     }
 
     private void PrintDynamic(ForLoopExpression expression, int indentLevel)
     {
+        PrintHeader(expression, indentLevel);
         Print(expression.CounterName is not null ? $"counter: {expression.CounterName}" : "no counter",
-            indentLevel);
-        Print("range", indentLevel);
-        Print(expression.Range, indentLevel + 1);
-        Print("body", indentLevel);
-        Print(expression.Body, indentLevel + 1);
+            indentLevel + 1);
+        Print("range", indentLevel + 1);
+        Print(expression.Range, indentLevel + 2);
+        Print("body", indentLevel + 1);
+        Print(expression.Body, indentLevel + 2);
     }
 
     private void PrintDynamic(WhileLoopExpression expression, int indentLevel)
     {
-        Print("condition", indentLevel);
-        Print(expression.Condition, indentLevel + 1);
-        Print("body", indentLevel);
-        Print(expression.Body, indentLevel + 1);
+        PrintHeader(expression, indentLevel);
+        Print("condition", indentLevel + 1);
+        Print(expression.Condition, indentLevel + 2);
+        Print("body", indentLevel + 1);
+        Print(expression.Body, indentLevel + 2);
     }
 
     private void PrintDynamic(FunctionDefinitionExpression expression, int indentLevel)
     {
-        Print($"{(expression.Parameters.Count == 0 ? "no " : "")}parameters", indentLevel);
+        PrintHeader(expression, indentLevel);
+        Print($"{(expression.Parameters.Count == 0 ? "no " : "")}parameters", indentLevel + 1);
         foreach (var parameter in expression.Parameters)
-            Print(parameter, indentLevel + 1);
-        Print("body", indentLevel);
-        Print(expression.Body, indentLevel + 1);
+            Print(parameter, indentLevel + 2);
+        Print("body", indentLevel + 1);
+        Print(expression.Body, indentLevel + 2);
     }
 
     private void PrintDynamic(PatternMatchingExpression expression, int indentLevel)
     {
-        Print("argument", indentLevel);
-        Print(expression.Argument, indentLevel + 1);
+        PrintHeader(expression, indentLevel);
+        Print("argument", indentLevel + 1);
+        Print(expression.Argument, indentLevel + 2);
         foreach (var branch in expression.Branches)
         {
-            Print("branch", indentLevel);
-            Print(branch, indentLevel + 1);
+            Print("branch", indentLevel + 1);
+            Print(branch, indentLevel + 2);
         }
         if (expression.Default is null)
             return;
-        Print("default", indentLevel);
-        Print(expression.Default, indentLevel);
+        Print("default", indentLevel + 1);
+        Print(expression.Default, indentLevel + 2);
     }
 
     private void PrintDynamic(GroupingExpression expression, int indentLevel)
     {
-        Print(expression.Expression, indentLevel);
+        PrintHeader(expression, indentLevel);
+        Print(expression.Expression, indentLevel + 1);
     }
 
     private void PrintDynamic(BinaryExpression expression, int indentLevel)
     {
-        // TODO: shorter form (operator)
-        Print(expression.Operator, indentLevel);
-        Print(expression.Left, indentLevel);
-        Print(expression.Right, indentLevel);
+        PrintHeader(expression, indentLevel, expression.Operator.ToString().Humanize(LetterCasing.LowerCase));
+        Print(expression.Left, indentLevel + 1);
+        Print(expression.Right, indentLevel + 1);
     }
 
     private void PrintDynamic(UnaryExpression expression, int indentLevel)
     {
-        // TODO: shorter form (operator)
-        Print(expression.Operator, indentLevel);
-        Print(expression.Expression, indentLevel);
+        PrintHeader(expression, indentLevel, expression.Operator.ToString().Humanize(LetterCasing.LowerCase));
+        Print(expression.Expression, indentLevel + 1);
     }
 
     private void PrintDynamic(FunctionCallExpression expression, int indentLevel)
     {
-        Print("expression", indentLevel);
-        Print(expression.Expression, indentLevel + 1);
+        PrintHeader(expression, indentLevel);
+        Print("expression", indentLevel + 1);
+        Print(expression.Expression, indentLevel + 2);
         foreach (var argument in expression.Arguments)
         {
-            Print("argument", indentLevel);
-            Print(argument, indentLevel + 1);
+            Print("argument", indentLevel + 1);
+            Print(argument, indentLevel + 2);
         }
     }
 
-    private static void PrintDynamic(IdentifierExpression expression, int indentLevel)
+    private void PrintDynamic(IdentifierExpression expression, int indentLevel)
     {
-        // TODO: shorter form (name)
-        Print(expression.Name, indentLevel);
+        PrintHeader(expression, indentLevel, expression.Name);
     }
 
-    private static void PrintDynamic(LiteralExpression expression, int indentLevel)
+    private void PrintDynamic(LiteralExpression expression, int indentLevel)
     {
-        // TODO: shorter form (type, value)
         var description = expression.Type switch
         {
             DataType.Null => null,
@@ -191,18 +197,18 @@ public partial class AstPrinter
         };
         if (description is not null)
             description = $": {description}";
-        Print($"{expression.Type.Humanize(LetterCasing.LowerCase)}{description}", indentLevel);
+        PrintHeader(expression, indentLevel, $"{expression.Type.Humanize(LetterCasing.LowerCase)}{description}");
     }
 
     private void PrintDynamic(TypeCastExpression expression, int indentLevel)
     {
-        Print(expression.Type, indentLevel);
-        Print(expression.Expression, indentLevel);
+        PrintHeader(expression, indentLevel);
+        Print(expression.Type, indentLevel + 1);
+        Print(expression.Expression, indentLevel + 1);
     }
 
-    private static void PrintDynamic(TypeExpression expression, int indentLevel)
+    private void PrintDynamic(TypeExpression expression, int indentLevel)
     {
-        // TODO: shorter form (type)
-        Print(expression.Type, indentLevel);
+        PrintHeader(expression, indentLevel, expression.Type.Humanize(LetterCasing.LowerCase));
     }
 }
