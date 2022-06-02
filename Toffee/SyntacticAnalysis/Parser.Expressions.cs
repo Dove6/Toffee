@@ -580,15 +580,19 @@ private Expression? ParseDisjunctionPatternExpression() => SupplyPosition(() =>
 
         while (TryParseFunctionCallPart(out var arguments))
             expression = new FunctionCallExpression(expression, arguments!);
+        var lastElement = expression;
 
         while (TryConsumeToken(out _, TokenType.OperatorDot))
         {
+            if (lastElement is not IdentifierExpression)
+                EmitError(new ExpectedIdentifier(lastElement));
             var right = ParsePrimaryExpression();
             if (right is null)
                 throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
+            lastElement = right;
             expression = new BinaryExpression(expression, Operator.NamespaceAccess, right);
             while (TryParseFunctionCallPart(out var arguments))
-                expression = new FunctionCallExpression(expression, arguments!);
+                lastElement = expression = new FunctionCallExpression(expression, arguments!);
         }
         return expression;
     });
