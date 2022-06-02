@@ -26,7 +26,6 @@ public partial class Parser
     //     | expression;
     private bool TryParseUnterminatedStatement(out Statement? parsedStatement)
     {
-        parsedStatement = null;
         var statementParsers = new List<ParseStatementDelegate>
         {
             ParseNamespaceImportStatement,
@@ -37,15 +36,10 @@ public partial class Parser
             ParseExpressionStatement
         };
 
-        foreach (var parser in statementParsers)
-        {
-            var parserResult = parser();
-            if (parserResult is null)
-                continue;
-            parsedStatement = parserResult;
-            return true;
-        }
-        return false;
+        parsedStatement = statementParsers
+            .Select(parser => parser())
+            .FirstOrDefault(result => result is not null);
+        return parsedStatement is not null;
     }
 
     // namespace_import

@@ -14,7 +14,6 @@ public partial class Parser
     //     | assignment;
     private bool TryParseExpression(out Expression? parsedExpression)
     {
-        parsedExpression = null;
         var expressionParsers = new List<ParseExpressionDelegate>
         {
             ParseBlockExpression,
@@ -26,15 +25,10 @@ public partial class Parser
             ParseAssignmentExpression
         };
 
-        foreach (var parser in expressionParsers)  // TODO: make these iterations LINQ-styled
-        {
-            var parserResult = parser();
-            if (parserResult is null)
-                continue;
-            parsedExpression = parserResult;
-            return true;
-        }
-        return false;
+        parsedExpression = expressionParsers
+            .Select(parser => parser())
+            .FirstOrDefault(result => result is not null);
+        return parsedExpression is not null;
     }
 
     private Expression ParseExpression()
