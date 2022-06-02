@@ -534,17 +534,24 @@ private Expression? ParseDisjunctionPatternExpression() => SupplyPosition(() =>
     });
 
     // unary_prefixed
-    //     = OP_UNARY_PREFIX, unary_prefixed
-    //     | exponentiation;
+    //     = { OP_UNARY_PREFIX }, exponentiation;
     private Expression? ParseUnaryPrefixedExpression() => SupplyPosition(() =>
     {
-        if (!TryConsumeToken(out var unaryOperator, OperatorMapper.UnaryTokenTypes))
-            return ParseExponentiationExpression();
-        var expression = ParseUnaryPrefixedExpression();
-        if (expression is null)
-            throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
+        var unaryOperators = new Stack<Token>();
+        while (TryConsumeToken(out var unaryOperator, OperatorMapper.UnaryTokenTypes))
+            unaryOperators.Push(unaryOperator);
 
-        return new UnaryExpression(OperatorMapper.MapUnaryOperator(unaryOperator.Type), expression);
+        var expression = ParseExponentiationExpression();
+        if (expression is null)
+        {
+            if (unaryOperators.Count == 0)
+                return null;
+            throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
+        }
+
+        while (unaryOperators.TryPop(out var unaryOperator))
+            expression = new UnaryExpression(OperatorMapper.MapUnaryOperator(unaryOperator.Type), expression);
+        return expression;
     });
 
     // exponentiation
