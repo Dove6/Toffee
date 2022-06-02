@@ -28,11 +28,74 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Compile Update="SyntacticAnalysis\ParserTests.Expressions.cs">
-        <DependentUpon>ParserTests.cs</DependentUpon>
+      <Compile Update="LexicalAnalysis\LexerTests.KeywordsAndIdentifiers.cs">
+        <DependentUpon>LexerTests.cs</DependentUpon>
       </Compile>
-      <Compile Update="SyntacticAnalysis\ParserTests.Statements.cs">
-        <DependentUpon>ParserTests.cs</DependentUpon>
+      <Compile Update="LexicalAnalysis\LexerTests.Numbers.cs">
+        <DependentUpon>LexerTests.cs</DependentUpon>
+      </Compile>
+      <Compile Update="LexicalAnalysis\LexerTests.OperatorsAndComments.cs">
+        <DependentUpon>LexerTests.cs</DependentUpon>
+      </Compile>
+      <Compile Update="LexicalAnalysis\LexerTests.Strings.cs">
+        <DependentUpon>LexerTests.cs</DependentUpon>
+      </Compile>
+      <Compile Update="SyntacticAnalysis\ExpressionParsingTests.Block.cs">
+        <DependentUpon>ExpressionParsingTests.cs</DependentUpon>
+      </Compile>
+      <Compile Update="SyntacticAnalysis\StatementParsingTests.Expression.cs">
+        <DependentUpon>StatementParsingTests.cs</DependentUpon>
+      </Compile>
+      <Compile Update="SyntacticAnalysis\ExpressionParsingTests.Conditional.cs">
+        <DependentUpon>ExpressionParsingTests.cs</DependentUpon>
+      </Compile>
+      <Compile Update="SyntacticAnalysis\ExpressionParsingTests.ForLoop.cs">
+        <DependentUpon>ExpressionParsingTests.cs</DependentUpon>
+      </Compile>
+      <Compile Update="SyntacticAnalysis\ExpressionParsingTests.FunctionCall.cs">
+        <DependentUpon>ExpressionParsingTests.cs</DependentUpon>
+      </Compile>
+      <Compile Update="SyntacticAnalysis\ExpressionParsingTests.FunctionDefinition.cs">
+        <DependentUpon>ExpressionParsingTests.cs</DependentUpon>
+      </Compile>
+      <Compile Update="SyntacticAnalysis\ExpressionParsingTests.PatternMatching.cs">
+        <DependentUpon>ExpressionParsingTests.cs</DependentUpon>
+      </Compile>
+      <Compile Update="SyntacticAnalysis\ExpressionParsingTests.WhileLoop.cs">
+        <DependentUpon>ExpressionParsingTests.cs</DependentUpon>
+      </Compile>
+      <Compile Update="SyntacticAnalysis\StatementParsingTests.VariableInitializationList.cs">
+        <DependentUpon>StatementParsingTests.cs</DependentUpon>
+      </Compile>
+      <Compile Update="SyntacticAnalysis\ExpressionParsingTests.Binary.cs">
+        <DependentUpon>ExpressionParsingTests.cs</DependentUpon>
+      </Compile>
+      <Compile Update="SyntacticAnalysis\ExpressionParsingTests.Unary.cs">
+        <DependentUpon>ExpressionParsingTests.cs</DependentUpon>
+      </Compile>
+      <Compile Update="SyntacticAnalysis\ExpressionParsingTests.Grouping.cs">
+        <DependentUpon>ExpressionParsingTests.cs</DependentUpon>
+      </Compile>
+      <Compile Update="SyntacticAnalysis\ExpressionParsingTests.Literal.cs">
+        <DependentUpon>ExpressionParsingTests.cs</DependentUpon>
+      </Compile>
+      <Compile Update="SyntacticAnalysis\ExpressionParsingTests.TypeCast.cs">
+        <DependentUpon>ExpressionParsingTests.cs</DependentUpon>
+      </Compile>
+      <Compile Update="SyntacticAnalysis\ExpressionParsingTests.Identifier.cs">
+        <DependentUpon>ExpressionParsingTests.cs</DependentUpon>
+      </Compile>
+      <Compile Update="SyntacticAnalysis\ExpressionParsingTests.Type.cs">
+        <DependentUpon>ExpressionParsingTests.cs</DependentUpon>
+      </Compile>
+      <Compile Update="SyntacticAnalysis\StatementParsingTests.Break.cs">
+        <DependentUpon>StatementParsingTests.cs</DependentUpon>
+      </Compile>
+      <Compile Update="SyntacticAnalysis\StatementParsingTests.BreakIf.cs">
+        <DependentUpon>StatementParsingTests.cs</DependentUpon>
+      </Compile>
+      <Compile Update="SyntacticAnalysis\StatementParsingTests.Return.cs">
+        <DependentUpon>StatementParsingTests.cs</DependentUpon>
       </Compile>
     </ItemGroup>
 

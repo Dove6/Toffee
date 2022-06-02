@@ -4,14 +4,14 @@ using Toffee.LexicalAnalysis;
 
 namespace Toffee.Tests.SyntacticAnalysis;
 
-public partial class ParserTests
+public static class Helpers
 {
-    private static EquivalencyAssertionOptions<T> ProvideOptions<T>(EquivalencyAssertionOptions<T> options) =>
+    public static EquivalencyAssertionOptions<T> ProvideOptions<T>(EquivalencyAssertionOptions<T> options) =>
         options.RespectingRuntimeTypes()
             .AllowingInfiniteRecursion()
             .Excluding(info => info.Name == "StartPosition" || info.Name == "EndPosition");
 
-    private static Token GetDefaultToken(TokenType type) => new(type, MapTokenTypeToContent(type));
+    public static Token GetDefaultToken(TokenType type) => new(type, MapTokenTypeToContent(type));
 
     private static string MapTokenTypeToContent(TokenType type)
     {
@@ -79,6 +79,4 @@ public partial class ParserTests
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
         };
     }
-
-    // TODO: negative tests
 }
