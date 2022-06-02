@@ -65,24 +65,50 @@ public partial class Parser : IParser
         }
     }
 
+    private T? InterceptParserError<T>(Func<T> throwingFunc)
+    {
+        try
+        {
+            return throwingFunc();
+        }
+        catch (ParserException e)
+        {
+            EmitError(e.Error);
+        }
+        return default;
+    }
+
     private void SkipSemicolons()
     {
         while (_lexer.CurrentToken.Type == TokenType.Semicolon)
             _lastTokenEndPosition = _lexer.Advance().EndPosition;
     }
 
+    private void SkipUntilNextStatement()
+    {
+        while (_lexer.CurrentToken.Type is not (TokenType.Semicolon or TokenType.EndOfText))
+            _lastTokenEndPosition = _lexer.Advance().EndPosition;
+    }
+
     public Statement? Advance()
     {
         SkipSemicolons();
-
-        // TODO: panic mode
-        // TODO: check for semicolon
         if (_lexer.CurrentToken.Type == TokenType.EndOfText)
-            CurrentStatement = null;
-        else if (TryParseStatement(out var parsedStatement))
-            CurrentStatement = parsedStatement;
-        else
-            throw new ParserException(new ExpectedStatement(_lexer.CurrentToken));
+            return CurrentStatement = null;
+
+        Statement? parsedStatement = null;
+        while (!InterceptParserError(() => TryParseStatement(out parsedStatement)))
+        {
+            EmitError(new ExpectedStatement(_lexer.CurrentToken));
+            SkipUntilNextStatement();
+            SkipSemicolons();
+            if (_lexer.CurrentToken.Type == TokenType.EndOfText)
+                return CurrentStatement = null;
+        }
+
+        CurrentStatement = parsedStatement!;
+        if (!CurrentStatement.IsTerminated)
+            EmitError(new ExpectedSemicolon(_lexer.CurrentToken));
 
         return CurrentStatement;
     }

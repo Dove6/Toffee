@@ -17,6 +17,8 @@ public record ExpectedBlockExpression(Token ActualToken)
     : ParserError(ActualToken.StartPosition);
 public record ExpectedPatternExpression(Token ActualToken)
     : ParserError(ActualToken.StartPosition);
+public record ExpectedSemicolon(Token ActualToken)
+    : ParserError(ActualToken.StartPosition);
 
 public static class ParserErrorExtensions
 {
