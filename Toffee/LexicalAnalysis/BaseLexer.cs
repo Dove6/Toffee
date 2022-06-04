@@ -16,7 +16,6 @@ public abstract class BaseLexer : ILexer
 
     public Token CurrentToken { get; protected set; }
 
-    public bool HadError { get; protected set; }
     public LexerError? CurrentError { get; protected set; }
 
     protected BaseLexer(int? maxLexemeLength = null)
@@ -25,10 +24,4 @@ public abstract class BaseLexer : ILexer
     }
 
     public abstract Token Advance();
-
-    public void ResetError()
-    {
-        CurrentError = null;
-        HadError = false;
-    }
 }

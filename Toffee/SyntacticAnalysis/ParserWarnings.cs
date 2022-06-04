@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Collections.Immutable;
 using Toffee.ErrorHandling;
 using Toffee.Scanning;
 
@@ -8,8 +8,8 @@ public abstract record ParserWarning(Position Position) : Warning(Position);
 
 public static class ParserWarningExtensions
 {
-    private static readonly ReadOnlyDictionary<Type, string> MessageMap = new(new Dictionary<Type, string>());
+    private static readonly ImmutableDictionary<Type, string> MessageMap = ImmutableDictionary<Type, string>.Empty;
 
     public static string ToMessage(this ParserWarning warning) =>
-        MessageMap.GetValueOrDefault(warning.GetType(), "Lexical warning");
+        MessageMap.GetValueOrDefault(warning.GetType(), "Syntax warning");
 }

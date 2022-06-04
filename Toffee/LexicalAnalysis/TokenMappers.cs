@@ -1,10 +1,10 @@
-using System.Collections.ObjectModel;
+using System.Collections.Immutable;
 
 namespace Toffee.LexicalAnalysis;
 
 public static class KeywordOrIdentifierMapper
 {
-    private static readonly ReadOnlyDictionary<string, TokenType> KeywordMap = new(new Dictionary<string, TokenType>
+    private static readonly ImmutableDictionary<string, TokenType> KeywordMap = new Dictionary<string, TokenType>
     {
         { "int", TokenType.KeywordInt },
         { "float", TokenType.KeywordFloat },
@@ -32,7 +32,7 @@ public static class KeywordOrIdentifierMapper
         { "default", TokenType.KeywordDefault },
         { "false", TokenType.KeywordFalse },
         { "true", TokenType.KeywordTrue }
-    });
+    }.ToImmutableDictionary();
 
     public static Token MapToKeywordOrIdentifier(string name) =>
         new(KeywordMap.GetValueOrDefault(name, TokenType.Identifier), name);
@@ -40,7 +40,7 @@ public static class KeywordOrIdentifierMapper
 
 public static class OperatorMapper
 {
-    private static readonly ReadOnlyDictionary<string, TokenType> OperatorMap = new(new Dictionary<string, TokenType>
+    private static readonly ImmutableDictionary<string, TokenType> OperatorMap = new Dictionary<string, TokenType>
     {
         { ".", TokenType.OperatorDot },
         { "^", TokenType.OperatorCaret },
@@ -74,13 +74,13 @@ public static class OperatorMapper
         { ",", TokenType.Comma },
         { ":", TokenType.Colon },
         { ";", TokenType.Semicolon }
-    });
+    }.ToImmutableDictionary();
 
-    private static readonly ReadOnlyDictionary<string, TokenType> CommentMap = new(new Dictionary<string, TokenType>
+    private static readonly ImmutableDictionary<string, TokenType> CommentMap = new Dictionary<string, TokenType>
     {
         { "//", TokenType.LineComment },
         { "/*", TokenType.BlockComment }
-    });
+    }.ToImmutableDictionary();
 
     public static bool IsTransitionExistent(string currentContent, char input) =>
         CommentMap.Keys.All(x => x != currentContent) &&
