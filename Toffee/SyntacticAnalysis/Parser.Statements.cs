@@ -17,6 +17,13 @@ public partial class Parser
         return true;
     }
 
+    private Statement ParseStatement()
+    {
+        if (TryParseStatement(out var parsedStatement))
+            return parsedStatement!;
+        throw new ParserException(new ExpectedStatement(_lexer.CurrentToken));
+    }
+
     // unterminated_statement
     //     = namespace_import
     //     | variable_initialization_list
@@ -26,16 +33,20 @@ public partial class Parser
     //     | expression;
     private bool TryParseUnterminatedStatement(out Statement? parsedStatement)
     {
-        parsedStatement = null;
-        foreach (var parser in _statementParsers)
+        var statementParsers = new List<ParseStatementDelegate>
         {
-            var parserResult = parser();
-            if (parserResult is null)
-                continue;
-            parsedStatement = parserResult;
-            return true;
-        }
-        return false;
+            ParseNamespaceImportStatement,
+            ParseVariableInitializationListStatement,
+            ParseBreakStatement,
+            ParseBreakIfStatement,
+            ParseReturnStatement,
+            ParseExpressionStatement
+        };
+
+        parsedStatement = statementParsers
+            .Select(parser => parser())
+            .FirstOrDefault(result => result is not null);
+        return parsedStatement is not null;
     }
 
     // namespace_import
@@ -51,8 +62,9 @@ public partial class Parser
         var firstIdentifier = ConsumeToken(TokenType.Identifier);
         list.Add(new IdentifierExpression((string)firstIdentifier.Content!));
 
-        while (TryConsumeToken(out _, TokenType.OperatorDot))
+        while (!TryEnsureToken(TokenType.Semicolon))
         {
+            ConsumeToken(TokenType.OperatorDot);
             var nextIdentifier = ConsumeToken(TokenType.Identifier);
             list.Add(new IdentifierExpression((string)nextIdentifier.Content!));
         }
@@ -82,16 +94,25 @@ public partial class Parser
     private VariableInitialization ParseVariableInitialization()
     {
         var isConst = TryConsumeToken(out _, TokenType.KeywordConst);
+        var assignmentLikeTokenTypes =
+            OperatorMapper.AssignmentTokenTypes.Append(TokenType.OperatorEqualsEquals).ToArray();
+        var tokenTypesAllowedAfterIdentifier =
+            assignmentLikeTokenTypes.Append(TokenType.Comma).Append(TokenType.Semicolon).ToArray();
 
         if (!TryConsumeToken(out var identifier, TokenType.Identifier))
             throw new ParserException(new UnexpectedToken(_lexer.CurrentToken,
                 isConst ? new[] { TokenType.Identifier } : new[] { TokenType.KeywordConst, TokenType.Identifier }));
         var variableName = (string)identifier.Content!;
 
-        // TODO: check for other operators containing =, eg. ==, +=
-        return TryConsumeToken(out _, TokenType.OperatorEquals)
-            ? new VariableInitialization(variableName, ParseExpression(), isConst)
-            : new VariableInitialization(variableName, null, isConst);
+        EnsureToken(tokenTypesAllowedAfterIdentifier);
+
+        if (!TryConsumeToken(out var assignmentToken, assignmentLikeTokenTypes))
+            return new VariableInitialization(variableName, null, isConst);
+        var initialValue = ParseExpression();
+        if (assignmentToken.Type == TokenType.OperatorEquals)
+            return new VariableInitialization(variableName, initialValue, isConst);
+        EmitError(new UnexpectedToken(assignmentToken, TokenType.OperatorEquals));
+        return new VariableInitialization(variableName, initialValue, isConst);
     }
 
     // break
@@ -129,6 +150,8 @@ public partial class Parser
     {
         var statementPosition = _lexer.CurrentToken.StartPosition;
         var statement = parseMethod();
-        return statement is null ? null : statement with { Position = statementPosition };
+        return statement is null
+            ? null
+            : statement with { StartPosition = statementPosition, EndPosition = _lastTokenEndPosition };
     }
 }

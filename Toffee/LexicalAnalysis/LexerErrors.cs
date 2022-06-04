@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Collections.Immutable;
 using Toffee.ErrorHandling;
 using Toffee.Scanning;
 
@@ -16,7 +16,7 @@ public record MissingExponent(Position Position) : LexerError(Position);
 
 public static class LexerErrorExtensions
 {
-    private static readonly ReadOnlyDictionary<Type, string> MessageMap = new(new Dictionary<Type, string>
+    private static readonly ImmutableDictionary<Type, string> MessageMap = new Dictionary<Type, string>
     {
         { typeof(UnexpectedEndOfText), "Unexpected end of text" },
         { typeof(ExceededMaxLexemeLength), "Unexpected end of text" },
@@ -25,7 +25,7 @@ public static class LexerErrorExtensions
         { typeof(InvalidNonDecimalPrefix), "Unknown non-decimal number prefix" },
         { typeof(MissingNonDecimalDigits), "No digits after non-decimal number prefix" },
         { typeof(MissingExponent), "No digits after scientific notation prefix" }
-    });
+    }.ToImmutableDictionary();
 
     public static string ToMessage(this LexerError error) =>
         MessageMap.GetValueOrDefault(error.GetType(), "Lexical error");

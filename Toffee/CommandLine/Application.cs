@@ -12,7 +12,7 @@ public class Application
     private string? _sourceName;
     private TextReader? _reader;
     private IScanner? _scanner;
-    private ILexerErrorHandler? _logger;
+    private ConsoleErrorHandler? _logger;
     private ILexer? _lexer;
     private IParser? _parser;
 
@@ -30,7 +30,7 @@ public class Application
         _scanner = new Scanner(_reader);
         _logger = new ConsoleErrorHandler(_sourceName);
         _lexer = new Lexer(_scanner, _logger, maxLexemeLength);
-        _parser = new Parser(_lexer);
+        _parser = new Parser(_lexer, _logger);
         RunParser();
     }
 
@@ -58,10 +58,7 @@ public class Application
     private void RunParser()
     {
         var printer = new AstPrinter(_sourceName!);
-        while (_parser!.CurrentStatement is not null)
-        {
-            printer.Print(_parser.CurrentStatement);
-            _parser.Advance();
-        }
+        while (_parser!.Advance() is not null)
+            printer.Print(_parser.CurrentStatement!);
     }
 }

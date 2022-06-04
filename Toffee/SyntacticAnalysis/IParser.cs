@@ -1,6 +1,6 @@
 ﻿namespace Toffee.SyntacticAnalysis;
 
-public interface IParser
+public interface IParser  // TODO: implement IEnumerable?
 {
     /// <summary>
     /// Current top-level statement.
@@ -11,6 +11,6 @@ public interface IParser
     /// <summary>
     /// Advances the position of the parser in the statement stream.
     /// </summary>
-    /// <returns>Superseded statement - the current one from before the method was called</returns>
+    /// <returns>Parsed statement - the current one after the method was called</returns>
     Statement? Advance();
 }

@@ -35,7 +35,7 @@ expression
     | pattern_matching;
     | assignment;
 block
-    = LEFT_BRACE, unterminated_statement, { SEMICOLON, { SEMICOLON }, unterminated_statement }, RIGHT_BRACE
+    = LEFT_BRACE, [ unterminated_statement, { SEMICOLON, [ unterminated_statement ] } ], RIGHT_BRACE;
 conditional_expression
     = conditional_if_part, { conditional_elif_part }, [ conditional_else_part ];
 conditional_if_part
@@ -103,7 +103,7 @@ unary_prefixed
 exponentiation
     = namespace_access_or_function_call, { OP_CARET, exponentiation };
 namespace_access_or_function_call
-    = namespace_access, { function_call_part } { OP_DOT, namespace_access, { function_call_part } };
+    = primary_expression, { function_call_part } { OP_DOT, primary_expression, { function_call_part } };
 function_call_part
     = LEFT_PARENTHESIS, arguments_list, RIGHT_PARENTHESIS;
 arguments_list

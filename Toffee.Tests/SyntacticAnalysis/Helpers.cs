@@ -1,17 +1,22 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using FluentAssertions.Equivalency;
 using Toffee.LexicalAnalysis;
 
 namespace Toffee.Tests.SyntacticAnalysis;
 
-public partial class ParserTests
+public static class Helpers
 {
-    private static EquivalencyAssertionOptions<T> ProvideOptions<T>(EquivalencyAssertionOptions<T> options) =>
+    public static EquivalencyAssertionOptions<T> ProvideOptions<T>(EquivalencyAssertionOptions<T> options) =>
         options.RespectingRuntimeTypes()
             .AllowingInfiniteRecursion()
-            .Excluding(info => info.Name == "Position");
+            .Excluding(info => info.Name == "StartPosition" || info.Name == "EndPosition");
 
-    private static Token GetDefaultToken(TokenType type) => new(type, MapTokenTypeToContent(type));
+    public static Token GetDefaultToken(TokenType type) => new(type, MapTokenTypeToContent(type));
+
+    public static Token[] AppendSemicolon(this IEnumerable<Token> tokenSequence) =>
+        tokenSequence.Append(GetDefaultToken(TokenType.Semicolon)).ToArray();
 
     private static string MapTokenTypeToContent(TokenType type)
     {
