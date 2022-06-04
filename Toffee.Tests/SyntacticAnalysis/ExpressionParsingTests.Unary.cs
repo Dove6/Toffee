@@ -21,19 +21,23 @@ public partial class ExpressionParsingTest
         var token = new Token(TokenType.Identifier, identifierName);
         var expectedExpression = new IdentifierExpression(identifierName);
 
-        var lexerMock = new LexerMock(opToken, token);
-        IParser parser = new Parser(lexerMock);
+        var lexerMock = new LexerMock(opToken, token, Helpers.GetDefaultToken(TokenType.Semicolon));
+        var errorHandlerMock = new ParserErrorHandlerMock();
+        IParser parser = new Parser(lexerMock, errorHandlerMock);
 
         parser.Advance();
 
         var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
-        expressionStatement!.IsTerminated.Should().Be(false);
+        expressionStatement!.IsTerminated.Should().Be(true);
 
         var expression = expressionStatement.Expression.As<UnaryExpression>();
         expression.Should().NotBeNull();
         expression!.Expression.Should().BeEquivalentTo(expectedExpression, Helpers.ProvideOptions);
         expression.Operator.Should().Be(expectedOperator);
+
+        Assert.False(errorHandlerMock.HadErrors);
+        Assert.False(errorHandlerMock.HadWarnings);
     }
 
     [Trait("Category", "Unary expressions")]
@@ -64,14 +68,15 @@ public partial class ExpressionParsingTest
 
         var expectedExpression = new LiteralExpression(DataType.Integer, 5L);
 
-        var lexerMock = new LexerMock(tokenSequence);
-        IParser parser = new Parser(lexerMock);
+        var lexerMock = new LexerMock(tokenSequence.AppendSemicolon());
+        var errorHandlerMock = new ParserErrorHandlerMock();
+        IParser parser = new Parser(lexerMock, errorHandlerMock);
 
         parser.Advance();
 
         var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
-        expressionStatement!.IsTerminated.Should().Be(false);
+        expressionStatement!.IsTerminated.Should().Be(true);
 
         var patternMatchingExpression = expressionStatement.Expression.As<PatternMatchingExpression>();
         patternMatchingExpression.Should().NotBeNull();
@@ -81,6 +86,9 @@ public partial class ExpressionParsingTest
         unaryExpression.Should().NotBeNull();
         unaryExpression.Operator.Should().Be(expectedOperator);
         unaryExpression.Expression.Should().BeEquivalentTo(expectedExpression, Helpers.ProvideOptions);
+
+        Assert.False(errorHandlerMock.HadErrors);
+        Assert.False(errorHandlerMock.HadWarnings);
     }
 
     [Trait("Category", "Unary expressions")]
@@ -108,14 +116,15 @@ public partial class ExpressionParsingTest
 
         var expectedExpression = new TypeExpression(expectedType);
 
-        var lexerMock = new LexerMock(tokenSequence);
-        IParser parser = new Parser(lexerMock);
+        var lexerMock = new LexerMock(tokenSequence.AppendSemicolon());
+        var errorHandlerMock = new ParserErrorHandlerMock();
+        IParser parser = new Parser(lexerMock, errorHandlerMock);
 
         parser.Advance();
 
         var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
-        expressionStatement!.IsTerminated.Should().Be(false);
+        expressionStatement!.IsTerminated.Should().Be(true);
 
         var patternMatchingExpression = expressionStatement.Expression.As<PatternMatchingExpression>();
         patternMatchingExpression.Should().NotBeNull();
@@ -125,5 +134,8 @@ public partial class ExpressionParsingTest
         unaryExpression.Should().NotBeNull();
         unaryExpression.Operator.Should().Be(expectedOperator);
         unaryExpression.Expression.Should().BeEquivalentTo(expectedExpression, Helpers.ProvideOptions);
+
+        Assert.False(errorHandlerMock.HadErrors);
+        Assert.False(errorHandlerMock.HadWarnings);
     }
 }

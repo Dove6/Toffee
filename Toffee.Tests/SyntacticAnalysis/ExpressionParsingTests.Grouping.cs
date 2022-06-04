@@ -30,15 +30,19 @@ public partial class ExpressionParsingTest
             Operator.Addition,
             new LiteralExpression(DataType.Integer, 5L))));
 
-        var lexerMock = new LexerMock(tokenSequence);
-        IParser parser = new Parser(lexerMock);
+        var lexerMock = new LexerMock(tokenSequence.AppendSemicolon());
+        var errorHandlerMock = new ParserErrorHandlerMock();
+        IParser parser = new Parser(lexerMock, errorHandlerMock);
 
         parser.Advance();
 
         var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
-        expressionStatement!.IsTerminated.Should().Be(false);
+        expressionStatement!.IsTerminated.Should().Be(true);
 
         expressionStatement.Expression.Should().BeEquivalentTo(expectedExpression, Helpers.ProvideOptions);
+
+        Assert.False(errorHandlerMock.HadErrors);
+        Assert.False(errorHandlerMock.HadWarnings);
     }
 }

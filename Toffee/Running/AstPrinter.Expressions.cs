@@ -77,13 +77,13 @@ public partial class AstPrinter
         PrintHeader(expression, indentLevel);
         foreach (var substatement in expression.Statements)
         {
-            Print("terminated", indentLevel + 1);
+            Print("regular statements", indentLevel + 1);
             Print(substatement, indentLevel + 2);
         }
-        if (expression.UnterminatedStatement is null)
+        if (expression.ResultStatement is null)
             return;
-        Print("unterminated", indentLevel + 1);
-        Print(expression.UnterminatedStatement, indentLevel + 2);
+        Print("result statement", indentLevel + 1);
+        Print(expression.ResultStatement, indentLevel + 2);
     }
 
     private void PrintDynamic(ConditionalExpression expression, int indentLevel)

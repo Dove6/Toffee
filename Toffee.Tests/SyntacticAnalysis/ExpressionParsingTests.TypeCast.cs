@@ -23,17 +23,21 @@ public partial class ExpressionParsingTest
             Helpers.GetDefaultToken(TokenType.RightParenthesis)
         };
 
-        var lexerMock = new LexerMock(tokenSequence);
-        IParser parser = new Parser(lexerMock);
+        var lexerMock = new LexerMock(tokenSequence.AppendSemicolon());
+        var errorHandlerMock = new ParserErrorHandlerMock();
+        IParser parser = new Parser(lexerMock, errorHandlerMock);
 
         parser.Advance();
 
         var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
-        expressionStatement!.IsTerminated.Should().Be(false);
+        expressionStatement!.IsTerminated.Should().Be(true);
 
         var expression = expressionStatement.Expression.As<TypeCastExpression>();
         expression.Should().NotBeNull();
         expression.Type.Should().Be(expectedCastType);
+
+        Assert.False(errorHandlerMock.HadErrors);
+        Assert.False(errorHandlerMock.HadWarnings);
     }
 }

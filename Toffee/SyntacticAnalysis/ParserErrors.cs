@@ -34,9 +34,14 @@ public record ExpectedPatternExpression(Position Position, TokenType ActualType)
     public ExpectedPatternExpression(Token actualToken) : this(actualToken.StartPosition, actualToken.Type)
     { }
 }
-public record ExpectedSemicolon(Position Position, TokenType ActualType) : ParserError(Position)
+public record ExpectedSemicolon(Position Position, TokenType? ActualTokenType = null, Type? ActualType = null)
+    : ParserError(Position)
 {
     public ExpectedSemicolon(Token actualToken) : this(actualToken.StartPosition, actualToken.Type)
+    { }
+
+    public ExpectedSemicolon(Statement actualStatement)
+        : this(actualStatement.StartPosition, null, actualStatement.GetType())
     { }
 }
 public record ExpectedIdentifier(Position Position, Type ActualType) : ParserError(Position)

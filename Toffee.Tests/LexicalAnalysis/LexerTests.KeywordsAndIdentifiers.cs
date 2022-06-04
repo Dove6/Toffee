@@ -36,9 +36,13 @@ public partial class LexerTests
     public void KeywordsShouldBeRecognizedCorrectly(string input, TokenType expectedTokenType)
     {
         var scannerMock = new ScannerMock(input);
-        ILexer lexer = new Lexer(scannerMock);
+        var errorHandlerMock = new LexerErrorHandlerMock();
+        ILexer lexer = new Lexer(scannerMock, errorHandlerMock);
 
         Assert.Equal(expectedTokenType, lexer.CurrentToken.Type);
+
+        Assert.False(errorHandlerMock.HadErrors);
+        Assert.False(errorHandlerMock.HadWarnings);
     }
 
     [Trait("Category", "Identifiers")]
@@ -53,9 +57,13 @@ public partial class LexerTests
     public void IdentifiersBasedOnKeywordsShouldBeRecognizedCorrectly(string input)
     {
         var scannerMock = new ScannerMock(input);
-        ILexer lexer = new Lexer(scannerMock);
+        var errorHandlerMock = new LexerErrorHandlerMock();
+        ILexer lexer = new Lexer(scannerMock, errorHandlerMock);
 
         Assert.Equal(TokenType.Identifier, lexer.CurrentToken.Type);
         Assert.Equal(input, lexer.CurrentToken.Content);
+
+        Assert.False(errorHandlerMock.HadErrors);
+        Assert.False(errorHandlerMock.HadWarnings);
     }
 }

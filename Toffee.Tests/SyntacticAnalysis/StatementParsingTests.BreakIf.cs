@@ -5,7 +5,7 @@ using Xunit;
 
 namespace Toffee.Tests.SyntacticAnalysis;
 
-public partial class StatementParsingTest
+public partial class StatementParsingTests
 {
     [Trait("Category", "Break if statements")]
     [Fact]
@@ -20,17 +20,25 @@ public partial class StatementParsingTest
 
         var rightParenthesisToken = Helpers.GetDefaultToken(TokenType.RightParenthesis);
 
-        var lexerMock = new LexerMock(breakIfToken, leftParenthesisToken, identifierToken, rightParenthesisToken);
-        IParser parser = new Parser(lexerMock);
+        var lexerMock = new LexerMock(breakIfToken,
+            leftParenthesisToken,
+            identifierToken,
+            rightParenthesisToken,
+            Helpers.GetDefaultToken(TokenType.Semicolon));
+        var errorHandlerMock = new ParserErrorHandlerMock();
+        IParser parser = new Parser(lexerMock, errorHandlerMock);
 
         parser.Advance();
 
         var breakIfStatement = parser.CurrentStatement.As<BreakIfStatement>();
         breakIfStatement.Should().NotBeNull();
-        breakIfStatement!.IsTerminated.Should().Be(false);
+        breakIfStatement!.IsTerminated.Should().Be(true);
 
         var expression = breakIfStatement.Condition.As<IdentifierExpression>();
         expression.Should().NotBeNull();
         expression!.Name.Should().Be(identifierName);
+
+        Assert.False(errorHandlerMock.HadErrors);
+        Assert.False(errorHandlerMock.HadWarnings);
     }
 }

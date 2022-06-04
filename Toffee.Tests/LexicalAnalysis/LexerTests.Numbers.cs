@@ -27,10 +27,14 @@ public partial class LexerTests
     public void IntegersShouldBeRecognizedCorrectly(string input, ulong expectedContent)
     {
         var scannerMock = new ScannerMock(input);
-        ILexer lexer = new Lexer(scannerMock);
+        var errorHandlerMock = new LexerErrorHandlerMock();
+        ILexer lexer = new Lexer(scannerMock, errorHandlerMock);
 
         Assert.Equal(TokenType.LiteralInteger, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
+
+        Assert.False(errorHandlerMock.HadErrors);
+        Assert.False(errorHandlerMock.HadWarnings);
     }
 
     [Trait("Category", "Numbers")]
@@ -49,10 +53,14 @@ public partial class LexerTests
     public void FloatsShouldBeRecognizedCorrectly(string input, double expectedContent)
     {
         var scannerMock = new ScannerMock(input);
-        ILexer lexer = new Lexer(scannerMock);
+        var errorHandlerMock = new LexerErrorHandlerMock();
+        ILexer lexer = new Lexer(scannerMock, errorHandlerMock);
 
         Assert.Equal(TokenType.LiteralFloat, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
+
+        Assert.False(errorHandlerMock.HadErrors);
+        Assert.False(errorHandlerMock.HadWarnings);
     }
 
     [Trait("Category", "Numbers")]
@@ -64,12 +72,15 @@ public partial class LexerTests
         object expectedContent, uint expectedOffset)
     {
         var scannerMock = new ScannerMock(input);
-        ILexer lexer = new Lexer(scannerMock);
+        var errorHandlerMock = new LexerErrorHandlerMock();
+        ILexer lexer = new Lexer(scannerMock, errorHandlerMock);
 
         Assert.Equal(expectedTokenType, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
         Assert.Equal(typeof(NumberLiteralTooLarge), lexer.CurrentError?.GetType());
         Assert.Equal(new Position(expectedOffset, 1, expectedOffset), lexer.CurrentError!.Position);
+
+        Assert.False(errorHandlerMock.HadWarnings);
     }
 
     [Trait("Category", "Numbers")]
@@ -82,13 +93,16 @@ public partial class LexerTests
         uint expectedOffset)
     {
         var scannerMock = new ScannerMock(input);
-        ILexer lexer = new Lexer(scannerMock);
+        var errorHandlerMock = new LexerErrorHandlerMock();
+        ILexer lexer = new Lexer(scannerMock, errorHandlerMock);
 
         Assert.Equal(TokenType.LiteralInteger, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
         Assert.Equal(typeof(MissingNonDecimalDigits), lexer.CurrentError?.GetType());
         Assert.Equal(new Position(expectedOffset, 1, expectedOffset), lexer.CurrentError!.Position);
         Assert.Equal(prefix, (lexer.CurrentError as MissingNonDecimalDigits)!.NonDecimalPrefix);
+
+        Assert.False(errorHandlerMock.HadWarnings);
     }
 
     [Trait("Category", "Numbers")]
@@ -100,13 +114,16 @@ public partial class LexerTests
         uint expectedOffset)
     {
         var scannerMock = new ScannerMock(input);
-        ILexer lexer = new Lexer(scannerMock);
+        var errorHandlerMock = new LexerErrorHandlerMock();
+        ILexer lexer = new Lexer(scannerMock, errorHandlerMock);
 
         Assert.Equal(TokenType.LiteralInteger, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
         Assert.Equal(typeof(InvalidNonDecimalPrefix), lexer.CurrentError?.GetType());
         Assert.Equal(new Position(expectedOffset, 1, expectedOffset), lexer.CurrentError!.Position);
         Assert.Equal(prefix, (lexer.CurrentError as InvalidNonDecimalPrefix)!.NonDecimalPrefix);
+
+        Assert.False(errorHandlerMock.HadWarnings);
     }
 
     [Trait("Category", "Numbers")]
@@ -118,11 +135,14 @@ public partial class LexerTests
     public void MissingExponentShouldBeDetectedProperly(string input, object expectedContent, uint expectedOffset)
     {
         var scannerMock = new ScannerMock(input);
-        ILexer lexer = new Lexer(scannerMock);
+        var errorHandlerMock = new LexerErrorHandlerMock();
+        ILexer lexer = new Lexer(scannerMock, errorHandlerMock);
 
         Assert.Equal(TokenType.LiteralFloat, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
         Assert.Equal(typeof(MissingExponent), lexer.CurrentError?.GetType());
         Assert.Equal(new Position(expectedOffset, 1, expectedOffset), lexer.CurrentError!.Position);
+
+        Assert.False(errorHandlerMock.HadWarnings);
     }
 }

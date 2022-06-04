@@ -29,10 +29,14 @@ public partial class LexerTests
     public void StringsShouldBeRecognizedCorrectly(string input, string expectedContent)
     {
         var scannerMock = new ScannerMock(input);
-        ILexer lexer = new Lexer(scannerMock);
+        var errorHandlerMock = new LexerErrorHandlerMock();
+        ILexer lexer = new Lexer(scannerMock, errorHandlerMock);
 
         Assert.Equal(TokenType.LiteralString, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
+
+        Assert.False(errorHandlerMock.HadErrors);
+        Assert.False(errorHandlerMock.HadWarnings);
     }
 
     [Trait("Category", "Strings")]
@@ -45,10 +49,14 @@ public partial class LexerTests
     public void BoundariesOfEscapeSequencesInStringShouldBeRecognizedCorrectly(string input, string expectedContent)
     {
         var scannerMock = new ScannerMock(input);
-        ILexer lexer = new Lexer(scannerMock);
+        var errorHandlerMock = new LexerErrorHandlerMock();
+        ILexer lexer = new Lexer(scannerMock, errorHandlerMock);
 
         Assert.Equal(TokenType.LiteralString, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
+
+        Assert.False(errorHandlerMock.HadErrors);
+        Assert.False(errorHandlerMock.HadWarnings);
     }
 
     [Trait("Category", "Strings")]
@@ -58,13 +66,13 @@ public partial class LexerTests
     public void IssuesInEscapeSequencesInStringsShouldBeDetectedProperly(string input, string expectedContent,
         Type expectedWarningType, uint expectedOffset)
     {
-        var loggerMock = new LexerErrorHandlerMock();
+        var errorHandlerMock = new LexerErrorHandlerMock();
         var scannerMock = new ScannerMock(input);
-        ILexer lexer = new Lexer(scannerMock, loggerMock);
+        ILexer lexer = new Lexer(scannerMock, errorHandlerMock);
 
         Assert.Equal(TokenType.LiteralString, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
-        var warning = loggerMock.HandledWarnings.First(x => x.GetType() == expectedWarningType);
+        var warning = errorHandlerMock.HandledWarnings.First(x => x.GetType() == expectedWarningType);
         Assert.Equal(new Position(expectedOffset, 1, expectedOffset), warning.Position);
     }
 }

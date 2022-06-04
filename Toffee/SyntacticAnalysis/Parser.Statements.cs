@@ -103,7 +103,7 @@ public partial class Parser
             return new VariableInitialization(variableName, null, isConst);
         if (!TryParseExpression(out var initialValue))
             EmitError(new ExpectedExpression(_lexer.CurrentToken));
-        if (TryConsumeToken(out _, TokenType.OperatorEquals))
+        if (assignmentToken.Type == TokenType.OperatorEquals)
             return new VariableInitialization(variableName, initialValue, isConst);
         EmitError(new UnexpectedToken(assignmentToken, TokenType.OperatorEquals));
         return new VariableInitialization(variableName, initialValue, isConst);

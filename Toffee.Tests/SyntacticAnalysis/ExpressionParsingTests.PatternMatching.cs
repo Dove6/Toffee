@@ -14,19 +14,23 @@ public partial class ExpressionParsingTest
     [ClassData(typeof(PatternMatchingExpressionTestData))]
     public void PatternMatchingExpressionsShouldBeParsedCorrectly(Token[] tokenSequence, Expression expectedArgument, PatternMatchingBranch[] expectedBranches, Expression? expectedDefault)
     {
-        var lexerMock = new LexerMock(tokenSequence);
-        IParser parser = new Parser(lexerMock);
+        var lexerMock = new LexerMock(tokenSequence.AppendSemicolon());
+        var errorHandlerMock = new ParserErrorHandlerMock();
+        IParser parser = new Parser(lexerMock, errorHandlerMock);
 
         parser.Advance();
 
         var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
-        expressionStatement!.IsTerminated.Should().Be(false);
+        expressionStatement!.IsTerminated.Should().Be(true);
 
         var patternMatchingExpression = expressionStatement.Expression.As<PatternMatchingExpression>();
         patternMatchingExpression.Should().NotBeNull();
         patternMatchingExpression.Argument.Should().BeEquivalentTo(expectedArgument, Helpers.ProvideOptions);
         patternMatchingExpression.Branches.ToArray().Should().BeEquivalentTo(expectedBranches, Helpers.ProvideOptions);
         patternMatchingExpression.Default.Should().BeEquivalentTo(expectedDefault, Helpers.ProvideOptions);
+
+        Assert.False(errorHandlerMock.HadErrors);
+        Assert.False(errorHandlerMock.HadWarnings);
     }
 }

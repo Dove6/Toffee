@@ -7,7 +7,7 @@ using Xunit;
 
 namespace Toffee.Tests.SyntacticAnalysis;
 
-public class StatementParsingTests
+public partial class StatementParsingTests
 {
     [Trait("Category", "Comments")]
     [Fact]
@@ -26,9 +26,9 @@ public class StatementParsingTests
             new("a",
                 new BinaryExpression(new LiteralExpression(DataType.Integer, 123L),
                     Operator.Addition,
-                        new LiteralExpression(DataType.Float, 3.14)),
-                    true)
-        });
+                    new LiteralExpression(DataType.Float, 3.14)),
+                true)
+        }) { IsTerminated = true };
 
         var comments = new[]
         {
@@ -39,13 +39,17 @@ public class StatementParsingTests
         var lexerMock =
             new LexerMock(
                 new[] { initToken, constToken, identifierToken, equalToken, leftTermToken, plusToken, rightTermToken }
-                    .SelectMany((x, i) => new[] { x, comments[i % 2] }).ToArray());
-        IParser parser = new Parser(lexerMock);
+                    .SelectMany((x, i) => new[] { x, comments[i % 2] }).ToArray().AppendSemicolon());
+        var errorHandlerMock = new ParserErrorHandlerMock();
+        IParser parser = new Parser(lexerMock, errorHandlerMock);
 
         parser.Advance();
 
         var statement = parser.CurrentStatement.As<VariableInitializationListStatement>();
         statement.Should().NotBeNull();
         statement.Should().BeEquivalentTo(expectedStatement, Helpers.ProvideOptions);
+
+        Assert.False(errorHandlerMock.HadErrors);
+        Assert.False(errorHandlerMock.HadWarnings);
     }
 }

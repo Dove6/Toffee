@@ -46,21 +46,27 @@ public partial class Parser
             return null;
 
         var statementList = new List<Statement>();
-        var unterminatedStatement = (Statement?)null;
+        var resultStatement = (Statement?)null;
         while (TryParseStatement(out var parsedStatement))
         {
-            if (!parsedStatement!.IsTerminated)
+            if (resultStatement is not null)
             {
-                unterminatedStatement = parsedStatement;
-                break;
+                if (!resultStatement.IsTerminated)
+                    EmitError(new ExpectedSemicolon(parsedStatement!));
+                statementList.Add(resultStatement);
             }
-            statementList.Add(parsedStatement);
+            resultStatement = parsedStatement;
             SkipSemicolons();
+        }
+        if (resultStatement is not null && resultStatement.IsTerminated)
+        {
+            statementList.Add(resultStatement);
+            resultStatement = null;
         }
 
         InterceptParserError(() => ConsumeToken(TokenType.RightBrace));
 
-        return new BlockExpression(statementList, unterminatedStatement);
+        return new BlockExpression(statementList, resultStatement);
     });
 
     // conditional_expression
@@ -272,9 +278,9 @@ public partial class Parser
         if (!isDefault && (condition = ParseDisjunctionPatternExpression()) is null)
             return false;
 
-        ConsumeToken(TokenType.Colon);
+        InterceptParserError(() => ConsumeToken(TokenType.Colon));
         var consequent = ParseExpression();
-        ConsumeToken(TokenType.Semicolon);
+        InterceptParserError(() => ConsumeToken(TokenType.Semicolon));
         specification = new PatternMatchingBranch(condition, consequent);
         return true;
     }

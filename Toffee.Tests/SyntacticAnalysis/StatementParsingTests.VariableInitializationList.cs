@@ -7,7 +7,7 @@ using Xunit;
 
 namespace Toffee.Tests.SyntacticAnalysis;
 
-public partial class StatementParsingTest
+public partial class StatementParsingTests
 {
     [Trait("Category", "Variable initialization list statements")]
     [Theory]
@@ -25,15 +25,19 @@ public partial class StatementParsingTest
 
         var expectedNamespaceSegments = namespaceSegments.Select(x => new IdentifierExpression(x)).ToArray();
 
-        var lexerMock = new LexerMock(interleavedNamespaceSegments.Prepend(pullToken).ToArray());
-        IParser parser = new Parser(lexerMock);
+        var lexerMock = new LexerMock(interleavedNamespaceSegments.Prepend(pullToken).ToArray().AppendSemicolon());
+        var errorHandlerMock = new ParserErrorHandlerMock();
+        IParser parser = new Parser(lexerMock, errorHandlerMock);
 
         parser.Advance();
 
         var namespaceImportStatement = parser.CurrentStatement.As<NamespaceImportStatement>();
         namespaceImportStatement.Should().NotBeNull();
-        namespaceImportStatement!.IsTerminated.Should().Be(false);
+        namespaceImportStatement!.IsTerminated.Should().Be(true);
         namespaceImportStatement.NamespaceLevels.ToArray().Should().BeEquivalentTo(expectedNamespaceSegments, Helpers.ProvideOptions);
+
+        Assert.False(errorHandlerMock.HadErrors);
+        Assert.False(errorHandlerMock.HadWarnings);
     }
 
     [Trait("Category", "Variable initialization list statements")]
@@ -41,14 +45,18 @@ public partial class StatementParsingTest
     [ClassData(typeof(VariableInitializationListStatementTestData))]
     public void VariableInitializationListStatementsShouldBeParsedCorrectly(Token[] tokenSequence, VariableInitialization[] expectedVariableList)
     {
-        var lexerMock = new LexerMock(tokenSequence);
-        IParser parser = new Parser(lexerMock);
+        var lexerMock = new LexerMock(tokenSequence.AppendSemicolon());
+        var errorHandlerMock = new ParserErrorHandlerMock();
+        IParser parser = new Parser(lexerMock, errorHandlerMock);
 
         parser.Advance();
 
-        var returnStatement = parser.CurrentStatement.As<VariableInitializationListStatement>();
-        returnStatement.Should().NotBeNull();
-        returnStatement!.IsTerminated.Should().Be(false);
-        returnStatement.Items.Should().BeEquivalentTo(expectedVariableList, Helpers.ProvideOptions);
+        var variableInitializationStatement = parser.CurrentStatement.As<VariableInitializationListStatement>();
+        variableInitializationStatement.Should().NotBeNull();
+        variableInitializationStatement!.IsTerminated.Should().Be(true);
+        variableInitializationStatement.Items.Should().BeEquivalentTo(expectedVariableList, Helpers.ProvideOptions);
+
+        Assert.False(errorHandlerMock.HadErrors);
+        Assert.False(errorHandlerMock.HadWarnings);
     }
 }

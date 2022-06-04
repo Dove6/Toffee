@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using FluentAssertions.Equivalency;
 using Toffee.LexicalAnalysis;
 
@@ -12,6 +13,9 @@ public static class Helpers
             .Excluding(info => info.Name == "StartPosition" || info.Name == "EndPosition");
 
     public static Token GetDefaultToken(TokenType type) => new(type, MapTokenTypeToContent(type));
+
+    public static Token[] AppendSemicolon(this Token[] tokenSequence) =>
+        tokenSequence.Append(Helpers.GetDefaultToken(TokenType.Semicolon)).ToArray();
 
     private static string MapTokenTypeToContent(TokenType type)
     {

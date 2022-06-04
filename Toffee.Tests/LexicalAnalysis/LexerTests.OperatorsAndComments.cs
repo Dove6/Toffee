@@ -43,44 +43,56 @@ public partial class LexerTests
     public void OperatorsShouldBeRecognizedCorrectly(string input, TokenType expectedTokenType)
     {
         var scannerMock = new ScannerMock(input);
-        ILexer lexer = new Lexer(scannerMock);
+        var errorHandlerMock = new LexerErrorHandlerMock();
+        ILexer lexer = new Lexer(scannerMock, errorHandlerMock);
 
         Assert.Equal(expectedTokenType, lexer.CurrentToken.Type);
+
+        Assert.False(errorHandlerMock.HadErrors);
+        Assert.False(errorHandlerMock.HadWarnings);
     }
 
     [Trait("Category", "Comments")]
     [Theory]
-    [InlineData("//", TokenType.LineComment)]
-    [InlineData("/*", TokenType.BlockComment)]
-    [InlineData("/**/", TokenType.BlockComment)]
-    public void CommentsShouldBeRecognizedCorrectly(string input, TokenType expectedTokenType)
+    [InlineData("//", TokenType.LineComment, false)]
+    [InlineData("/*", TokenType.BlockComment, true)]
+    [InlineData("/**/", TokenType.BlockComment, false)]
+    public void CommentsShouldBeRecognizedCorrectly(string input, TokenType expectedTokenType, bool shouldProduceError)
     {
         var scannerMock = new ScannerMock(input);
-        ILexer lexer = new Lexer(scannerMock);
+        var errorHandlerMock = new LexerErrorHandlerMock();
+        ILexer lexer = new Lexer(scannerMock, errorHandlerMock);
 
         Assert.Equal(expectedTokenType, lexer.CurrentToken.Type);
+
+        Assert.False(shouldProduceError ^ errorHandlerMock.HadErrors);
+        Assert.False(errorHandlerMock.HadWarnings);
     }
 
     [Trait("Category", "Comments")]
     [Theory]
-    [InlineData("//", false, "")]
-    [InlineData("// ", false, " ")]
-    [InlineData("// example content", false, " example content")]
-    [InlineData("// example\nmultiline\ncontent", false, " example")]
-    [InlineData("///**/", false, "/**/")]
-    [InlineData("/*", true, "")]
-    [InlineData("/**/", true, "")]
-    [InlineData("/* */", true, " ")]
-    [InlineData("/* example content */", true, " example content ")]
-    [InlineData("/* example\nmultiline\ncontent */", true, " example\nmultiline\ncontent ")]
-    [InlineData("/*///* /**/", true, "///* /*")]
-    public void ContentOfCommentsShouldBePreservedProperly(string input, bool isBlock, string expectedContent)
+    [InlineData("//", false, "", false)]
+    [InlineData("// ", false, " ", false)]
+    [InlineData("// example content", false, " example content", false)]
+    [InlineData("// example\nmultiline\ncontent", false, " example", false)]
+    [InlineData("///**/", false, "/**/", false)]
+    [InlineData("/*", true, "", true)]
+    [InlineData("/**/", true, "", false)]
+    [InlineData("/* */", true, " ", false)]
+    [InlineData("/* example content */", true, " example content ", false)]
+    [InlineData("/* example\nmultiline\ncontent */", true, " example\nmultiline\ncontent ", false)]
+    [InlineData("/*///* /**/", true, "///* /*", false)]
+    public void ContentOfCommentsShouldBePreservedProperly(string input, bool isBlock, string expectedContent, bool shouldProduceError)
     {
         var scannerMock = new ScannerMock(input);
-        ILexer lexer = new Lexer(scannerMock);
+        var errorHandlerMock = new LexerErrorHandlerMock();
+        ILexer lexer = new Lexer(scannerMock, errorHandlerMock);
 
         Assert.Equal(isBlock ? TokenType.BlockComment : TokenType.LineComment, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
+
+        Assert.False(shouldProduceError ^ errorHandlerMock.HadErrors);
+        Assert.False(errorHandlerMock.HadWarnings);
     }
 
     [Trait("Category", "Operators")]
@@ -94,12 +106,15 @@ public partial class LexerTests
     public void UnknownTokensShouldBeDetectedProperly(string input, object expectedContent, uint expectedOffset)
     {
         var scannerMock = new ScannerMock(input);
-        ILexer lexer = new Lexer(scannerMock);
+        var errorHandlerMock = new LexerErrorHandlerMock();
+        ILexer lexer = new Lexer(scannerMock, errorHandlerMock);
 
         Assert.Equal(TokenType.Unknown, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
         Assert.Equal(typeof(UnknownToken), lexer.CurrentError?.GetType());
         Assert.Equal(new Position(expectedOffset, 1, expectedOffset), lexer.CurrentError!.Position);
         Assert.Equal(input, (lexer.CurrentError as UnknownToken)!.Content);
+
+        Assert.False(errorHandlerMock.HadWarnings);
     }
 }

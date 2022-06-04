@@ -11,12 +11,16 @@ public partial class LexerTests
     public void EmptyInputShouldResultInEtxToken()
     {
         var scannerMock = new ScannerMock("");
-        ILexer lexer = new Lexer(scannerMock);
+        var errorHandlerMock = new LexerErrorHandlerMock();
+        ILexer lexer = new Lexer(scannerMock, errorHandlerMock);
 
         Assert.Equal(TokenType.EndOfText, lexer.CurrentToken.Type);
 
         lexer.Advance();
         Assert.Equal(TokenType.EndOfText, lexer.CurrentToken.Type);
+
+        Assert.False(errorHandlerMock.HadErrors);
+        Assert.False(errorHandlerMock.HadWarnings);
     }
 
     [Theory]
@@ -27,9 +31,13 @@ public partial class LexerTests
     public void WhiteSpacesShouldBeSkipped(string input)
     {
         var scannerMock = new ScannerMock(input);
-        ILexer lexer = new Lexer(scannerMock);
+        var errorHandlerMock = new LexerErrorHandlerMock();
+        ILexer lexer = new Lexer(scannerMock, errorHandlerMock);
 
         Assert.Equal(TokenType.EndOfText, lexer.CurrentToken.Type);
+
+        Assert.False(errorHandlerMock.HadErrors);
+        Assert.False(errorHandlerMock.HadWarnings);
     }
 
     [Trait("Category", "Strings")]
@@ -44,13 +52,16 @@ public partial class LexerTests
         string expectedContent, uint expectedOffset)
     {
         var scannerMock = new ScannerMock(input);
-        ILexer lexer = new Lexer(scannerMock, maxLexemeLength: lengthLimit);
+        var errorHandlerMock = new LexerErrorHandlerMock();
+        ILexer lexer = new Lexer(scannerMock, errorHandlerMock, lengthLimit);
 
         Assert.Equal(expectedTokenType, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
         Assert.Equal(typeof(ExceededMaxLexemeLength), lexer.CurrentError?.GetType());
         Assert.Equal(new Position(expectedOffset, 1, expectedOffset), lexer.CurrentError!.Position);
         Assert.Equal(lengthLimit, (lexer.CurrentError as ExceededMaxLexemeLength)!.MaxLexemeLength);
+
+        Assert.False(errorHandlerMock.HadWarnings);
     }
 
     [Trait("Category", "Strings")]
@@ -62,13 +73,16 @@ public partial class LexerTests
         object expectedContent, uint expectedOffset)
     {
         var scannerMock = new ScannerMock(input);
-        ILexer lexer = new Lexer(scannerMock);
+        var errorHandlerMock = new LexerErrorHandlerMock();
+        ILexer lexer = new Lexer(scannerMock, errorHandlerMock);
 
         Assert.Equal(expectedTokenType, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
         Assert.Equal(typeof(UnexpectedEndOfText), lexer.CurrentError?.GetType());
         Assert.Equal(new Position(expectedOffset, 1, expectedOffset), lexer.CurrentError!.Position);
         Assert.Equal(expectedTokenType, (lexer.CurrentError as UnexpectedEndOfText)!.BuiltTokenType);
+
+        Assert.False(errorHandlerMock.HadWarnings);
     }
 
     [Theory]
@@ -87,12 +101,16 @@ public partial class LexerTests
         object expectedContent)
     {
         var scannerMock = new ScannerMock(input);
-        ILexer lexer = new Lexer(scannerMock);
+        var errorHandlerMock = new LexerErrorHandlerMock();
+        ILexer lexer = new Lexer(scannerMock, errorHandlerMock);
 
         lexer.Advance();
 
         Assert.Equal(expectedTokenType, lexer.CurrentToken.Type);
         Assert.Equal(expectedContent, lexer.CurrentToken.Content);
+
+        Assert.False(errorHandlerMock.HadErrors);
+        Assert.False(errorHandlerMock.HadWarnings);
     }
 
     [Theory]
@@ -111,12 +129,16 @@ public partial class LexerTests
         object expectedContent)
     {
         var scannerMock = new ScannerMock(input);
-        ILexer lexer = new Lexer(scannerMock);
+        var errorHandlerMock = new LexerErrorHandlerMock();
+        ILexer lexer = new Lexer(scannerMock, errorHandlerMock);
 
         var supersededToken = lexer.Advance();
 
         Assert.Equal(expectedTokenType, supersededToken.Type);
         Assert.Equal(expectedContent, supersededToken.Content);
+
+        Assert.False(errorHandlerMock.HadErrors);
+        Assert.False(errorHandlerMock.HadWarnings);
     }
 
     [Theory]
@@ -124,7 +146,8 @@ public partial class LexerTests
     public void PositionShouldBeCalculatedCorrectly(string input, uint tokenIndex, Token expectedToken)
     {
         var scannerMock = new ScannerMock(input);
-        ILexer lexer = new Lexer(scannerMock);
+        var errorHandlerMock = new LexerErrorHandlerMock();
+        ILexer lexer = new Lexer(scannerMock, errorHandlerMock);
 
         for (var i = 0u; i < tokenIndex; i++)
             lexer.Advance();
@@ -132,6 +155,9 @@ public partial class LexerTests
         Assert.Equal(expectedToken.Type, lexer.CurrentToken.Type);
         Assert.Equal(expectedToken.StartPosition, lexer.CurrentToken.StartPosition);
         Assert.Equal(expectedToken.EndPosition, lexer.CurrentToken.EndPosition);
+
+        Assert.False(errorHandlerMock.HadErrors);
+        Assert.False(errorHandlerMock.HadWarnings);
     }
 
     public static IEnumerable<object[]> TestSequenceEnumerable()

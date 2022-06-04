@@ -28,7 +28,8 @@ public class OperatorsPriorityTestData : IEnumerable<object[]>
                     Operator.NamespaceAccess,
                     new IdentifierExpression("b")), new List<Expression>()),
                 Operator.NamespaceAccess,
-                new IdentifierExpression("c"))
+                new IdentifierExpression("c")),
+            true  // ignore errors (function call cannot be a part of namespace access)
         };
         // . higher than ^
         yield return new object[]

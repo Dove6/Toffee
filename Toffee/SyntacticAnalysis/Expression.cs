@@ -4,7 +4,7 @@ namespace Toffee.SyntacticAnalysis;
 
 public abstract record Expression(Position StartPosition, Position EndPosition);
 
-public record BlockExpression(IList<Statement> Statements, Statement? UnterminatedStatement = null)
+public record BlockExpression(IList<Statement> Statements, Statement? ResultStatement = null)
     : Expression(new Position(), new Position());
 public record ConditionalExpression(ConditionalElement IfPart, IList<ConditionalElement> ElifParts, Expression? ElsePart = null)
     : Expression(new Position(), new Position());

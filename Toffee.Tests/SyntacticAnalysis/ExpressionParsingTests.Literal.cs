@@ -19,18 +19,22 @@ public partial class ExpressionParsingTest
     {
         var literalToken = new Token(literalTokenType, literalTokenContent);
 
-        var lexerMock = new LexerMock(literalToken);
-        IParser parser = new Parser(lexerMock);
+        var lexerMock = new LexerMock(literalToken, Helpers.GetDefaultToken(TokenType.Semicolon));
+        var errorHandlerMock = new ParserErrorHandlerMock();
+        IParser parser = new Parser(lexerMock, errorHandlerMock);
 
         parser.Advance();
 
         var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
-        expressionStatement!.IsTerminated.Should().Be(false);
+        expressionStatement!.IsTerminated.Should().Be(true);
 
         var expression = expressionStatement.Expression.As<LiteralExpression>();
         expression.Should().NotBeNull();
         expression!.Type.Should().Be(literalType);
         expression.Value.Should().Be(literalValue);
+
+        Assert.False(errorHandlerMock.HadErrors);
+        Assert.False(errorHandlerMock.HadWarnings);
     }
 }
