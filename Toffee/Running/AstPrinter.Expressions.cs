@@ -80,10 +80,10 @@ public partial class AstPrinter
             Print("regular statements", indentLevel + 1);
             Print(substatement, indentLevel + 2);
         }
-        if (expression.ResultStatement is null)
+        if (expression.ResultExpression is null)
             return;
-        Print("result statement", indentLevel + 1);
-        Print(expression.ResultStatement, indentLevel + 2);
+        Print("result expression", indentLevel + 1);
+        Print(expression.ResultExpression, indentLevel + 2);
     }
 
     private void PrintDynamic(ConditionalExpression expression, int indentLevel)

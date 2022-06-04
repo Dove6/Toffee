@@ -63,10 +63,15 @@ public partial class Parser
             statementList.Add(resultStatement);
             resultStatement = null;
         }
+        Expression? resultExpression = null;
+        if (resultStatement is ExpressionStatement resultExpressionStatement)
+            resultExpression = resultExpressionStatement.Expression;
+        else if (resultStatement is not null)
+            statementList.Add(resultStatement);
 
         InterceptParserError(() => ConsumeToken(TokenType.RightBrace));
 
-        return new BlockExpression(statementList, resultStatement);
+        return new BlockExpression(statementList, resultExpression);
     });
 
     // conditional_expression

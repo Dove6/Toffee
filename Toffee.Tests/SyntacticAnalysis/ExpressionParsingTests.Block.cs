@@ -12,7 +12,7 @@ public partial class ExpressionParsingTest
     [Trait("Category", "Block expressions")]
     [Theory]
     [ClassData(typeof(BlockExpressionTestData))]
-    public void BlockExpressionsShouldBeParsedCorrectly(Token[] tokenSequence, Statement[] expectedStatementList, Statement? expectedResultStatement)
+    public void BlockExpressionsShouldBeParsedCorrectly(Token[] tokenSequence, Statement[] expectedStatementList, Expression? expectedResultExpression)
     {
         var lexerMock = new LexerMock(tokenSequence);
         var errorHandlerMock = new ParserErrorHandlerMock();
@@ -27,7 +27,7 @@ public partial class ExpressionParsingTest
         var blockExpression = expressionStatement.Expression.As<BlockExpression>();
         blockExpression.Should().NotBeNull();
         blockExpression!.Statements.ToArray().Should().BeEquivalentTo(expectedStatementList, Helpers.ProvideOptions);
-        blockExpression.ResultStatement.Should().BeEquivalentTo(expectedResultStatement, Helpers.ProvideOptions);
+        blockExpression.ResultExpression.Should().BeEquivalentTo(expectedResultExpression, Helpers.ProvideOptions);
 
         Assert.False(errorHandlerMock.HadErrors);
         Assert.False(errorHandlerMock.HadWarnings);
@@ -37,7 +37,7 @@ public partial class ExpressionParsingTest
     [Trait("Category", "Negative")]
     [Theory]
     [ClassData(typeof(BlockExpressionMissingClosingBraceTestData))]
-    public void MissingClosingBraceInBlockExpressionsShouldBeDetectedProperly(Token[] tokenSequence, Statement[] expectedStatementList, Statement? expectedResultStatement, ParserError expectedError, bool shouldStatementBeTerminated)
+    public void MissingClosingBraceInBlockExpressionsShouldBeDetectedProperly(Token[] tokenSequence, Statement[] expectedStatementList, Expression? expectedResultExpression, ParserError expectedError, bool shouldStatementBeTerminated)
     {
         var lexerMock = new LexerMock(tokenSequence);
         var errorHandlerMock = new ParserErrorHandlerMock();
@@ -52,7 +52,7 @@ public partial class ExpressionParsingTest
         var blockExpression = expressionStatement.Expression.As<BlockExpression>();
         blockExpression.Should().NotBeNull();
         blockExpression!.Statements.ToArray().Should().BeEquivalentTo(expectedStatementList, Helpers.ProvideOptions);
-        blockExpression.ResultStatement.Should().BeEquivalentTo(expectedResultStatement, Helpers.ProvideOptions);
+        blockExpression.ResultExpression.Should().BeEquivalentTo(expectedResultExpression, Helpers.ProvideOptions);
 
         errorHandlerMock.HandledErrors[0].Should().BeEquivalentTo(expectedError);
 

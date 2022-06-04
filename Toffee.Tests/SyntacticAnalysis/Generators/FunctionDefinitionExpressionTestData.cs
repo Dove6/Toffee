@@ -33,7 +33,7 @@ public class FunctionDefinitionExpressionTestData : IEnumerable<object[]>
                 semicolonToken
             },
             Array.Empty<FunctionParameter>(),
-            new BlockExpression(new List<Statement>(), new ExpressionStatement(new IdentifierExpression("a")))
+            new BlockExpression(new List<Statement>(), new IdentifierExpression("a"))
         };
         // with one parameter
         yield return new object[]
@@ -53,7 +53,7 @@ public class FunctionDefinitionExpressionTestData : IEnumerable<object[]>
             {
                 new FunctionParameter("a")
             },
-            new BlockExpression(new List<Statement>(), new ExpressionStatement(new IdentifierExpression("b")))
+            new BlockExpression(new List<Statement>(), new IdentifierExpression("b"))
         };
         // with one const parameter
         yield return new object[]
@@ -74,7 +74,7 @@ public class FunctionDefinitionExpressionTestData : IEnumerable<object[]>
             {
                 new FunctionParameter(IsConst: true, Name: "a")
             },
-            new BlockExpression(new List<Statement>(), new ExpressionStatement(new IdentifierExpression("b")))
+            new BlockExpression(new List<Statement>(), new IdentifierExpression("b"))
         };
         // with one required parameter
         yield return new object[]
@@ -95,7 +95,7 @@ public class FunctionDefinitionExpressionTestData : IEnumerable<object[]>
             {
                 new FunctionParameter("a", IsNullAllowed: false)
             },
-            new BlockExpression(new List<Statement>(), new ExpressionStatement(new IdentifierExpression("b")))
+            new BlockExpression(new List<Statement>(), new IdentifierExpression("b"))
         };
         // with more than one parameter
         yield return new object[]
@@ -118,7 +118,7 @@ public class FunctionDefinitionExpressionTestData : IEnumerable<object[]>
                 new FunctionParameter("a"),
                 new FunctionParameter("b")
             },
-            new BlockExpression(new List<Statement>(), new ExpressionStatement(new IdentifierExpression("c")))
+            new BlockExpression(new List<Statement>(), new IdentifierExpression("c"))
         };
         // with more than one parameter (including one const and non-nullable)
         yield return new object[]
@@ -143,7 +143,7 @@ public class FunctionDefinitionExpressionTestData : IEnumerable<object[]>
                 new FunctionParameter(IsConst: true, Name: "a", IsNullAllowed: false),
                 new FunctionParameter("b")
             },
-            new BlockExpression(new List<Statement>(), new ExpressionStatement(new IdentifierExpression("c")))
+            new BlockExpression(new List<Statement>(), new IdentifierExpression("c"))
         };
     }
 

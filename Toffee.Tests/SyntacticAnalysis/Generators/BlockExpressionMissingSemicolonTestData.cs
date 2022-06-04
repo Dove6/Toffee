@@ -26,7 +26,7 @@ public class BlockExpressionMissingSemicolonTestData : IEnumerable<object[]>
                 semicolonToken
             },
             new BlockExpression(new List<Statement> { new ExpressionStatement(new IdentifierExpression("a")) },
-                new ExpressionStatement(new IdentifierExpression("b"))),
+                new IdentifierExpression("b")),
             new ExpectedSemicolon(new Position(2, 1, 2), TokenType.Identifier)
         };
         // missing semicolon and regular
@@ -66,7 +66,7 @@ public class BlockExpressionMissingSemicolonTestData : IEnumerable<object[]>
                     new ExpressionStatement(new IdentifierExpression("a")),
                     new ExpressionStatement(new IdentifierExpression("b")) { IsTerminated = true }
                 },
-                new ExpressionStatement(new IdentifierExpression("c"))),
+                new IdentifierExpression("c")),
             new ExpectedSemicolon(new Position(2, 1, 2), TokenType.Identifier)
         };
         // double missing semicolon and double regular

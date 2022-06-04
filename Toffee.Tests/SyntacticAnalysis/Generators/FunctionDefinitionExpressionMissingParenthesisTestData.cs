@@ -29,7 +29,7 @@ public class FunctionDefinitionExpressionMissingParenthesisTestData : IEnumerabl
                 semicolonToken
             },
             new FunctionDefinitionExpression(new List<FunctionParameter>(),
-                new BlockExpression(new List<Statement>(), new ExpressionStatement(new IdentifierExpression("a")))),
+                new BlockExpression(new List<Statement>(), new IdentifierExpression("a"))),
             new UnexpectedToken(new Position(1, 1, 1), TokenType.RightParenthesis, TokenType.LeftParenthesis)
         };
         // basic, missing right parenthesis
@@ -45,7 +45,7 @@ public class FunctionDefinitionExpressionMissingParenthesisTestData : IEnumerabl
                 semicolonToken
             },
             new FunctionDefinitionExpression(new List<FunctionParameter>(),
-                new BlockExpression(new List<Statement>(), new ExpressionStatement(new IdentifierExpression("a")))),
+                new BlockExpression(new List<Statement>(), new IdentifierExpression("a"))),
             new UnexpectedToken(new Position(2, 1, 2), TokenType.LeftBrace, TokenType.RightParenthesis)
         };
         // basic, missing both parentheses
@@ -60,7 +60,7 @@ public class FunctionDefinitionExpressionMissingParenthesisTestData : IEnumerabl
                 semicolonToken
             },
             new FunctionDefinitionExpression(new List<FunctionParameter>(),
-                new BlockExpression(new List<Statement>(), new ExpressionStatement(new IdentifierExpression("a")))),
+                new BlockExpression(new List<Statement>(), new IdentifierExpression("a"))),
             new UnexpectedToken(new Position(1, 1, 1), TokenType.LeftBrace, TokenType.LeftParenthesis),
             new UnexpectedToken(new Position(1, 1, 1), TokenType.LeftBrace, TokenType.RightParenthesis)
         };
@@ -78,7 +78,7 @@ public class FunctionDefinitionExpressionMissingParenthesisTestData : IEnumerabl
                 semicolonToken
             },
             new FunctionDefinitionExpression(new List<FunctionParameter> { new("a") },
-                new BlockExpression(new List<Statement>(), new ExpressionStatement(new IdentifierExpression("b")))),
+                new BlockExpression(new List<Statement>(), new IdentifierExpression("b"))),
             new UnexpectedToken(new Position(1, 1, 1), TokenType.Identifier, TokenType.LeftParenthesis)
         };
         // with one parameter, missing right parenthesis
@@ -95,7 +95,7 @@ public class FunctionDefinitionExpressionMissingParenthesisTestData : IEnumerabl
                 semicolonToken
             },
             new FunctionDefinitionExpression(new List<FunctionParameter> { new("a") },
-                new BlockExpression(new List<Statement>(), new ExpressionStatement(new IdentifierExpression("b")))),
+                new BlockExpression(new List<Statement>(), new IdentifierExpression("b"))),
             new UnexpectedToken(new Position(3, 1, 3), TokenType.LeftBrace, TokenType.RightParenthesis)
         };
         // with one parameter, missing both parenthesis
@@ -111,7 +111,7 @@ public class FunctionDefinitionExpressionMissingParenthesisTestData : IEnumerabl
                 semicolonToken
             },
             new FunctionDefinitionExpression(new List<FunctionParameter> { new("a") },
-                new BlockExpression(new List<Statement>(), new ExpressionStatement(new IdentifierExpression("b")))),
+                new BlockExpression(new List<Statement>(), new IdentifierExpression("b"))),
             new UnexpectedToken(new Position(1, 1, 1), TokenType.Identifier, TokenType.LeftParenthesis),
             new UnexpectedToken(new Position(2, 1, 2), TokenType.LeftBrace, TokenType.RightParenthesis)
         };

@@ -22,7 +22,7 @@ public class BlockExpressionMissingClosingBraceTestData : IEnumerable<object[]>
                 semicolonToken
             },
             Array.Empty<Statement>(),
-            (null as Statement)!,
+            (null as Expression)!,
             new UnexpectedToken(new Position(1, 1, 1), TokenType.Semicolon, TokenType.RightBrace),
             true  // with no statements there is no semicolon skipping
         };
@@ -35,7 +35,7 @@ public class BlockExpressionMissingClosingBraceTestData : IEnumerable<object[]>
                 new(TokenType.Identifier, "a")
             },
             Array.Empty<Statement>(),
-            new ExpressionStatement(new IdentifierExpression("a")),
+            new IdentifierExpression("a"),
             new UnexpectedToken(new Position(2, 1, 2), TokenType.Semicolon, TokenType.RightBrace),
             false
         };
@@ -55,7 +55,7 @@ public class BlockExpressionMissingClosingBraceTestData : IEnumerable<object[]>
                     IsTerminated = true
                 }
             },
-            (null as Statement)!,
+            (null as Expression)!,
             new UnexpectedToken(new Position(3, 1, 3), TokenType.Semicolon, TokenType.RightBrace),
             false
         };
@@ -76,7 +76,7 @@ public class BlockExpressionMissingClosingBraceTestData : IEnumerable<object[]>
                     IsTerminated = true
                 }
             },
-            (null as Statement)!,
+            (null as Expression)!,
             new UnexpectedToken(new Position(4, 1, 4), TokenType.Semicolon, TokenType.RightBrace),
             false  // semicolons are skipped as a part of statements block
         };
@@ -97,7 +97,7 @@ public class BlockExpressionMissingClosingBraceTestData : IEnumerable<object[]>
                     IsTerminated = true
                 }
             },
-            new ExpressionStatement(new IdentifierExpression("b")),
+            new IdentifierExpression("b"),
             new UnexpectedToken(new Position(4, 1, 4), TokenType.Semicolon, TokenType.RightBrace),
             false
         };
@@ -123,7 +123,7 @@ public class BlockExpressionMissingClosingBraceTestData : IEnumerable<object[]>
                     IsTerminated = true
                 }
             },
-            (null as Statement)!,
+            (null as Expression)!,
             new UnexpectedToken(new Position(5, 1, 5), TokenType.Semicolon, TokenType.RightBrace),
             false
         };
@@ -150,7 +150,7 @@ public class BlockExpressionMissingClosingBraceTestData : IEnumerable<object[]>
                     IsTerminated = true
                 }
             },
-            (null as Statement)!,
+            (null as Expression)!,
             new UnexpectedToken(new Position(6, 1, 6), TokenType.Semicolon, TokenType.RightBrace),
             false  // semicolons are skipped as a part of statements block
         };

@@ -23,7 +23,7 @@ public class BlockExpressionTestData : IEnumerable<object[]>
                 semicolonToken
             },
             Array.Empty<Statement>(),
-            (null as Statement)!
+            (null as Expression)!
         };
         // basic with result
         yield return new object[]
@@ -36,7 +36,7 @@ public class BlockExpressionTestData : IEnumerable<object[]>
                 semicolonToken
             },
             Array.Empty<Statement>(),
-            new ExpressionStatement(new IdentifierExpression("a"))
+            new IdentifierExpression("a")
         };
         // basic with regular
         yield return new object[]
@@ -56,7 +56,7 @@ public class BlockExpressionTestData : IEnumerable<object[]>
                     IsTerminated = true
                 }
             },
-            (null as Statement)!
+            (null as Expression)!
         };
         // with regular and result
         yield return new object[]
@@ -77,7 +77,7 @@ public class BlockExpressionTestData : IEnumerable<object[]>
                     IsTerminated = true
                 }
             },
-            new ExpressionStatement(new IdentifierExpression("b"))
+            new IdentifierExpression("b")
         };
         // double regular
         yield return new object[]
@@ -103,7 +103,7 @@ public class BlockExpressionTestData : IEnumerable<object[]>
                     IsTerminated = true
                 }
             },
-            (null as Statement)!
+            (null as Expression)!
         };
     }
 
