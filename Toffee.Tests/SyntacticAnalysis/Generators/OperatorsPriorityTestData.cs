@@ -20,7 +20,8 @@ public class OperatorsPriorityTestData : IEnumerable<object[]>
                 Helpers.GetDefaultToken(TokenType.LeftParenthesis),
                 Helpers.GetDefaultToken(TokenType.RightParenthesis),
                 Helpers.GetDefaultToken(TokenType.OperatorDot),
-                new Token(TokenType.Identifier, "c")
+                new Token(TokenType.Identifier, "c"),
+                Helpers.GetDefaultToken(TokenType.Semicolon)
             },
             new BinaryExpression(
                 new FunctionCallExpression(new BinaryExpression(
@@ -40,7 +41,8 @@ public class OperatorsPriorityTestData : IEnumerable<object[]>
                 Helpers.GetDefaultToken(TokenType.OperatorCaret),
                 new Token(TokenType.Identifier, "b"),
                 Helpers.GetDefaultToken(TokenType.OperatorDot),
-                new Token(TokenType.Identifier, "c")
+                new Token(TokenType.Identifier, "c"),
+                Helpers.GetDefaultToken(TokenType.Semicolon)
             },
             new BinaryExpression(
                 new IdentifierExpression("a"),
@@ -58,7 +60,8 @@ public class OperatorsPriorityTestData : IEnumerable<object[]>
                 Helpers.GetDefaultToken(TokenType.OperatorPlus),
                 new Token(TokenType.Identifier, "a"),
                 Helpers.GetDefaultToken(TokenType.OperatorCaret),
-                new Token(TokenType.Identifier, "b")
+                new Token(TokenType.Identifier, "b"),
+                Helpers.GetDefaultToken(TokenType.Semicolon)
             },
             new UnaryExpression(
                 Operator.NumberPromotion,
@@ -77,7 +80,8 @@ public class OperatorsPriorityTestData : IEnumerable<object[]>
                 Helpers.GetDefaultToken(TokenType.OperatorBang),
                 Helpers.GetDefaultToken(TokenType.OperatorMinus),
                 Helpers.GetDefaultToken(TokenType.OperatorPlus),
-                new Token(TokenType.Identifier, "a")
+                new Token(TokenType.Identifier, "a"),
+                Helpers.GetDefaultToken(TokenType.Semicolon)
             },
             new UnaryExpression(
                 Operator.NumberPromotion,
@@ -99,7 +103,8 @@ public class OperatorsPriorityTestData : IEnumerable<object[]>
                 Helpers.GetDefaultToken(TokenType.OperatorPlus),
                 new Token(TokenType.Identifier, "a"),
                 Helpers.GetDefaultToken(TokenType.OperatorAsterisk),
-                new Token(TokenType.Identifier, "b")
+                new Token(TokenType.Identifier, "b"),
+                Helpers.GetDefaultToken(TokenType.Semicolon)
             },
             new BinaryExpression(
                 new UnaryExpression(
@@ -123,7 +128,8 @@ public class OperatorsPriorityTestData : IEnumerable<object[]>
                 Helpers.GetDefaultToken(TokenType.OperatorSlash),
                 new Token(TokenType.Identifier, "e"),
                 Helpers.GetDefaultToken(TokenType.OperatorAsterisk),
-                new Token(TokenType.Identifier, "f")
+                new Token(TokenType.Identifier, "f"),
+                Helpers.GetDefaultToken(TokenType.Semicolon)
             },
             new BinaryExpression(
                 new BinaryExpression(
@@ -151,7 +157,8 @@ public class OperatorsPriorityTestData : IEnumerable<object[]>
                 Helpers.GetDefaultToken(TokenType.OperatorPlus),
                 new Token(TokenType.Identifier, "b"),
                 Helpers.GetDefaultToken(TokenType.OperatorAsterisk),
-                new Token(TokenType.Identifier, "c")
+                new Token(TokenType.Identifier, "c"),
+                Helpers.GetDefaultToken(TokenType.Semicolon)
             },
             new BinaryExpression(
                 new IdentifierExpression("a"),
@@ -172,7 +179,8 @@ public class OperatorsPriorityTestData : IEnumerable<object[]>
                 Helpers.GetDefaultToken(TokenType.OperatorMinus),
                 new Token(TokenType.Identifier, "c"),
                 Helpers.GetDefaultToken(TokenType.OperatorPlus),
-                new Token(TokenType.Identifier, "d")
+                new Token(TokenType.Identifier, "d"),
+                Helpers.GetDefaultToken(TokenType.Semicolon)
             },
             new BinaryExpression(
                 new BinaryExpression(
@@ -194,7 +202,8 @@ public class OperatorsPriorityTestData : IEnumerable<object[]>
                 Helpers.GetDefaultToken(TokenType.OperatorDotDot),
                 new Token(TokenType.Identifier, "b"),
                 Helpers.GetDefaultToken(TokenType.OperatorPlus),
-                new Token(TokenType.Identifier, "c")
+                new Token(TokenType.Identifier, "c"),
+                Helpers.GetDefaultToken(TokenType.Semicolon)
             },
             new BinaryExpression(
                 new IdentifierExpression("a"),
@@ -213,7 +222,8 @@ public class OperatorsPriorityTestData : IEnumerable<object[]>
                 Helpers.GetDefaultToken(TokenType.OperatorLess),
                 new Token(TokenType.Identifier, "b"),
                 Helpers.GetDefaultToken(TokenType.OperatorDotDot),
-                new Token(TokenType.Identifier, "c")
+                new Token(TokenType.Identifier, "c"),
+                Helpers.GetDefaultToken(TokenType.Semicolon)
             },
             new BinaryExpression(
                 new IdentifierExpression("a"),
@@ -250,7 +260,8 @@ public class OperatorsPriorityTestData : IEnumerable<object[]>
                 Helpers.GetDefaultToken(TokenType.OperatorLessEquals),
                 new Token(TokenType.Identifier, "k"),
                 Helpers.GetDefaultToken(TokenType.OperatorLess),
-                new Token(TokenType.Identifier, "l")
+                new Token(TokenType.Identifier, "l"),
+                Helpers.GetDefaultToken(TokenType.Semicolon)
             },
             new BinaryExpression(
                 new BinaryExpression(
@@ -296,7 +307,8 @@ public class OperatorsPriorityTestData : IEnumerable<object[]>
                 Helpers.GetDefaultToken(TokenType.OperatorLess),
                 new Token(TokenType.Identifier, "b"),
                 Helpers.GetDefaultToken(TokenType.KeywordIs),
-                Helpers.GetDefaultToken(TokenType.KeywordInt)
+                Helpers.GetDefaultToken(TokenType.KeywordInt),
+                Helpers.GetDefaultToken(TokenType.Semicolon)
             },
             new BinaryExpression(
                 new BinaryExpression(
@@ -317,7 +329,8 @@ public class OperatorsPriorityTestData : IEnumerable<object[]>
                 new Token(TokenType.Identifier, "b"),
                 Helpers.GetDefaultToken(TokenType.KeywordIs),
                 Helpers.GetDefaultToken(TokenType.KeywordNot),
-                Helpers.GetDefaultToken(TokenType.KeywordInt)
+                Helpers.GetDefaultToken(TokenType.KeywordInt),
+                Helpers.GetDefaultToken(TokenType.Semicolon)
             },
             new BinaryExpression(
                 new BinaryExpression(
@@ -337,7 +350,8 @@ public class OperatorsPriorityTestData : IEnumerable<object[]>
                 Helpers.GetDefaultToken(TokenType.OperatorAndAnd),
                 new Token(TokenType.Identifier, "b"),
                 Helpers.GetDefaultToken(TokenType.KeywordIs),
-                Helpers.GetDefaultToken(TokenType.KeywordInt)
+                Helpers.GetDefaultToken(TokenType.KeywordInt),
+                Helpers.GetDefaultToken(TokenType.Semicolon)
             },
             new BinaryExpression(
                 new IdentifierExpression("a"),
@@ -357,7 +371,8 @@ public class OperatorsPriorityTestData : IEnumerable<object[]>
                 new Token(TokenType.Identifier, "b"),
                 Helpers.GetDefaultToken(TokenType.KeywordIs),
                 Helpers.GetDefaultToken(TokenType.KeywordNot),
-                Helpers.GetDefaultToken(TokenType.KeywordInt)
+                Helpers.GetDefaultToken(TokenType.KeywordInt),
+                Helpers.GetDefaultToken(TokenType.Semicolon)
             },
             new BinaryExpression(
                 new IdentifierExpression("a"),
@@ -376,7 +391,8 @@ public class OperatorsPriorityTestData : IEnumerable<object[]>
                 Helpers.GetDefaultToken(TokenType.OperatorOrOr),
                 new Token(TokenType.Identifier, "b"),
                 Helpers.GetDefaultToken(TokenType.OperatorAndAnd),
-                new Token(TokenType.Identifier, "c")
+                new Token(TokenType.Identifier, "c"),
+                Helpers.GetDefaultToken(TokenType.Semicolon)
             },
             new BinaryExpression(
                 new IdentifierExpression("a"),
@@ -395,7 +411,8 @@ public class OperatorsPriorityTestData : IEnumerable<object[]>
                 Helpers.GetDefaultToken(TokenType.OperatorQueryGreater),
                 new Token(TokenType.Identifier, "b"),
                 Helpers.GetDefaultToken(TokenType.OperatorOrOr),
-                new Token(TokenType.Identifier, "c")
+                new Token(TokenType.Identifier, "c"),
+                Helpers.GetDefaultToken(TokenType.Semicolon)
             },
             new BinaryExpression(
                 new IdentifierExpression("a"),
@@ -414,7 +431,8 @@ public class OperatorsPriorityTestData : IEnumerable<object[]>
                 Helpers.GetDefaultToken(TokenType.OperatorQueryQuery),
                 new Token(TokenType.Identifier, "b"),
                 Helpers.GetDefaultToken(TokenType.OperatorQueryGreater),
-                new Token(TokenType.Identifier, "c")
+                new Token(TokenType.Identifier, "c"),
+                Helpers.GetDefaultToken(TokenType.Semicolon)
             },
             new BinaryExpression(
                 new IdentifierExpression("a"),
@@ -433,7 +451,8 @@ public class OperatorsPriorityTestData : IEnumerable<object[]>
                 Helpers.GetDefaultToken(TokenType.OperatorEquals),
                 new Token(TokenType.Identifier, "b"),
                 Helpers.GetDefaultToken(TokenType.OperatorQueryQuery),
-                new Token(TokenType.Identifier, "c")
+                new Token(TokenType.Identifier, "c"),
+                Helpers.GetDefaultToken(TokenType.Semicolon)
             },
             new BinaryExpression(
                 new IdentifierExpression("a"),
@@ -470,7 +489,8 @@ public class OperatorsPriorityTestData : IEnumerable<object[]>
                 Helpers.GetDefaultToken(TokenType.OperatorPlusEquals),
                 new Token(TokenType.Identifier, "k"),
                 Helpers.GetDefaultToken(TokenType.OperatorEquals),
-                new Token(TokenType.Identifier, "l")
+                new Token(TokenType.Identifier, "l"),
+                Helpers.GetDefaultToken(TokenType.Semicolon)
             },
             new BinaryExpression(
                 new IdentifierExpression("a"),

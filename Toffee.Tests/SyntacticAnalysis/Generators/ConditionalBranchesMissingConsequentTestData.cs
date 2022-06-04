@@ -2,67 +2,66 @@
 using System.Collections;
 using System.Collections.Generic;
 using Toffee.LexicalAnalysis;
+using Toffee.Scanning;
 using Toffee.SyntacticAnalysis;
 
 namespace Toffee.Tests.SyntacticAnalysis.Generators;
 
-public class FunctionCallExpressionTestData : IEnumerable<object[]>
+public class ConditionalBranchesMissingConsequentTestData : IEnumerable<object[]>
 {
     public IEnumerator<object[]> GetEnumerator()
     {
+        var ifToken = Helpers.GetDefaultToken(TokenType.KeywordIf);
         var leftParenthesisToken = Helpers.GetDefaultToken(TokenType.LeftParenthesis);
-        var rightParenthesisToken = Helpers.GetDefaultToken(TokenType.RightParenthesis);
         var semicolonToken = Helpers.GetDefaultToken(TokenType.Semicolon);
-        var commaToken = Helpers.GetDefaultToken(TokenType.Comma);
-        // basic
+        var rightParenthesisToken = Helpers.GetDefaultToken(TokenType.RightParenthesis);
+        var elifToken = Helpers.GetDefaultToken(TokenType.KeywordElif);
+        var elseToken = Helpers.GetDefaultToken(TokenType.KeywordElse);
+        // if branch
         yield return new object[]
         {
             new[]
             {
-                new(TokenType.Identifier, "a"),
+                ifToken,
                 leftParenthesisToken,
+                new(TokenType.Identifier, "a"),
                 rightParenthesisToken,
                 semicolonToken
             },
-            new IdentifierExpression("a"),
-            Array.Empty<Expression>()
+            new ExpectedExpression(new Position(4, 1, 4), TokenType.Semicolon)
         };
-        // with an argument
+        // else branch
         yield return new object[]
         {
             new[]
             {
-                new(TokenType.Identifier, "a"),
+                ifToken,
                 leftParenthesisToken,
-                new(TokenType.Identifier, "b"),
+                new(TokenType.Identifier, "a"),
                 rightParenthesisToken,
+                new(TokenType.Identifier, "b"),
+                elseToken,
                 semicolonToken
             },
-            new IdentifierExpression("a"),
-            new[]
-            {
-                new IdentifierExpression("b")
-            }
+            new ExpectedExpression(new Position(6, 1, 6), TokenType.Semicolon)
         };
-        // with more than one argument
+        // with elif
         yield return new object[]
         {
             new[]
             {
-                new(TokenType.Identifier, "a"),
+                ifToken,
                 leftParenthesisToken,
+                new(TokenType.Identifier, "a"),
+                rightParenthesisToken,
                 new(TokenType.Identifier, "b"),
-                commaToken,
+                elifToken,
+                leftParenthesisToken,
                 new(TokenType.Identifier, "c"),
                 rightParenthesisToken,
                 semicolonToken
             },
-            new IdentifierExpression("a"),
-            new[]
-            {
-                new IdentifierExpression("b"),
-                new IdentifierExpression("c")
-            }
+            new ExpectedExpression(new Position(9, 1, 9), TokenType.Semicolon)
         };
     }
 

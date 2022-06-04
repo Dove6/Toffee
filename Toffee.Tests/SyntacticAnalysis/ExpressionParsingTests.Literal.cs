@@ -9,7 +9,7 @@ public partial class ExpressionParsingTest
 {
     [Trait("Category", "Literal expressions")]
     [Theory]
-    [InlineData(TokenType.LiteralInteger, 1234L, DataType.Integer, 1234L)]
+    [InlineData(TokenType.LiteralInteger, 1234ul, DataType.Integer, 1234ul)]
     [InlineData(TokenType.LiteralFloat, 3.14, DataType.Float, 3.14)]
     [InlineData(TokenType.LiteralString, "abcd", DataType.String, "abcd")]
     [InlineData(TokenType.KeywordTrue, "true", DataType.Bool, true)]

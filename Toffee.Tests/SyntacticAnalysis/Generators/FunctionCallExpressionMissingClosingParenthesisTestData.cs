@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using Toffee.LexicalAnalysis;
+using Toffee.Scanning;
 using Toffee.SyntacticAnalysis;
 
 namespace Toffee.Tests.SyntacticAnalysis.Generators;
 
-public class FunctionCallExpressionTestData : IEnumerable<object[]>
+public class FunctionCallExpressionMissingClosingParenthesisTestData : IEnumerable<object[]>
 {
     public IEnumerator<object[]> GetEnumerator()
     {
@@ -14,20 +14,19 @@ public class FunctionCallExpressionTestData : IEnumerable<object[]>
         var rightParenthesisToken = Helpers.GetDefaultToken(TokenType.RightParenthesis);
         var semicolonToken = Helpers.GetDefaultToken(TokenType.Semicolon);
         var commaToken = Helpers.GetDefaultToken(TokenType.Comma);
-        // basic
+        // no arguments
         yield return new object[]
         {
             new[]
             {
                 new(TokenType.Identifier, "a"),
                 leftParenthesisToken,
-                rightParenthesisToken,
                 semicolonToken
             },
-            new IdentifierExpression("a"),
-            Array.Empty<Expression>()
+            new FunctionCallExpression(new IdentifierExpression("a"), new List<Expression>()),
+            new UnexpectedToken(new Position(2, 1, 2), TokenType.Semicolon, TokenType.RightParenthesis)
         };
-        // with an argument
+        // an argument
         yield return new object[]
         {
             new[]
@@ -35,34 +34,10 @@ public class FunctionCallExpressionTestData : IEnumerable<object[]>
                 new(TokenType.Identifier, "a"),
                 leftParenthesisToken,
                 new(TokenType.Identifier, "b"),
-                rightParenthesisToken,
                 semicolonToken
             },
-            new IdentifierExpression("a"),
-            new[]
-            {
-                new IdentifierExpression("b")
-            }
-        };
-        // with more than one argument
-        yield return new object[]
-        {
-            new[]
-            {
-                new(TokenType.Identifier, "a"),
-                leftParenthesisToken,
-                new(TokenType.Identifier, "b"),
-                commaToken,
-                new(TokenType.Identifier, "c"),
-                rightParenthesisToken,
-                semicolonToken
-            },
-            new IdentifierExpression("a"),
-            new[]
-            {
-                new IdentifierExpression("b"),
-                new IdentifierExpression("c")
-            }
+            new FunctionCallExpression(new IdentifierExpression("a"), new List<Expression> { new IdentifierExpression("b") }),
+            new UnexpectedToken(new Position(3, 1, 3), TokenType.Semicolon, TokenType.RightParenthesis)
         };
     }
 

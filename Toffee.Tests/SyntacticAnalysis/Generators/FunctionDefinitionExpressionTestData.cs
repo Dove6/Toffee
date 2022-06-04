@@ -15,6 +15,7 @@ public class FunctionDefinitionExpressionTestData : IEnumerable<object[]>
         var rightParenthesisToken = Helpers.GetDefaultToken(TokenType.RightParenthesis);
         var leftBrace = Helpers.GetDefaultToken(TokenType.LeftBrace);
         var rightBrace = Helpers.GetDefaultToken(TokenType.RightBrace);
+        var semicolonToken = Helpers.GetDefaultToken(TokenType.Semicolon);
         var constToken = Helpers.GetDefaultToken(TokenType.KeywordConst);
         var bangToken = Helpers.GetDefaultToken(TokenType.OperatorBang);
         var commaToken = Helpers.GetDefaultToken(TokenType.Comma);
@@ -28,7 +29,8 @@ public class FunctionDefinitionExpressionTestData : IEnumerable<object[]>
                 rightParenthesisToken,
                 leftBrace,
                 new(TokenType.Identifier, "a"),
-                rightBrace
+                rightBrace,
+                semicolonToken
             },
             Array.Empty<FunctionParameter>(),
             new BlockExpression(new List<Statement>(), new ExpressionStatement(new IdentifierExpression("a")))
@@ -44,7 +46,8 @@ public class FunctionDefinitionExpressionTestData : IEnumerable<object[]>
                 rightParenthesisToken,
                 leftBrace,
                 new(TokenType.Identifier, "b"),
-                rightBrace
+                rightBrace,
+                semicolonToken
             },
             new[]
             {
@@ -64,7 +67,8 @@ public class FunctionDefinitionExpressionTestData : IEnumerable<object[]>
                 rightParenthesisToken,
                 leftBrace,
                 new(TokenType.Identifier, "b"),
-                rightBrace
+                rightBrace,
+                semicolonToken
             },
             new[]
             {
@@ -84,7 +88,8 @@ public class FunctionDefinitionExpressionTestData : IEnumerable<object[]>
                 rightParenthesisToken,
                 leftBrace,
                 new(TokenType.Identifier, "b"),
-                rightBrace
+                rightBrace,
+                semicolonToken
             },
             new[]
             {
@@ -105,7 +110,8 @@ public class FunctionDefinitionExpressionTestData : IEnumerable<object[]>
                 rightParenthesisToken,
                 leftBrace,
                 new(TokenType.Identifier, "c"),
-                rightBrace
+                rightBrace,
+                semicolonToken
             },
             new[]
             {
@@ -129,7 +135,8 @@ public class FunctionDefinitionExpressionTestData : IEnumerable<object[]>
                 rightParenthesisToken,
                 leftBrace,
                 new(TokenType.Identifier, "c"),
-                rightBrace
+                rightBrace,
+                semicolonToken
             },
             new[]
             {

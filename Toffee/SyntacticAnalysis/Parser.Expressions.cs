@@ -208,7 +208,9 @@ public partial class Parser
     {
         var list = new List<FunctionParameter>();
         if (!TryParseParameter(out var firstParameter))
-            return list;
+            return !TryConsumeToken(out var commaToken, TokenType.Comma)
+                ? list
+                : throw new ParserException(new ExpectedParameter(commaToken));
         list.Add(firstParameter!);
         while (TryConsumeToken(out _, TokenType.Comma))
             list.Add(ParseParameter());
@@ -558,10 +560,16 @@ private Expression? ParseDisjunctionPatternExpression() => SupplyPosition(() =>
 
         if (expression is LiteralExpression { Type: DataType.Integer, Value: > 9223372036854775807ul } badLiteral)
         {
-            if (badLiteral.Value is not 9223372036854775808ul
-                    || !unaryOperators.TryPeek(out var nearestOperator)
-                        || nearestOperator.Type != TokenType.OperatorMinus)
-                EmitError(new IntegerLiteralOutOfRange(badLiteral));
+            var isNegative = false;
+            var errorPosition = badLiteral.StartPosition;
+            if (unaryOperators.TryPeek(out var nearestOperator))
+            {
+                errorPosition = new UnaryExpression(OperatorMapper.MapUnaryOperator(nearestOperator.Type), expression)
+                    .StartPosition;
+                isNegative = nearestOperator.Type == TokenType.OperatorMinus;
+            }
+            if (badLiteral.Value is not 9223372036854775808ul || !isNegative)
+                EmitError(new IntegerOutOfRange(errorPosition, (ulong)badLiteral.Value, isNegative));
         }
 
         while (unaryOperators.TryPop(out var unaryOperator))
@@ -581,7 +589,7 @@ private Expression? ParseDisjunctionPatternExpression() => SupplyPosition(() =>
         while (TryConsumeToken(out _, TokenType.OperatorCaret))
         {
             if (expression is LiteralExpression { Type: DataType.Integer, Value: > 9223372036854775807ul } badLiteral)
-                EmitError(new IntegerLiteralOutOfRange(badLiteral));
+                EmitError(new IntegerOutOfRange(badLiteral));
             components.Push(expression);
             expression = ParseNamespaceAccessOrFunctionCallExpression();
             if (expression is null)
@@ -643,7 +651,9 @@ private Expression? ParseDisjunctionPatternExpression() => SupplyPosition(() =>
     {
         var list = new List<Expression>();
         if (!TryParseExpression(out var firstArgument))
-            return list;
+            return !TryConsumeToken(out var commaToken, TokenType.Comma)
+                ? list
+                : throw new ParserException(new ExpectedExpression(commaToken));
         list.Add(firstArgument!);
         while (TryConsumeToken(out _, TokenType.Comma))
         {

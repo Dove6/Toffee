@@ -2,11 +2,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using Toffee.LexicalAnalysis;
+using Toffee.Scanning;
 using Toffee.SyntacticAnalysis;
 
 namespace Toffee.Tests.SyntacticAnalysis.Generators;
 
-public class PatternMatchingExpressionTestData : IEnumerable<object[]>
+public class PatternMatchingSpecificationMissingColonOrSemicolonTestData : IEnumerable<object[]>
 {
     public IEnumerator<object[]> GetEnumerator()
     {
@@ -18,7 +19,7 @@ public class PatternMatchingExpressionTestData : IEnumerable<object[]>
         var colonToken = Helpers.GetDefaultToken(TokenType.Colon);
         var semicolonToken = Helpers.GetDefaultToken(TokenType.Semicolon);
         var defaultToken = Helpers.GetDefaultToken(TokenType.KeywordDefault);
-        // basic
+        // non-default branch, missing colon
         yield return new object[]
         {
             new[]
@@ -28,14 +29,17 @@ public class PatternMatchingExpressionTestData : IEnumerable<object[]>
                 new(TokenType.Identifier, "a"),
                 rightParenthesisToken,
                 leftBrace,
+                new(TokenType.Identifier, "b"),
+                new(TokenType.Identifier, "c"),
+                semicolonToken,
                 rightBrace,
                 semicolonToken
             },
-            new IdentifierExpression("a"),
-            Array.Empty<PatternMatchingBranch>(),
-            (null as Expression)!
+            new PatternMatchingExpression(new IdentifierExpression("a"),
+                new List<PatternMatchingBranch> { new(new IdentifierExpression("b"), new IdentifierExpression("c")) }),
+            new UnexpectedToken(new Position(6, 1, 6), TokenType.Identifier, TokenType.Colon)
         };
-        // with non-default branch
+        // non-default branch, missing semicolon
         yield return new object[]
         {
             new[]
@@ -48,18 +52,34 @@ public class PatternMatchingExpressionTestData : IEnumerable<object[]>
                 new(TokenType.Identifier, "b"),
                 colonToken,
                 new(TokenType.Identifier, "c"),
+                rightBrace,
+                semicolonToken
+            },
+            new PatternMatchingExpression(new IdentifierExpression("a"),
+                new List<PatternMatchingBranch> { new(new IdentifierExpression("b"), new IdentifierExpression("c")) }),
+            new UnexpectedToken(new Position(8, 1, 8), TokenType.Identifier, TokenType.Semicolon)
+        };
+        // default branch, missing colon
+        yield return new object[]
+        {
+            new[]
+            {
+                matchToken,
+                leftParenthesisToken,
+                new(TokenType.Identifier, "a"),
+                rightParenthesisToken,
+                leftBrace,
+                defaultToken,
+                new(TokenType.Identifier, "b"),
                 semicolonToken,
                 rightBrace,
                 semicolonToken
             },
-            new IdentifierExpression("a"),
-            new[]
-            {
-                new PatternMatchingBranch(new IdentifierExpression("b"), new IdentifierExpression("c"))
-            },
-            (null as Expression)!
+            new PatternMatchingExpression(new IdentifierExpression("a"), new List<PatternMatchingBranch>(),
+                new IdentifierExpression("b")),
+            new UnexpectedToken(new Position(6, 1, 6), TokenType.Identifier, TokenType.Colon)
         };
-        // with default branch
+        // default branch, missing semicolon
         yield return new object[]
         {
             new[]
@@ -72,70 +92,12 @@ public class PatternMatchingExpressionTestData : IEnumerable<object[]>
                 defaultToken,
                 colonToken,
                 new(TokenType.Identifier, "b"),
-                semicolonToken,
                 rightBrace,
                 semicolonToken
             },
-            new IdentifierExpression("a"),
-            Array.Empty<PatternMatchingBranch>(),
-            new IdentifierExpression("b")
-        };
-        // with more than one non-default branch
-        yield return new object[]
-        {
-            new[]
-            {
-                matchToken,
-                leftParenthesisToken,
-                new(TokenType.Identifier, "a"),
-                rightParenthesisToken,
-                leftBrace,
-                new(TokenType.Identifier, "b"),
-                colonToken,
-                new(TokenType.Identifier, "c"),
-                semicolonToken,
-                new(TokenType.Identifier, "d"),
-                colonToken,
-                new(TokenType.Identifier, "e"),
-                semicolonToken,
-                rightBrace,
-                semicolonToken
-            },
-            new IdentifierExpression("a"),
-            new[]
-            {
-                new PatternMatchingBranch(new IdentifierExpression("b"), new IdentifierExpression("c")),
-                new PatternMatchingBranch(new IdentifierExpression("d"), new IdentifierExpression("e"))
-            },
-            (null as Expression)!
-        };
-        // with both non-default and default branch
-        yield return new object[]
-        {
-            new[]
-            {
-                matchToken,
-                leftParenthesisToken,
-                new(TokenType.Identifier, "a"),
-                rightParenthesisToken,
-                leftBrace,
-                new(TokenType.Identifier, "b"),
-                colonToken,
-                new(TokenType.Identifier, "c"),
-                semicolonToken,
-                defaultToken,
-                colonToken,
-                new(TokenType.Identifier, "d"),
-                semicolonToken,
-                rightBrace,
-                semicolonToken
-            },
-            new IdentifierExpression("a"),
-            new[]
-            {
-                new PatternMatchingBranch(new IdentifierExpression("b"), new IdentifierExpression("c"))
-            },
-            new IdentifierExpression("d")
+            new PatternMatchingExpression(new IdentifierExpression("a"), new List<PatternMatchingBranch>(),
+                new IdentifierExpression("b")),
+            new UnexpectedToken(new Position(8, 1, 8), TokenType.Identifier, TokenType.Semicolon)
         };
     }
 

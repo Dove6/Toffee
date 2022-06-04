@@ -105,7 +105,7 @@ public partial class Parser : IParser
                 return CurrentStatement = null;
         }
 
-        CurrentStatement = parsedStatement!;
+        CurrentStatement = parsedStatement;
         if (!CurrentStatement.IsTerminated)
             EmitError(new ExpectedSemicolon(_lexer.CurrentToken));
 

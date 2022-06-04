@@ -13,19 +13,32 @@ public class BlockExpressionTestData : IEnumerable<object[]>
         var leftBraceToken = Helpers.GetDefaultToken(TokenType.LeftBrace);
         var rightBraceToken = Helpers.GetDefaultToken(TokenType.RightBrace);
         var semicolonToken = Helpers.GetDefaultToken(TokenType.Semicolon);
-        // basic unterminated
+        // empty
+        yield return new object[]
+        {
+            new[]
+            {
+                leftBraceToken,
+                rightBraceToken,
+                semicolonToken
+            },
+            Array.Empty<Statement>(),
+            (null as Statement)!
+        };
+        // basic with result
         yield return new object[]
         {
             new[]
             {
                 leftBraceToken,
                 new(TokenType.Identifier, "a"),
-                rightBraceToken
+                rightBraceToken,
+                semicolonToken
             },
             Array.Empty<Statement>(),
             new ExpressionStatement(new IdentifierExpression("a"))
         };
-        // basic terminated
+        // basic with regular
         yield return new object[]
         {
             new[]
@@ -33,7 +46,8 @@ public class BlockExpressionTestData : IEnumerable<object[]>
                 leftBraceToken,
                 new(TokenType.Identifier, "a"),
                 semicolonToken,
-                rightBraceToken
+                rightBraceToken,
+                semicolonToken
             },
             new Statement[]
             {
@@ -44,7 +58,7 @@ public class BlockExpressionTestData : IEnumerable<object[]>
             },
             (null as Statement)!
         };
-        // terminated and unterminated
+        // with regular and result
         yield return new object[]
         {
             new[]
@@ -53,7 +67,8 @@ public class BlockExpressionTestData : IEnumerable<object[]>
                 new(TokenType.Identifier, "a"),
                 semicolonToken,
                 new(TokenType.Identifier, "b"),
-                rightBraceToken
+                rightBraceToken,
+                semicolonToken
             },
             new Statement[]
             {
@@ -64,7 +79,7 @@ public class BlockExpressionTestData : IEnumerable<object[]>
             },
             new ExpressionStatement(new IdentifierExpression("b"))
         };
-        // double terminated
+        // double regular
         yield return new object[]
         {
             new[]
@@ -74,7 +89,8 @@ public class BlockExpressionTestData : IEnumerable<object[]>
                 semicolonToken,
                 new(TokenType.Identifier, "b"),
                 semicolonToken,
-                rightBraceToken
+                rightBraceToken,
+                semicolonToken
             },
             new Statement[]
             {

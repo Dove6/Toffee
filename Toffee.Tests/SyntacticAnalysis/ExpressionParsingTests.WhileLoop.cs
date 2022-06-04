@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Toffee.LexicalAnalysis;
+using Toffee.Scanning;
 using Toffee.SyntacticAnalysis;
 using Toffee.Tests.SyntacticAnalysis.Generators;
 using Xunit;
@@ -13,7 +14,7 @@ public partial class ExpressionParsingTest
     [ClassData(typeof(WhileLoopExpressionTestData))]
     public void WhileLoopExpressionsShouldBeParsedCorrectly(Token[] tokenSequence, Expression expectedCondition, Expression expectedBody)
     {
-        var lexerMock = new LexerMock(tokenSequence.AppendSemicolon());
+        var lexerMock = new LexerMock(tokenSequence);
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
@@ -29,6 +30,35 @@ public partial class ExpressionParsingTest
         whileLoopExpression.Body.Should().BeEquivalentTo(expectedBody, Helpers.ProvideOptions);
 
         Assert.False(errorHandlerMock.HadErrors);
+        Assert.False(errorHandlerMock.HadWarnings);
+    }
+
+    [Trait("Category", "While loop expressions")]
+    [Trait("Category", "Negative")]
+    [Fact]
+    public void MissingBodyOfWhileLoopExpressionsShouldBeDetectedProperly()
+    {
+        var tokenSequence = new[]
+        {
+            Helpers.GetDefaultToken(TokenType.KeywordWhile),
+            Helpers.GetDefaultToken(TokenType.LeftParenthesis),
+            new(TokenType.Identifier, "a"),
+            Helpers.GetDefaultToken(TokenType.RightParenthesis),
+            Helpers.GetDefaultToken(TokenType.Semicolon)
+        };
+
+        var expectedError = new ExpectedExpression(new Position(4, 1, 4), TokenType.Semicolon);
+
+        var lexerMock = new LexerMock(tokenSequence);
+        var errorHandlerMock = new ParserErrorHandlerMock();
+        IParser parser = new Parser(lexerMock, errorHandlerMock);
+
+        parser.Advance();
+
+        parser.CurrentStatement.Should().BeNull();
+
+        errorHandlerMock.HandledErrors[0].Should().BeEquivalentTo(expectedError);
+
         Assert.False(errorHandlerMock.HadWarnings);
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using FluentAssertions.Equivalency;
 using Toffee.LexicalAnalysis;
@@ -14,8 +15,8 @@ public static class Helpers
 
     public static Token GetDefaultToken(TokenType type) => new(type, MapTokenTypeToContent(type));
 
-    public static Token[] AppendSemicolon(this Token[] tokenSequence) =>
-        tokenSequence.Append(Helpers.GetDefaultToken(TokenType.Semicolon)).ToArray();
+    public static Token[] AppendSemicolon(this IEnumerable<Token> tokenSequence) =>
+        tokenSequence.Append(GetDefaultToken(TokenType.Semicolon)).ToArray();
 
     private static string MapTokenTypeToContent(TokenType type)
     {

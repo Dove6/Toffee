@@ -14,7 +14,7 @@ public partial class ExpressionParsingTest
     [ClassData(typeof(ConditionalExpressionTestData))]
     public void ConditionalExpressionsShouldBeParsedCorrectly(Token[] tokenSequence, ConditionalElement expectedIfPart, ConditionalElement[] expectedElifParts, Expression? expectedElsePart)
     {
-        var lexerMock = new LexerMock(tokenSequence.AppendSemicolon());
+        var lexerMock = new LexerMock(tokenSequence);
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
@@ -31,6 +31,25 @@ public partial class ExpressionParsingTest
         conditionalExpression.ElsePart.Should().BeEquivalentTo(expectedElsePart, Helpers.ProvideOptions);
 
         Assert.False(errorHandlerMock.HadErrors);
+        Assert.False(errorHandlerMock.HadWarnings);
+    }
+
+    [Trait("Category", "Conditional expressions")]
+    [Trait("Category", "Negative")]
+    [Theory]
+    [ClassData(typeof(ConditionalBranchesMissingConsequentTestData))]
+    public void MissingConsequentOfConditionalBranchesShouldBeDetectedProperly(Token[] tokenSequence, ParserError expectedError)
+    {
+        var lexerMock = new LexerMock(tokenSequence);
+        var errorHandlerMock = new ParserErrorHandlerMock();
+        IParser parser = new Parser(lexerMock, errorHandlerMock);
+
+        parser.Advance();
+
+        parser.CurrentStatement.Should().BeNull();
+
+        errorHandlerMock.HandledErrors[0].Should().BeEquivalentTo(expectedError);
+
         Assert.False(errorHandlerMock.HadWarnings);
     }
 }

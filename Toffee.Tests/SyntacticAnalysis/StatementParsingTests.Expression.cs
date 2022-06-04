@@ -14,7 +14,7 @@ public partial class StatementParsingTests
     [ClassData(typeof(ExpressionStatementTestData))]
     public void ExpressionStatementsShouldBeParsedCorrectly(Token[] tokenSequence, Type expectedExpressionType)
     {
-        var lexerMock = new LexerMock(tokenSequence.AppendSemicolon());
+        var lexerMock = new LexerMock(tokenSequence);
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 

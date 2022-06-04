@@ -62,8 +62,9 @@ public partial class Parser
         var firstIdentifier = ConsumeToken(TokenType.Identifier);
         list.Add(new IdentifierExpression((string)firstIdentifier.Content!));
 
-        while (TryConsumeToken(out _, TokenType.OperatorDot))
+        while (!TryEnsureToken(TokenType.Semicolon))
         {
+            ConsumeToken(TokenType.OperatorDot);
             var nextIdentifier = ConsumeToken(TokenType.Identifier);
             list.Add(new IdentifierExpression((string)nextIdentifier.Content!));
         }
@@ -93,16 +94,21 @@ public partial class Parser
     private VariableInitialization ParseVariableInitialization()
     {
         var isConst = TryConsumeToken(out _, TokenType.KeywordConst);
+        var assignmentLikeTokenTypes =
+            OperatorMapper.AssignmentTokenTypes.Append(TokenType.OperatorEqualsEquals).ToArray();
+        var tokenTypesAllowedAfterIdentifier =
+            assignmentLikeTokenTypes.Append(TokenType.Comma).Append(TokenType.Semicolon).ToArray();
 
         if (!TryConsumeToken(out var identifier, TokenType.Identifier))
             throw new ParserException(new UnexpectedToken(_lexer.CurrentToken,
                 isConst ? new[] { TokenType.Identifier } : new[] { TokenType.KeywordConst, TokenType.Identifier }));
         var variableName = (string)identifier.Content!;
 
-        if (!TryConsumeToken(out var assignmentToken, OperatorMapper.AssignmentTokenTypes))
+        EnsureToken(tokenTypesAllowedAfterIdentifier);
+
+        if (!TryConsumeToken(out var assignmentToken, assignmentLikeTokenTypes))
             return new VariableInitialization(variableName, null, isConst);
-        if (!TryParseExpression(out var initialValue))
-            EmitError(new ExpectedExpression(_lexer.CurrentToken));
+        var initialValue = ParseExpression();
         if (assignmentToken.Type == TokenType.OperatorEquals)
             return new VariableInitialization(variableName, initialValue, isConst);
         EmitError(new UnexpectedToken(assignmentToken, TokenType.OperatorEquals));

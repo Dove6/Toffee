@@ -12,6 +12,7 @@ public class ConditionalExpressionTestData : IEnumerable<object[]>
     {
         var ifToken = Helpers.GetDefaultToken(TokenType.KeywordIf);
         var leftParenthesisToken = Helpers.GetDefaultToken(TokenType.LeftParenthesis);
+        var semicolonToken = Helpers.GetDefaultToken(TokenType.Semicolon);
         var rightParenthesisToken = Helpers.GetDefaultToken(TokenType.RightParenthesis);
         var elifToken = Helpers.GetDefaultToken(TokenType.KeywordElif);
         var elseToken = Helpers.GetDefaultToken(TokenType.KeywordElse);
@@ -24,7 +25,8 @@ public class ConditionalExpressionTestData : IEnumerable<object[]>
                 leftParenthesisToken,
                 new(TokenType.Identifier, "a"),
                 rightParenthesisToken,
-                new(TokenType.Identifier, "b")
+                new(TokenType.Identifier, "b"),
+                semicolonToken
             },
             new ConditionalElement(new IdentifierExpression("a"), new IdentifierExpression("b")),
             Array.Empty<ConditionalElement>(),
@@ -41,7 +43,8 @@ public class ConditionalExpressionTestData : IEnumerable<object[]>
                 rightParenthesisToken,
                 new(TokenType.Identifier, "b"),
                 elseToken,
-                new(TokenType.Identifier, "c")
+                new(TokenType.Identifier, "c"),
+                semicolonToken
             },
             new ConditionalElement(new IdentifierExpression("a"), new IdentifierExpression("b")),
             Array.Empty<ConditionalElement>(),
@@ -61,7 +64,8 @@ public class ConditionalExpressionTestData : IEnumerable<object[]>
                 leftParenthesisToken,
                 new(TokenType.Identifier, "c"),
                 rightParenthesisToken,
-                new(TokenType.Identifier, "d")
+                new(TokenType.Identifier, "d"),
+                semicolonToken
             },
             new ConditionalElement(new IdentifierExpression("a"), new IdentifierExpression("b")),
             new[]
@@ -89,7 +93,8 @@ public class ConditionalExpressionTestData : IEnumerable<object[]>
                 leftParenthesisToken,
                 new(TokenType.Identifier, "e"),
                 rightParenthesisToken,
-                new(TokenType.Identifier, "f")
+                new(TokenType.Identifier, "f"),
+                semicolonToken
             },
             new ConditionalElement(new IdentifierExpression("a"), new IdentifierExpression("b")),
             new[]
@@ -115,7 +120,8 @@ public class ConditionalExpressionTestData : IEnumerable<object[]>
                 rightParenthesisToken,
                 new(TokenType.Identifier, "d"),
                 elseToken,
-                new(TokenType.Identifier, "e")
+                new(TokenType.Identifier, "e"),
+                semicolonToken
             },
             new ConditionalElement(new IdentifierExpression("a"), new IdentifierExpression("b")),
             new[]

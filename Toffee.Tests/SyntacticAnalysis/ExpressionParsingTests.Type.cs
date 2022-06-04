@@ -21,10 +21,11 @@ public partial class ExpressionParsingTest
         {
             new Token(TokenType.Identifier, "a"),
             Helpers.GetDefaultToken(TokenType.KeywordIs),
-            Helpers.GetDefaultToken(typeTokenType)
+            Helpers.GetDefaultToken(typeTokenType),
+            Helpers.GetDefaultToken(TokenType.Semicolon)
         };
 
-        var lexerMock = new LexerMock(tokenSequence.AppendSemicolon());
+        var lexerMock = new LexerMock(tokenSequence);
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 

@@ -19,7 +19,8 @@ public class OperatorsAssociativityTestData : IEnumerable<object[]>
                     Helpers.GetDefaultToken(tokenType),
                     new Token(TokenType.Identifier, "b"),
                     Helpers.GetDefaultToken(tokenType),
-                    new Token(TokenType.Identifier, "c")
+                    new Token(TokenType.Identifier, "c"),
+                    Helpers.GetDefaultToken(TokenType.Semicolon)
                 },
                 new BinaryExpression(
                     new BinaryExpression(
@@ -38,7 +39,8 @@ public class OperatorsAssociativityTestData : IEnumerable<object[]>
                     Helpers.GetDefaultToken(tokenType),
                     new Token(TokenType.Identifier, "b"),
                     Helpers.GetDefaultToken(tokenType),
-                    new Token(TokenType.Identifier, "c")
+                    new Token(TokenType.Identifier, "c"),
+                    Helpers.GetDefaultToken(TokenType.Semicolon)
                 },
                 new BinaryExpression(
                     new IdentifierExpression("a"),
@@ -55,7 +57,8 @@ public class OperatorsAssociativityTestData : IEnumerable<object[]>
                 {
                     Helpers.GetDefaultToken(tokenType),
                     Helpers.GetDefaultToken(tokenType),
-                    new Token(TokenType.Identifier, "a")
+                    new Token(TokenType.Identifier, "a"),
+                    Helpers.GetDefaultToken(TokenType.Semicolon)
                 },
                 new UnaryExpression(
                     @operator,
@@ -72,7 +75,8 @@ public class OperatorsAssociativityTestData : IEnumerable<object[]>
                     Helpers.GetDefaultToken(TokenType.KeywordIs),
                     Helpers.GetDefaultToken(TokenType.KeywordInt),
                     Helpers.GetDefaultToken(TokenType.KeywordIs),
-                    Helpers.GetDefaultToken(TokenType.KeywordInt)
+                    Helpers.GetDefaultToken(TokenType.KeywordInt),
+                    Helpers.GetDefaultToken(TokenType.Semicolon)
                 }.SelectMany(x =>
                     x.Type == TokenType.KeywordIs
                         ? isNegated ? new[] { x, Helpers.GetDefaultToken(TokenType.KeywordNot) } : new[] { x }
@@ -99,7 +103,8 @@ public class OperatorsAssociativityTestData : IEnumerable<object[]>
                 Helpers.GetDefaultToken(TokenType.RightParenthesis),
                 Helpers.GetDefaultToken(TokenType.LeftParenthesis),
                 new Token(TokenType.Identifier, "c"),
-                Helpers.GetDefaultToken(TokenType.RightParenthesis)
+                Helpers.GetDefaultToken(TokenType.RightParenthesis),
+                Helpers.GetDefaultToken(TokenType.Semicolon)
             },
             new FunctionCallExpression(
                 new FunctionCallExpression(

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Toffee.LexicalAnalysis;
 using Toffee.SyntacticAnalysis;
+using Toffee.Tests.SyntacticAnalysis;
 
 namespace Toffee.Tests.SyntacticAnalysis.Generators;
 
@@ -11,39 +12,39 @@ public class ExpressionStatementTestData : IEnumerable<object[]>
     public IEnumerator<object[]> GetEnumerator()
     {
         // block
-        yield return new[]
+        yield return new object[]
         {
-            new BlockExpressionTestData().First()[0],
+            (Token[])new BlockExpressionTestData().First()[0],
             typeof(BlockExpression)
         };
         // if
-        yield return new[]
+        yield return new object[]
         {
-            new ConditionalExpressionTestData().First()[0],
+            (Token[])new ConditionalExpressionTestData().First()[0],
             typeof(ConditionalExpression)
         };
         // for
-        yield return new[]
+        yield return new object[]
         {
-            new ForLoopExpressionTestData().First()[0],
+            (Token[])new ForLoopExpressionTestData().First()[0],
             typeof(ForLoopExpression)
         };
         // while
-        yield return new[]
+        yield return new object[]
         {
-            new WhileLoopExpressionTestData().First()[0],
+            (Token[])new WhileLoopExpressionTestData().First()[0],
             typeof(WhileLoopExpression)
         };
         // functi
-        yield return new[]
+        yield return new object[]
         {
-            new FunctionDefinitionExpressionTestData().First()[0],
+            (Token[])new FunctionDefinitionExpressionTestData().First()[0],
             typeof(FunctionDefinitionExpression)
         };
         // match
-        yield return new[]
+        yield return new object[]
         {
-            new PatternMatchingExpressionTestData().First()[0],
+            (Token[])new PatternMatchingExpressionTestData().First()[0],
             typeof(PatternMatchingExpression)
         };
         // binary
@@ -53,7 +54,8 @@ public class ExpressionStatementTestData : IEnumerable<object[]>
             {
                 new Token(TokenType.Identifier, "a"),
                 Helpers.GetDefaultToken(TokenType.OperatorPlus),
-                new Token(TokenType.Identifier, "b")
+                new Token(TokenType.Identifier, "b"),
+                Helpers.GetDefaultToken(TokenType.Semicolon)
             },
             typeof(BinaryExpression)
         };
@@ -63,14 +65,15 @@ public class ExpressionStatementTestData : IEnumerable<object[]>
             new[]
             {
                 Helpers.GetDefaultToken(TokenType.OperatorPlus),
-                new Token(TokenType.Identifier, "a")
+                new Token(TokenType.Identifier, "a"),
+                Helpers.GetDefaultToken(TokenType.Semicolon)
             },
             typeof(UnaryExpression)
         };
         // call
-        yield return new[]
+        yield return new object[]
         {
-            new FunctionCallExpressionTestData().First()[0],
+            (Token[])new FunctionCallExpressionTestData().First()[0],
             typeof(FunctionCallExpression)
         };
         // identifier
@@ -78,7 +81,8 @@ public class ExpressionStatementTestData : IEnumerable<object[]>
         {
             new[]
             {
-                new Token(TokenType.Identifier, "a")
+                new Token(TokenType.Identifier, "a"),
+                Helpers.GetDefaultToken(TokenType.Semicolon)
             },
             typeof(IdentifierExpression)
         };
@@ -87,7 +91,8 @@ public class ExpressionStatementTestData : IEnumerable<object[]>
         {
             new[]
             {
-                new Token(TokenType.LiteralInteger, 18L)
+                new Token(TokenType.LiteralInteger, 18ul),
+                Helpers.GetDefaultToken(TokenType.Semicolon)
             },
             typeof(LiteralExpression)
         };
@@ -99,7 +104,8 @@ public class ExpressionStatementTestData : IEnumerable<object[]>
                 Helpers.GetDefaultToken(TokenType.KeywordInt),
                 Helpers.GetDefaultToken(TokenType.LeftParenthesis),
                 new Token(TokenType.Identifier, "a"),
-                Helpers.GetDefaultToken(TokenType.RightParenthesis)
+                Helpers.GetDefaultToken(TokenType.RightParenthesis),
+                Helpers.GetDefaultToken(TokenType.Semicolon)
             },
             typeof(TypeCastExpression)
         };

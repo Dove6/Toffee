@@ -10,6 +10,7 @@ public class VariableInitializationListStatementTestData : IEnumerable<object[]>
     public IEnumerator<object[]> GetEnumerator()
     {
         var initToken = Helpers.GetDefaultToken(TokenType.KeywordInit);
+        var semicolonToken = Helpers.GetDefaultToken(TokenType.Semicolon);
         var constToken = Helpers.GetDefaultToken(TokenType.KeywordConst);
         var assignmentToken = Helpers.GetDefaultToken(TokenType.OperatorEquals);
         var commaToken = Helpers.GetDefaultToken(TokenType.Comma);
@@ -19,7 +20,8 @@ public class VariableInitializationListStatementTestData : IEnumerable<object[]>
             new[]
             {
                 initToken,
-                new(TokenType.Identifier, "a")
+                new(TokenType.Identifier, "a"),
+                semicolonToken
             },
             new VariableInitialization[]
             {
@@ -33,7 +35,8 @@ public class VariableInitializationListStatementTestData : IEnumerable<object[]>
             {
                 initToken,
                 constToken,
-                new(TokenType.Identifier, "a")
+                new(TokenType.Identifier, "a"),
+                semicolonToken
             },
             new VariableInitialization[]
             {
@@ -48,11 +51,12 @@ public class VariableInitializationListStatementTestData : IEnumerable<object[]>
                 initToken,
                 new(TokenType.Identifier, "a"),
                 assignmentToken,
-                new Token(TokenType.LiteralInteger, 5L)
+                new Token(TokenType.LiteralInteger, 5ul),
+                semicolonToken
             },
             new VariableInitialization[]
             {
-                new("a", new LiteralExpression(DataType.Integer, 5L))
+                new("a", new LiteralExpression(DataType.Integer, 5ul))
             }
         };
         // with const and initialization
@@ -64,11 +68,12 @@ public class VariableInitializationListStatementTestData : IEnumerable<object[]>
                 constToken,
                 new(TokenType.Identifier, "a"),
                 assignmentToken,
-                new Token(TokenType.LiteralInteger, 5L)
+                new Token(TokenType.LiteralInteger, 5ul),
+                semicolonToken
             },
             new VariableInitialization[]
             {
-                new(IsConst: true, Name: "a", InitialValue: new LiteralExpression(DataType.Integer, 5L))
+                new(IsConst: true, Name: "a", InitialValue: new LiteralExpression(DataType.Integer, 5ul))
             }
         };
         // more than one
@@ -79,7 +84,8 @@ public class VariableInitializationListStatementTestData : IEnumerable<object[]>
                 initToken,
                 new(TokenType.Identifier, "a"),
                 commaToken,
-                new(TokenType.Identifier, "b")
+                new(TokenType.Identifier, "b"),
+                semicolonToken
             },
             new VariableInitialization[]
             {
@@ -96,13 +102,14 @@ public class VariableInitializationListStatementTestData : IEnumerable<object[]>
                 constToken,
                 new(TokenType.Identifier, "a"),
                 assignmentToken,
-                new Token(TokenType.LiteralInteger, 5L),
+                new Token(TokenType.LiteralInteger, 5ul),
                 commaToken,
-                new(TokenType.Identifier, "b")
+                new(TokenType.Identifier, "b"),
+                semicolonToken
             },
             new VariableInitialization[]
             {
-                new(IsConst: true, Name: "a", InitialValue: new LiteralExpression(DataType.Integer, 5L)),
+                new(IsConst: true, Name: "a", InitialValue: new LiteralExpression(DataType.Integer, 5ul)),
                 new("b")
             }
         };

@@ -1,11 +1,12 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using Toffee.LexicalAnalysis;
+using Toffee.Scanning;
 using Toffee.SyntacticAnalysis;
 
 namespace Toffee.Tests.SyntacticAnalysis.Generators;
 
-public class ForLoopExpressionTestData : IEnumerable<object[]>
+public class ForLoopSpecificationMissingPartsTestData : IEnumerable<object[]>
 {
     public IEnumerator<object[]> GetEnumerator()
     {
@@ -15,79 +16,50 @@ public class ForLoopExpressionTestData : IEnumerable<object[]>
         var semicolonToken = Helpers.GetDefaultToken(TokenType.Semicolon);
         var colonToken = Helpers.GetDefaultToken(TokenType.Colon);
         var comma = Helpers.GetDefaultToken(TokenType.Comma);
-        // basic
+        // missing range
         yield return new object[]
         {
             new[]
             {
                 forToken,
                 leftParenthesisToken,
-                new(TokenType.Identifier, "a"),
                 rightParenthesisToken,
-                new(TokenType.Identifier, "b"),
+                new(TokenType.Identifier, "a"),
                 semicolonToken
             },
-            null!,
-            new ForLoopRange(new IdentifierExpression("a")),
-            new IdentifierExpression("b")
+            new ExpectedExpression(new Position(2, 1, 2), TokenType.RightParenthesis)
         };
-        // with start:stop range
+        // missing counter
         yield return new object[]
         {
             new[]
             {
                 forToken,
                 leftParenthesisToken,
-                new(TokenType.Identifier, "a"),
-                colonToken,
-                new(TokenType.Identifier, "b"),
-                rightParenthesisToken,
-                new(TokenType.Identifier, "c"),
-                semicolonToken
-            },
-            null!,
-            new ForLoopRange(Start: new IdentifierExpression("a"), PastTheEnd: new IdentifierExpression("b")),
-            new IdentifierExpression("c")
-        };
-        // with start:stop:step range
-        yield return new object[]
-        {
-            new[]
-            {
-                forToken,
-                leftParenthesisToken,
-                new(TokenType.Identifier, "a"),
-                colonToken,
-                new(TokenType.Identifier, "b"),
-                colonToken,
-                new(TokenType.Identifier, "c"),
-                rightParenthesisToken,
-                new(TokenType.Identifier, "d"),
-                semicolonToken
-            },
-            null!,
-            new ForLoopRange(Start: new IdentifierExpression("a"), PastTheEnd: new IdentifierExpression("b"), Step: new IdentifierExpression("c")),
-            new IdentifierExpression("d")
-        };
-        // with counter
-        yield return new object[]
-        {
-            new[]
-            {
-                forToken,
-                leftParenthesisToken,
-                new(TokenType.Identifier, "a"),
                 comma,
+                new(TokenType.Identifier, "a"),
+                rightParenthesisToken,
+                new(TokenType.Identifier, "b"),
+                semicolonToken
+            },
+            new ExpectedExpression(new Position(2, 1, 2), TokenType.Comma)
+        };
+        // start:stop, missing range start
+        yield return new object[]
+        {
+            new[]
+            {
+                forToken,
+                leftParenthesisToken,
+                colonToken,
                 new(TokenType.Identifier, "b"),
                 rightParenthesisToken,
                 new(TokenType.Identifier, "c"),
                 semicolonToken
             },
-            "a",
-            new ForLoopRange(new IdentifierExpression("b")),
-            new IdentifierExpression("c")
+            new ExpectedExpression(new Position(2, 1, 2), TokenType.Colon)
         };
-        // with counter and start:stop range
+        // start:stop, missing range stop
         yield return new object[]
         {
             new[]
@@ -98,16 +70,30 @@ public class ForLoopExpressionTestData : IEnumerable<object[]>
                 comma,
                 new(TokenType.Identifier, "b"),
                 colonToken,
-                new(TokenType.Identifier, "c"),
                 rightParenthesisToken,
-                new(TokenType.Identifier, "d"),
+                new(TokenType.Identifier, "c"),
                 semicolonToken
             },
-            "a",
-            new ForLoopRange(Start: new IdentifierExpression("b"), PastTheEnd: new IdentifierExpression("c")),
-            new IdentifierExpression("d")
+            new ExpectedExpression(new Position(6, 1, 6), TokenType.RightParenthesis)
         };
-        // with counter and start:stop:step range
+        // start:stop:step, missing range start
+        yield return new object[]
+        {
+            new[]
+            {
+                forToken,
+                leftParenthesisToken,
+                colonToken,
+                new(TokenType.Identifier, "a"),
+                colonToken,
+                new(TokenType.Identifier, "b"),
+                rightParenthesisToken,
+                new(TokenType.Identifier, "c"),
+                semicolonToken
+            },
+            new ExpectedExpression(new Position(2, 1, 2), TokenType.Colon)
+        };
+        // start:stop:step, missing range stop
         yield return new object[]
         {
             new[]
@@ -115,19 +101,31 @@ public class ForLoopExpressionTestData : IEnumerable<object[]>
                 forToken,
                 leftParenthesisToken,
                 new(TokenType.Identifier, "a"),
-                comma,
+                colonToken,
+                colonToken,
                 new(TokenType.Identifier, "b"),
-                colonToken,
-                new(TokenType.Identifier, "c"),
-                colonToken,
-                new(TokenType.Identifier, "d"),
                 rightParenthesisToken,
-                new(TokenType.Identifier, "e"),
+                new(TokenType.Identifier, "c"),
                 semicolonToken
             },
-            "a",
-            new ForLoopRange(Start: new IdentifierExpression("b"), PastTheEnd: new IdentifierExpression("c"), Step: new IdentifierExpression("d")),
-            new IdentifierExpression("e")
+            new ExpectedExpression(new Position(4, 1, 4), TokenType.Colon)
+        };
+        // start:stop:step, missing range step
+        yield return new object[]
+        {
+            new[]
+            {
+                forToken,
+                leftParenthesisToken,
+                new(TokenType.Identifier, "a"),
+                colonToken,
+                new(TokenType.Identifier, "b"),
+                colonToken,
+                rightParenthesisToken,
+                new(TokenType.Identifier, "c"),
+                semicolonToken
+            },
+            new ExpectedExpression(new Position(6, 1, 6), TokenType.RightParenthesis)
         };
     }
 

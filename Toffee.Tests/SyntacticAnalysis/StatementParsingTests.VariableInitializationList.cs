@@ -1,6 +1,8 @@
+using System.Collections.Generic;
 using System.Linq;
 using FluentAssertions;
 using Toffee.LexicalAnalysis;
+using Toffee.Scanning;
 using Toffee.SyntacticAnalysis;
 using Toffee.Tests.SyntacticAnalysis.Generators;
 using Xunit;
@@ -11,41 +13,10 @@ public partial class StatementParsingTests
 {
     [Trait("Category", "Variable initialization list statements")]
     [Theory]
-    [InlineData("std")]
-    [InlineData("std", "io")]
-    [InlineData("one1", "two2", "three3")]
-    public void NamespaceImportStatementsShouldBeParsedCorrectly(params string[] namespaceSegments)
-    {
-        var pullToken = Helpers.GetDefaultToken(TokenType.KeywordPull);
-
-        var namespaceSegmentTokens = namespaceSegments.Select(x => new Token(TokenType.Identifier, x));
-        var dotToken =Helpers.GetDefaultToken(TokenType.OperatorDot);
-        var interleavedNamespaceSegments = namespaceSegmentTokens.SelectMany(x => new[] { x, dotToken })
-            .Take(2 * namespaceSegments.Length - 1);
-
-        var expectedNamespaceSegments = namespaceSegments.Select(x => new IdentifierExpression(x)).ToArray();
-
-        var lexerMock = new LexerMock(interleavedNamespaceSegments.Prepend(pullToken).ToArray().AppendSemicolon());
-        var errorHandlerMock = new ParserErrorHandlerMock();
-        IParser parser = new Parser(lexerMock, errorHandlerMock);
-
-        parser.Advance();
-
-        var namespaceImportStatement = parser.CurrentStatement.As<NamespaceImportStatement>();
-        namespaceImportStatement.Should().NotBeNull();
-        namespaceImportStatement!.IsTerminated.Should().Be(true);
-        namespaceImportStatement.NamespaceLevels.ToArray().Should().BeEquivalentTo(expectedNamespaceSegments, Helpers.ProvideOptions);
-
-        Assert.False(errorHandlerMock.HadErrors);
-        Assert.False(errorHandlerMock.HadWarnings);
-    }
-
-    [Trait("Category", "Variable initialization list statements")]
-    [Theory]
     [ClassData(typeof(VariableInitializationListStatementTestData))]
     public void VariableInitializationListStatementsShouldBeParsedCorrectly(Token[] tokenSequence, VariableInitialization[] expectedVariableList)
     {
-        var lexerMock = new LexerMock(tokenSequence.AppendSemicolon());
+        var lexerMock = new LexerMock(tokenSequence);
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
@@ -57,6 +28,111 @@ public partial class StatementParsingTests
         variableInitializationStatement.Items.Should().BeEquivalentTo(expectedVariableList, Helpers.ProvideOptions);
 
         Assert.False(errorHandlerMock.HadErrors);
+        Assert.False(errorHandlerMock.HadWarnings);
+    }
+
+    [Trait("Category", "Variable initialization list statements")]
+    [Trait("Category", "Negative")]
+    [Theory]
+    [ClassData(typeof(VariableInitializationListStatementMissingVariableTestData))]
+    public void MissingVariableInVariableInitializationListStatementsShouldBeDetectedProperly(Token[] tokenSequence, ParserError expectedError)
+    {
+        var lexerMock = new LexerMock(tokenSequence);
+        var errorHandlerMock = new ParserErrorHandlerMock();
+        IParser parser = new Parser(lexerMock, errorHandlerMock);
+
+        parser.Advance();
+
+        parser.CurrentStatement.Should().BeNull();
+
+        errorHandlerMock.HandledErrors[0].Should().BeEquivalentTo(expectedError);
+
+        Assert.False(errorHandlerMock.HadWarnings);
+    }
+
+    [Trait("Category", "Variable initialization list statements")]
+    [Trait("Category", "Negative")]
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void MissingInitialValueInVariableInitializationListStatementsShouldBeDetectedProperly(bool constKeywordUsed)
+    {
+        var tokenSequence = (constKeywordUsed
+            ? new[] { Helpers.GetDefaultToken(TokenType.KeywordInit), Helpers.GetDefaultToken(TokenType.KeywordConst) }
+            : new[] { Helpers.GetDefaultToken(TokenType.KeywordInit) })
+            .Concat(new[]
+            {
+                new Token(TokenType.Identifier, "a"),
+                Helpers.GetDefaultToken(TokenType.OperatorEquals)
+            })
+            .AppendSemicolon();
+
+        var errorPosition = 3u + (constKeywordUsed ? 1u : 0u);
+        var expectedError = new ExpectedExpression(new Position(errorPosition, 1, errorPosition), TokenType.Semicolon);
+
+        var lexerMock = new LexerMock(tokenSequence);
+        var errorHandlerMock = new ParserErrorHandlerMock();
+        IParser parser = new Parser(lexerMock, errorHandlerMock);
+
+        parser.Advance();
+
+        parser.CurrentStatement.Should().BeNull();
+
+        errorHandlerMock.HandledErrors[0].Should().BeEquivalentTo(expectedError);
+
+        Assert.False(errorHandlerMock.HadWarnings);
+    }
+
+    [Trait("Category", "Variable initialization list statements")]
+    [Trait("Category", "Negative")]
+    [Theory]
+    [InlineData(TokenType.OperatorEqualsEquals, true)]
+    [InlineData(TokenType.OperatorPlusEquals, true)]
+    [InlineData(TokenType.OperatorMinusEquals, true)]
+    [InlineData(TokenType.OperatorAsteriskEquals, true)]
+    [InlineData(TokenType.OperatorSlashEquals, true)]
+    [InlineData(TokenType.OperatorPercentEquals, true)]
+    [InlineData(TokenType.OperatorEqualsEquals, false)]
+    [InlineData(TokenType.OperatorPlusEquals, false)]
+    [InlineData(TokenType.OperatorMinusEquals, false)]
+    [InlineData(TokenType.OperatorAsteriskEquals, false)]
+    [InlineData(TokenType.OperatorSlashEquals, false)]
+    [InlineData(TokenType.OperatorPercentEquals, false)]
+    public void BadAssignmentOperatorInVariableInitializationListStatementsShouldBeDetectedProperly(TokenType operatorTokenType, bool constKeywordUsed)
+    {
+        const string initializedVariableName = "a";
+
+        var tokenSequence = (constKeywordUsed
+                ? new[] { Helpers.GetDefaultToken(TokenType.KeywordInit), Helpers.GetDefaultToken(TokenType.KeywordConst) }
+                : new[] { Helpers.GetDefaultToken(TokenType.KeywordInit) })
+            .Concat(new[]
+            {
+                new Token(TokenType.Identifier, initializedVariableName),
+                Helpers.GetDefaultToken(operatorTokenType),
+                new Token(TokenType.LiteralInteger, 123ul)
+            })
+            .AppendSemicolon();
+
+        var expectedStatement = new VariableInitializationListStatement(new List<VariableInitialization>
+        {
+            new(initializedVariableName, new LiteralExpression(DataType.Integer, 123ul), constKeywordUsed)
+        }) { IsTerminated = true };
+
+        var errorPosition = 2u + (constKeywordUsed ? 1u : 0u);
+        var expectedError = new UnexpectedToken(new Position(errorPosition, 1, errorPosition),
+            operatorTokenType, TokenType.OperatorEquals);
+
+        var lexerMock = new LexerMock(tokenSequence);
+        var errorHandlerMock = new ParserErrorHandlerMock();
+        IParser parser = new Parser(lexerMock, errorHandlerMock);
+
+        parser.Advance();
+
+        var variableInitializationStatement = parser.CurrentStatement.As<VariableInitializationListStatement>();
+        variableInitializationStatement.Should().BeEquivalentTo(expectedStatement, Helpers.ProvideOptions);
+
+        errorHandlerMock.HandledErrors[0].Should().BeEquivalentTo(expectedError);
+
         Assert.False(errorHandlerMock.HadWarnings);
     }
 }

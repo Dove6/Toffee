@@ -50,10 +50,15 @@ public record ExpectedIdentifier(Position Position, Type ActualType) : ParserErr
         : this(actualExpression.StartPosition, actualExpression.GetType())
     { }
 }
-public record IntegerLiteralOutOfRange(Position Position, ulong Value) : ParserError(Position)
+public record IntegerOutOfRange(Position Position, ulong Value, bool Negative = false) : ParserError(Position)
 {
-    public IntegerLiteralOutOfRange(LiteralExpression actualExpression)
+    public IntegerOutOfRange(LiteralExpression actualExpression)
         : this(actualExpression.StartPosition, (ulong)actualExpression.Value!)
+    { }
+}
+public record ExpectedParameter(Position Position, TokenType ActualType) : ParserError(Position)
+{
+    public ExpectedParameter(Token actualToken) : this(actualToken.StartPosition, actualToken.Type)
     { }
 }
 
@@ -68,7 +73,8 @@ public static class ParserErrorExtensions
         { typeof(ExpectedPatternExpression), "Unexpected token instead of a pattern expression" },
         { typeof(ExpectedSemicolon), "Expected terminating semicolon" },
         { typeof(ExpectedIdentifier), "Expected only identifiers in namespace path" },
-        { typeof(IntegerLiteralOutOfRange), "Literal integer above maximum (positive) value or below minimum (negative) value" }
+        { typeof(IntegerOutOfRange), "Literal integer above maximum (positive) value or below minimum (negative) value" },
+        { typeof(ExpectedParameter), "Expected parameter in parameter list" }
     }.ToImmutableDictionary();
 
     public static string ToMessage(this ParserError error) =>
