@@ -62,9 +62,8 @@ public partial class Parser
         var firstIdentifier = ConsumeToken(TokenType.Identifier);
         list.Add((string)firstIdentifier.Content!);
 
-        while (!TryEnsureToken(TokenType.Semicolon))
+        while (TryConsumeToken(out _, TokenType.OperatorDot))
         {
-            ConsumeToken(TokenType.OperatorDot);
             var nextIdentifier = ConsumeToken(TokenType.Identifier);
             list.Add((string)nextIdentifier.Content!);
         }
@@ -97,15 +96,11 @@ public partial class Parser
         var isConst = TryConsumeToken(out _, TokenType.KeywordConst);
         var assignmentLikeTokenTypes =
             OperatorMapper.AssignmentTokenTypes.Append(TokenType.OperatorEqualsEquals).ToArray();
-        var tokenTypesAllowedAfterIdentifier =
-            assignmentLikeTokenTypes.Append(TokenType.Comma).Append(TokenType.Semicolon).ToArray();
 
         if (!TryConsumeToken(out var identifier, TokenType.Identifier))
             throw new ParserException(new UnexpectedToken(_lexer.CurrentToken,
                 isConst ? new[] { TokenType.Identifier } : new[] { TokenType.KeywordConst, TokenType.Identifier }));
         var variableName = (string)identifier.Content!;
-
-        EnsureToken(tokenTypesAllowedAfterIdentifier);
 
         if (!TryConsumeToken(out var assignmentToken, assignmentLikeTokenTypes))
             return new VariableInitialization(variableName, null, isConst);

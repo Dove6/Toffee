@@ -19,11 +19,9 @@ public partial class Runner : IRunner
 
     private static object? CastToNumber(object? value)
     {
-        if (value is null)
-            return null;
-
         return value switch
         {
+            null => null,
             long integerValue => integerValue,
             double floatValue => floatValue,
             string stringValue => CastToNumber(stringValue),
@@ -44,9 +42,6 @@ public partial class Runner : IRunner
 
     private static object? Cast(object? value, DataType type)
     {
-        if (value is null)
-            return null;
-
         return type switch
         {
             DataType.Integer => CastToInteger(value),
@@ -57,10 +52,11 @@ public partial class Runner : IRunner
         };
     }
 
-    private static object? CastToInteger(object value)
+    private static long? CastToInteger(object? value)
     {
         return value switch
         {
+            null => null,
             long integerValue => integerValue,
             double floatValue => (long)Math.Truncate(floatValue),
             bool boolValue => boolValue ? 1L : 0L,
@@ -69,10 +65,11 @@ public partial class Runner : IRunner
         };
     }
 
-    private static object? CastToFloat(object value)
+    private static double? CastToFloat(object? value)
     {
         return value switch
         {
+            null => null,
             long integerValue => (double)integerValue,
             double floatValue => floatValue,
             bool boolValue => boolValue ? 1.0 : 0.0,
@@ -81,10 +78,11 @@ public partial class Runner : IRunner
         };
     }
 
-    private static object? CastToString(object value)
+    private static string? CastToString(object? value)
     {
         return value switch
         {
+            null => null,
             long integerValue => integerValue.ToString(CultureInfo.InvariantCulture),
             double floatValue => floatValue.ToString(CultureInfo.InvariantCulture),
             bool boolValue => boolValue.ToString(CultureInfo.InvariantCulture).ToLowerInvariant(),
@@ -93,10 +91,11 @@ public partial class Runner : IRunner
         };
     }
 
-    private static object? CastToBool(object value)
+    private static bool? CastToBool(object? value)
     {
         return value switch
         {
+            null => null,
             long integerValue => integerValue != 0L,
             double floatValue => floatValue != 0L,
             bool boolValue => boolValue,

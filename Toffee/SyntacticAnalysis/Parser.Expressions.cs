@@ -102,8 +102,13 @@ public partial class Parser
             return false;
 
         var condition = ParseParenthesizedExpression();
-        var consequent = ParseExpression();
-        var blockConsequent = consequent as BlockExpression ?? new BlockExpression(new List<Statement>(), consequent);
+        var consequent = ParseStatement();
+        BlockExpression blockConsequent;
+        if (consequent is ExpressionStatement expressionStatement)
+            blockConsequent = expressionStatement.Expression as BlockExpression
+                ?? new BlockExpression(new List<Statement>(), expressionStatement.Expression);
+        else
+            blockConsequent = new BlockExpression(new List<Statement> { consequent });
         ifPart = new ConditionalElement(condition, blockConsequent);
         return true;
     }
@@ -116,8 +121,13 @@ public partial class Parser
         if (!TryConsumeToken(out _, TokenType.KeywordElse))
             return false;
 
-        var consequent = ParseExpression();
-        var blockConsequent = consequent as BlockExpression ?? new BlockExpression(new List<Statement>(), consequent);
+        var consequent = ParseStatement();
+        BlockExpression blockConsequent;
+        if (consequent is ExpressionStatement expressionStatement)
+            blockConsequent = expressionStatement.Expression as BlockExpression
+                              ?? new BlockExpression(new List<Statement>(), expressionStatement.Expression);
+        else
+            blockConsequent = new BlockExpression(new List<Statement> { consequent });
         elsePart = blockConsequent;
         return true;
     }
@@ -140,8 +150,13 @@ public partial class Parser
             return null;
 
         var (counterName, loopRange) = ParseForLoopSpecification();
-        var body = ParseExpression();
-        var blockBody = body as BlockExpression ?? new BlockExpression(new List<Statement>(), body);
+        var body = ParseStatement();
+        BlockExpression blockBody;
+        if (body is ExpressionStatement expressionStatement)
+            blockBody = expressionStatement.Expression as BlockExpression
+                ?? new BlockExpression(new List<Statement>(), expressionStatement.Expression);
+        else
+            blockBody = new BlockExpression(new List<Statement> { body });
         // TODO: warn about ignored expression
         return new ForLoopExpression(loopRange, blockBody, counterName);
     });
@@ -192,8 +207,13 @@ public partial class Parser
             return null;
 
         var condition = ParseParenthesizedExpression();
-        var body = ParseExpression();
-        var blockBody = body as BlockExpression ?? new BlockExpression(new List<Statement>(), body);
+        var body = ParseStatement();
+        BlockExpression blockBody;
+        if (body is ExpressionStatement expressionStatement)
+            blockBody = expressionStatement.Expression as BlockExpression
+                ?? new BlockExpression(new List<Statement>(), expressionStatement.Expression);
+        else
+            blockBody = new BlockExpression(new List<Statement> { body });
         // TODO: warn about ignored expression
         return new WhileLoopExpression(condition, blockBody);
     });
@@ -299,10 +319,15 @@ public partial class Parser
             return false;
 
         InterceptParserError(() => ConsumeToken(TokenType.Colon));
-        var consequent = ParseExpression();
+        var consequent = ParseStatement();
         InterceptParserError(() => ConsumeToken(TokenType.Semicolon));
 
-        var blockConsequent = consequent as BlockExpression ?? new BlockExpression(new List<Statement>(), consequent);
+        BlockExpression blockConsequent;
+        if (consequent is ExpressionStatement expressionStatement)
+            blockConsequent = expressionStatement.Expression as BlockExpression
+                              ?? new BlockExpression(new List<Statement>(), expressionStatement.Expression);
+        else
+            blockConsequent = new BlockExpression(new List<Statement> { consequent });
         specification = new PatternMatchingBranch(condition, blockConsequent);
         return true;
     }

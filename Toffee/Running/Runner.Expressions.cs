@@ -5,7 +5,7 @@ namespace Toffee.Running;
 
 public partial class Runner
 {
-    public object? Calculate(Expression expression, EnvironmentStack? environmentStack = null)
+    public object? Calculate(Expression expression, EnvironmentStack? environmentStack)
     {
         return CalculateDynamic(expression as dynamic, environmentStack ?? new EnvironmentStack());
     }
@@ -29,7 +29,15 @@ public partial class Runner
 
     private object? CalculateDynamic(ConditionalExpression expression, EnvironmentStack environmentStack)
     {
-        throw new NotImplementedException();
+        var consequentToRun = expression.Branches.FirstOrDefault(x =>
+        {
+            var conditionValue = Calculate(x.Condition, environmentStack);
+            return CastToBool(conditionValue) is true;
+        })?.Consequent;
+        consequentToRun ??= expression.ElseBranch;
+        return consequentToRun is not null
+            ? Calculate(consequentToRun, environmentStack)
+            : null;
     }
 
     private object? CalculateDynamic(ForLoopExpression expression, EnvironmentStack environmentStack)
@@ -39,7 +47,9 @@ public partial class Runner
 
     private object? CalculateDynamic(WhileLoopExpression expression, EnvironmentStack environmentStack)
     {
-        throw new NotImplementedException();
+        while (CastToBool(Calculate(expression.Condition, environmentStack)) is true)
+            Calculate(expression.Body, environmentStack);
+        return Calculate(expression.Condition, environmentStack);
     }
 
     private object? CalculateDynamic(FunctionDefinitionExpression expression, EnvironmentStack environmentStack)

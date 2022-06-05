@@ -4,7 +4,7 @@ namespace Toffee.Running;
 
 public partial class Runner
 {
-    public void Run(Statement statement, EnvironmentStack? environmentStack = null)
+    public void Run(Statement statement, EnvironmentStack? environmentStack)
     {
         RunDynamic(statement as dynamic, environmentStack ?? new EnvironmentStack());
     }

@@ -83,7 +83,10 @@ public class Application
         {
             var statement = _parser.CurrentStatement!;
             if (statement is ExpressionStatement expressionStatement)
+            {
+                Console.Write("Output: ");
                 Console.WriteLine(Stringify(runner.Calculate(expressionStatement.Expression, environmentStack)));
+            }
             else
                 runner.Run(_parser.CurrentStatement!, environmentStack);
         }
