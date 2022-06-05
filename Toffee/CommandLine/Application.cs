@@ -55,10 +55,23 @@ public class Application
         }
     }
 
-    private void RunParser()
+    private void RunParserAst()
     {
         var printer = new AstPrinter(_sourceName!);
         while (_parser!.Advance() is not null)
             printer.Print(_parser.CurrentStatement!);
+    }
+
+    private void RunParser()
+    {
+        var runner = new Runner(_logger);
+        while (_parser!.Advance() is not null)
+        {
+            var statement = _parser.CurrentStatement!;
+            if (statement is ExpressionStatement expressionStatement)
+                Console.WriteLine(runner.Calculate(expressionStatement.Expression));
+            else
+                runner.Run(_parser.CurrentStatement!);
+        }
     }
 }

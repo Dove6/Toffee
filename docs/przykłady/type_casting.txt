@@ -13,7 +13,7 @@ int(5.0);  // --> 5
 int(3.14);  // --> 3 (obcięcie)
 int("5");  // --> 5
 int("39d");  // --> null
-int("5.0e5);  // --> 500000
+int("5.0e5");  // --> 500000
 int(functi(a) { a + 2 });  // --> null
 int(null);  // --> null
 
@@ -23,7 +23,7 @@ float(false);  // --> 0.0
 float(5);  // --> 5.0
 float("5");  // --> 5.0
 float("39d");  // --> null
-float("5.0e5);  // --> 500000.0
+float("5.0e5");  // --> 500000.0
 float(functi(a) { a + 2 });  // --> null
 float(null);  // --> null
 
@@ -46,7 +46,7 @@ bool(5.0);  // --> true
 bool(3.14);  // --> true
 bool("5");  // --> null
 bool("39d");  // --> null
-bool("5.0e5);  // --> null
+bool("5.0e5");  // --> null
 bool("true");  // --> true
 bool("false");  // --> false
 bool("True");  // --> null
@@ -64,7 +64,7 @@ bool(null);  // --> null
 +5;  // --> 5 (bez zmian)
 +"39d";  // --> null
 +"5";  // --> 5
-+"5.0e5;  // --> 500000.0
++"5.0e5";  // --> 500000.0
 +functi(a) { a + 2 };  // --> null
 +null;  // --> null
 
@@ -75,7 +75,7 @@ bool(null);  // --> null
 --5;  // --> 5 (bez zmian, uwaga na overflow)
 --"39d";  // --> null
 --"5";  // --> 5
---"5.0e5;  // --> 500000.0
+--"5.0e5";  // --> 500000.0
 --functi(a) { a + 2 };  // --> null
 --null;  // --> null
 
@@ -96,7 +96,7 @@ bool(null);  // --> null
 !!5;  // --> true
 !!"39d";  // --> null
 !!"5";  // --> null
-!!"5.0e5;  // --> null
+!!"5.0e5";  // --> null
 !!"true";  // --> true
 !!"false";  // --> false
 !!"TRUE";  // --> null
