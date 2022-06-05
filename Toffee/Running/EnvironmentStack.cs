@@ -1,6 +1,4 @@
-﻿using System.Collections.Immutable;
-
-namespace Toffee.Running;
+﻿namespace Toffee.Running;
 
 public class EnvironmentStack
 {
@@ -19,14 +17,13 @@ public class EnvironmentStack
 
     private int? LocateOnStack(string identifier) => _stack.Reverse()
         .Select((environment, index) => (index, environment))
-        .Where(indexedEnvironment => indexedEnvironment.environment.Variables.ContainsKey(identifier))
+        .Where(indexedEnvironment => indexedEnvironment.environment.Has(identifier))
         .Select(indexedEnvironment => (int?)indexedEnvironment.index)
         .FirstOrDefault();
 
     public EnvironmentStack(Environment? initialEnvironment = null)
     {
-        _stack = new List<Environment>
-            { initialEnvironment ?? new Environment(ImmutableDictionary<string, Variable>.Empty) };
+        _stack = new List<Environment> { initialEnvironment ?? new Environment() };
     }
 
     public object? Access(string identifier)
@@ -34,7 +31,7 @@ public class EnvironmentStack
         var environmentIndex = LocateOnStack(identifier);
         if (environmentIndex is null)
             throw new NotImplementedException();
-        return GetEnvironmentAt(environmentIndex.Value).Variables[identifier].Value;
+        return GetEnvironmentAt(environmentIndex.Value).Access(identifier);
     }
 
     public void Assign(string identifier, object? value)
@@ -42,27 +39,31 @@ public class EnvironmentStack
         var environmentIndex = LocateOnStack(identifier);
         if (environmentIndex is null)
             throw new NotImplementedException();
-        SetEnvironmentAt(environmentIndex.Value,
-            GetEnvironmentAt(environmentIndex.Value).WithAssigned(identifier, value));
+        GetEnvironmentAt(environmentIndex.Value).Assign(identifier, value);
     }
 
     public void Initialize(string identifier, object? initialValue = null, bool isConst = false)
     {
-        if (CurrentEnvironment.Variables.ContainsKey(identifier))
+        if (CurrentEnvironment.Has(identifier))
             throw new NotImplementedException();
-        CurrentEnvironment = CurrentEnvironment.WithInitialized(identifier, new Variable(initialValue, isConst));
+        CurrentEnvironment.Initialize(identifier, initialValue, isConst);
+    }
+
+    public void FinalizeInitializationList()
+    {
+        CurrentEnvironment = CurrentEnvironment.Clone();
     }
 
     private void Push(Environment? environment = null)
     {
-        _stack.Add(environment ?? new Environment(ImmutableDictionary<string, Variable>.Empty));
+        _stack = _stack.Append(environment ?? new Environment()).ToList();
     }
 
     private void Pop()
     {
         if (_stack.Count <= 1)
             throw new NotImplementedException();
-        _stack.RemoveAt(_stack.Count - 1);
+        _stack = _stack.SkipLast(1).ToList();
     }
 
     public EnvironmentStack Clone()
@@ -98,25 +99,40 @@ public class EnvironmentStack
             _environmentStack = null;
         }
     }
-};
-
-public record Environment(ImmutableDictionary<string, Variable> Variables)
-{
-    public Environment WithInitialized(string identifier, Variable variable) => this with
-    {
-        Variables = Variables.Add(identifier, variable)
-    };
-
-    public Environment WithAssigned(string identifier, object? value)
-    {
-        var variable = Variables[identifier];
-        if (variable.IsConst)
-            throw new NotImplementedException();
-        return this with
-        {
-            Variables = Variables.SetItem(identifier, variable with { Value = value })
-        };
-    }
 }
 
-public record Variable(object? Value, bool IsConst = false);
+public class Environment
+{
+    private IDictionary<string, Variable> _variables = new Dictionary<string, Variable>();
+
+    public bool Has(string identifier) => _variables.ContainsKey(identifier);
+
+    public void Initialize(string identifier, object? value, bool isConst)
+    {
+        _variables.Add(identifier, new Variable(value, isConst));
+    }
+
+    public object? Access(string identifier)
+    {
+        if (!_variables.ContainsKey(identifier))
+            throw new NotImplementedException();
+        return _variables[identifier].Value;
+    }
+
+    public void Assign(string identifier, object? value)
+    {
+        if (!_variables.ContainsKey(identifier))
+            throw new NotImplementedException();
+        var variable = _variables[identifier];
+        if (variable.IsConst)
+            throw new NotImplementedException();
+        _variables[identifier].Value = value;
+    }
+
+    public Environment Clone() => new() { _variables = new Dictionary<string, Variable>(_variables) };
+}
+
+public record Variable(object? Value, bool IsConst)
+{
+    public object? Value { get; set; } = Value;
+}

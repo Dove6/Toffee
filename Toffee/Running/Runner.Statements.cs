@@ -32,6 +32,7 @@ public partial class Runner
                 initialValue = Calculate(variable.InitialValue);
             _environmentStack.Initialize(variable.Name, initialValue, variable.IsConst);
         }
+        _environmentStack.FinalizeInitializationList();
     }
 
     private void RunDynamic(BreakStatement statement)
