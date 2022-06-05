@@ -105,7 +105,7 @@ public partial class Runner
 
     private object? CalculateDynamic(GroupingExpression expression)
     {
-        return Calculate(expression);
+        return Calculate(expression.Expression);
     }
 
     private object? CalculateDynamic(BinaryExpression expression)
