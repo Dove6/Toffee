@@ -6,20 +6,20 @@ public static class Logical
     {
         if (value is not bool)
             return null;
-        return !(bool)value;
+        return !Casting.ToBool(value);
     }
 
     public static bool? Disjoin(object? first, object? second)
     {
         if (first is not bool || second is not bool)
             return null;
-        return (bool)first || (bool)second;
+        return Casting.ToBool(first)!.Value || Casting.ToBool(second)!.Value;
     }
 
     public static bool? Conjoin(object? first, object? second)
     {
         if (first is not bool || second is not bool)
             return null;
-        return (bool)first && (bool)second;
+        return Casting.ToBool(first)!.Value && Casting.ToBool(second)!.Value;
     }
 }

@@ -53,12 +53,12 @@ public class EnvironmentStack
         CurrentEnvironment = CurrentEnvironment.WithInitialized(identifier, new Variable(initialValue, isConst));
     }
 
-    public void Enter()
+    public void Push(Environment? environment = null)
     {
-        _stack.Add(new Environment(ImmutableDictionary<string, Variable>.Empty));
+        _stack.Add(environment ?? new Environment(ImmutableDictionary<string, Variable>.Empty));
     }
 
-    public void Leave()
+    public void Pop()
     {
         if (_stack.Count <= 1)
             throw new NotImplementedException();

@@ -52,7 +52,7 @@ for (outer, 4:-1:-1) {
 j = for (5) {
     print("iteration");
 };
-// j ma teraz wartość 4
+// j ma teraz wartość 5
 
 // pętla while
 while (true) {

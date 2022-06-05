@@ -5,10 +5,16 @@ namespace Toffee.SyntacticAnalysis;
 public abstract record Expression(Position StartPosition, Position EndPosition);
 
 public record BlockExpression(IList<Statement> Statements, Expression? ResultExpression = null)
-    : Expression(new Position(), new Position());
+    : Expression(new Position(), new Position())
+{
+    public BlockExpression(Statement statement) : this(new List<Statement> { statement })
+    { }
+    public BlockExpression(Expression expression) : this(new List<Statement>(), expression)
+    { }
+}
 public record ConditionalExpression(IList<ConditionalElement> Branches, BlockExpression? ElseBranch = null)
     : Expression(new Position(), new Position());
-public record ForLoopExpression(ForLoopRange Range, BlockExpression Body, string? CounterName = null)
+public record ForLoopExpression(ForLoopRange Range, BlockExpression Body)
     : Expression(new Position(), new Position());
 public record WhileLoopExpression(Expression Condition, BlockExpression Body)
     : Expression(new Position(), new Position());

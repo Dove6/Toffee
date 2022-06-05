@@ -6,6 +6,6 @@ public static class Character
     {
         if (first is not string || second is not string)
             return null;
-        return (string)first + (string)second;
+        return Casting.ToString(first) + Casting.ToString(second);
     }
 }

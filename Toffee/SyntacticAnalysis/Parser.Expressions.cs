@@ -158,7 +158,38 @@ public partial class Parser
         else
             blockBody = new BlockExpression(new List<Statement> { body });
         // TODO: warn about ignored expression
-        return new ForLoopExpression(loopRange, blockBody, counterName);
+        // TODO: what about step value == 0?
+        if (counterName is null)
+            return new ForLoopExpression(loopRange, blockBody);
+
+        // desugaring
+        if (blockBody.ResultExpression is not null)
+            blockBody.Statements.Add(new ExpressionStatement(blockBody.ResultExpression));
+        blockBody = blockBody with { ResultExpression = null };
+        var stepExpression = loopRange.Step ?? new LiteralExpression(DataType.Integer, 1L);
+        blockBody.Statements.Add(new ExpressionStatement(new BinaryExpression(new IdentifierExpression(counterName),
+            Operator.AdditionAssignment, stepExpression)));
+        return new BlockExpression(new List<Statement>
+            {
+                new VariableInitializationListStatement(new List<VariableInitialization>
+                {
+                    new(counterName, loopRange.Start ?? new LiteralExpression(DataType.Integer, 0L))
+                }),
+                new ExpressionStatement(new WhileLoopExpression(new ConditionalExpression(new List<ConditionalElement>
+                        {
+                            new(new BinaryExpression(stepExpression,
+                                    Operator.GreaterOrEqualComparison,
+                                    new LiteralExpression(DataType.Integer, 0L)),
+                                new BlockExpression(new BinaryExpression(new IdentifierExpression(counterName),
+                                    Operator.LessThanComparison,
+                                    loopRange.PastTheEnd)))
+                        },
+                        new BlockExpression(new BinaryExpression(new IdentifierExpression(counterName),
+                            Operator.GreaterThanComparison,
+                            loopRange.PastTheEnd))),
+                    blockBody))
+            },
+            new IdentifierExpression(counterName));
     });
 
     // for_loop_specification

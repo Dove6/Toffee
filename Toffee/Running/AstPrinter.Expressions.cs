@@ -105,8 +105,6 @@ public partial class AstPrinter
     private void PrintDynamic(ForLoopExpression expression, int indentLevel)
     {
         PrintHeader(expression, indentLevel);
-        Print(expression.CounterName is not null ? $"counter: {expression.CounterName}" : "no counter",
-            indentLevel + 1);
         Print("range", indentLevel + 1);
         Print(expression.Range, indentLevel + 2);
         Print("body", indentLevel + 1);

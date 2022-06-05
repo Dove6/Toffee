@@ -17,13 +17,13 @@ public partial class Runner
 
     private object? CalculateDynamic(BlockExpression expression, EnvironmentStack environmentStack)
     {
-        environmentStack.Enter();
+        environmentStack.Push();
         foreach (var statement in expression.Statements)
             Run(statement, environmentStack);
         var result = expression.ResultExpression is not null
             ? Calculate(expression.ResultExpression, environmentStack)
             : null;
-        environmentStack.Leave();
+        environmentStack.Pop();
         return result;
     }
 
@@ -32,7 +32,7 @@ public partial class Runner
         var consequentToRun = expression.Branches.FirstOrDefault(x =>
         {
             var conditionValue = Calculate(x.Condition, environmentStack);
-            return CastToBool(conditionValue) is true;
+            return Casting.ToBool(conditionValue) is true;
         })?.Consequent;
         consequentToRun ??= expression.ElseBranch;
         return consequentToRun is not null
@@ -42,12 +42,40 @@ public partial class Runner
 
     private object? CalculateDynamic(ForLoopExpression expression, EnvironmentStack environmentStack)
     {
-        throw new NotImplementedException();
+        object? startValue = 0L;
+        object? stepValue = 1L;
+        var stopValue = Casting.ToNumber(Calculate(expression.Range.PastTheEnd, environmentStack));
+
+        if (expression.Range.Start is not null)
+            startValue = Casting.ToNumber(Calculate(expression.Range.Start, environmentStack));
+        if (expression.Range.Step is not null)
+            stepValue = Casting.ToNumber(Calculate(expression.Range.Step, environmentStack));
+        if (startValue is double || stepValue is double || stopValue is double)
+        {
+            startValue = Casting.ToFloat(startValue);
+            stepValue = Casting.ToFloat(stepValue);
+            stopValue = Casting.ToFloat(stopValue);
+        }
+
+        if (startValue is null || stepValue is null || stopValue is null)
+            throw new NotImplementedException();
+
+        var counter = startValue;
+        Func<object?, object?, bool?> rangePredicate = Relational.IsGreaterThan(stepValue, 0L) is true
+            ? Relational.IsLessThan
+            : Relational.IsGreaterThan;
+
+        while (rangePredicate(counter, stopValue) is true)
+        {
+            Calculate(expression.Body, environmentStack);
+            counter = Arithmetical.Add(counter, stepValue);
+        }
+        return counter;
     }
 
     private object? CalculateDynamic(WhileLoopExpression expression, EnvironmentStack environmentStack)
     {
-        while (CastToBool(Calculate(expression.Condition, environmentStack)) is true)
+        while (Casting.ToBool(Calculate(expression.Condition, environmentStack)) is true)
             Calculate(expression.Body, environmentStack);
         return Calculate(expression.Condition, environmentStack);
     }
@@ -77,20 +105,20 @@ public partial class Runner
             throw new NotImplementedException();  // TODO: little sense
 
         if (expression.Operator == Operator.Addition)
-            return Arithmetical.Add(CastToNumber(leftResult), CastToNumber(rightResult));
+            return Arithmetical.Add(Casting.ToNumber(leftResult), Casting.ToNumber(rightResult));
         if (expression.Operator == Operator.Subtraction)
-            return Arithmetical.Subtract(CastToNumber(leftResult), CastToNumber(rightResult));
+            return Arithmetical.Subtract(Casting.ToNumber(leftResult), Casting.ToNumber(rightResult));
         if (expression.Operator == Operator.Multiplication)
-            return Arithmetical.Multiply(CastToNumber(leftResult), CastToNumber(rightResult));
+            return Arithmetical.Multiply(Casting.ToNumber(leftResult), Casting.ToNumber(rightResult));
         if (expression.Operator == Operator.Division)
-            return Arithmetical.Divide(CastToNumber(leftResult), CastToNumber(rightResult));
+            return Arithmetical.Divide(Casting.ToNumber(leftResult), Casting.ToNumber(rightResult));
         if (expression.Operator == Operator.Remainder)
-            return Arithmetical.Remainder(CastToNumber(leftResult), CastToNumber(rightResult));
+            return Arithmetical.Remainder(Casting.ToNumber(leftResult), Casting.ToNumber(rightResult));
         if (expression.Operator == Operator.Exponentiation)
-            return Arithmetical.Exponentiate(CastToNumber(leftResult), CastToNumber(rightResult));
+            return Arithmetical.Exponentiate(Casting.ToNumber(leftResult), Casting.ToNumber(rightResult));
 
         if (expression.Operator == Operator.Concatenation)
-            return Character.Concatenate(Cast(leftResult, DataType.String), Cast(rightResult, DataType.String));
+            return Character.Concatenate(Casting.ToString(leftResult), Casting.ToString(rightResult));
 
         if (expression.Operator == Operator.LessThanComparison)
             return Relational.IsLessThan(leftResult, rightResult);
@@ -106,15 +134,15 @@ public partial class Runner
             return Relational.IsNotEqualTo(leftResult, rightResult);
 
         if (expression.Operator == Operator.Disjunction)
-            return Logical.Disjoin(Cast(leftResult, DataType.Bool), Cast(rightResult, DataType.Bool));
+            return Logical.Disjoin(Casting.ToBool(leftResult), Casting.ToBool(rightResult));
         if (expression.Operator == Operator.Conjunction)
-            return Logical.Conjoin(Cast(leftResult, DataType.Bool), Cast(rightResult, DataType.Bool));
+            return Logical.Conjoin(Casting.ToBool(leftResult), Casting.ToBool(rightResult));
 
         // TODO: check if it makes sense
         if (expression.Operator == Operator.PatternMatchingDisjunction)
-            return Logical.Disjoin(Cast(leftResult, DataType.Bool), Cast(rightResult, DataType.Bool));
+            return Logical.Disjoin(Casting.ToBool(leftResult), Casting.ToBool(rightResult));
         if (expression.Operator == Operator.PatternMatchingConjunction)
-            return Logical.Conjoin(Cast(leftResult, DataType.Bool), Cast(rightResult, DataType.Bool));
+            return Logical.Conjoin(Casting.ToBool(leftResult), Casting.ToBool(rightResult));
 
         if (expression.Operator == Operator.NullCoalescing)
             return leftResult ?? rightResult;
@@ -152,12 +180,12 @@ public partial class Runner
         var innerResult = Calculate(expression.Expression, environmentStack);
 
         if (expression.Operator == Operator.NumberPromotion)
-            return CastToNumber(innerResult);
+            return Casting.ToNumber(innerResult);
         if (expression.Operator == Operator.ArithmeticNegation)
-            return Arithmetical.Negate(CastToNumber(innerResult));
+            return Arithmetical.Negate(Casting.ToNumber(innerResult));
 
         if (expression.Operator == Operator.LogicalNegation)
-            return Logical.Negate(Cast(innerResult, DataType.Bool));
+            return Logical.Negate(Casting.ToBool(innerResult));
 
         // TODO: little sense here
         if (expression.Operator == Operator.PatternMatchingLessThanComparison)
@@ -201,7 +229,7 @@ public partial class Runner
     private object? CalculateDynamic(TypeCastExpression expression, EnvironmentStack environmentStack)
     {
         var value = Calculate(expression.Expression, environmentStack);
-        return Cast(value, expression.Type);
+        return Casting.To(value, expression.Type);
     }
 
     private object? CalculateDynamic(TypeCheckExpression expression, EnvironmentStack environmentStack)

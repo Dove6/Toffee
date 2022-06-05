@@ -18,8 +18,8 @@ public static class Arithmetical
             return null;
         // TODO: describe promotion rules
         if (augend is double || addend is double)
-            return (double)augend + (double)addend;
-        return (long)augend + (long)addend;
+            return Casting.ToFloat(augend) + Casting.ToFloat(addend);
+        return Casting.ToInt(augend) + Casting.ToInt(addend);
     }
 
     public static object? Subtract(object? minuend, object? subtrahend)
@@ -28,8 +28,8 @@ public static class Arithmetical
             return null;
         // TODO: describe promotion rules
         if (minuend is double || subtrahend is double)
-            return (double)minuend - (double)subtrahend;
-        return (long)minuend - (long)subtrahend;
+            return Casting.ToFloat(minuend) - Casting.ToFloat(subtrahend);
+        return Casting.ToInt(minuend) - Casting.ToInt(subtrahend);
     }
 
     public static object? Multiply(object? multiplier, object? multiplicand)
@@ -38,8 +38,8 @@ public static class Arithmetical
             return null;
         // TODO: describe promotion rules
         if (multiplier is double || multiplicand is double)
-            return (double)multiplier * (double)multiplicand;
-        return (long)multiplier * (long)multiplicand;
+            return Casting.ToFloat(multiplier) * Casting.ToFloat(multiplicand);
+        return Casting.ToInt(multiplier) * Casting.ToInt(multiplicand);
     }
 
     public static object? Divide(object? dividend, object? divisor)
@@ -48,10 +48,10 @@ public static class Arithmetical
             return null;
         // TODO: describe promotion rules
         if (dividend is double || divisor is double)
-            return (double)dividend / (double)divisor;
+            return Casting.ToFloat(dividend) / Casting.ToFloat(divisor);
         if (divisor is 0L)
             throw new NotImplementedException();
-        return (long)dividend / (long)divisor;
+        return Casting.ToInt(dividend) / Casting.ToInt(divisor);
     }
 
     public static object? Remainder(object? dividend, object? divisor)
@@ -60,10 +60,10 @@ public static class Arithmetical
             return null;
         // TODO: describe promotion rules
         if (dividend is double || divisor is double)
-            return (double)dividend % (double)divisor;
+            return Casting.ToFloat(dividend) % Casting.ToFloat(divisor);
         if (divisor is 0L)
             throw new NotImplementedException();
-        return (long)dividend % (long)divisor;
+        return Casting.ToInt(dividend) % Casting.ToInt(divisor);
     }
 
     public static object? Exponentiate(object? value, object? exponent)
@@ -71,10 +71,10 @@ public static class Arithmetical
         if (value is not (long or double) || exponent is not (long or double))
             return null;
         // TODO: describe promotion rules
-        var result = Math.Pow((double)value, (double)exponent);
+        var result = Math.Pow(Casting.ToFloat(value)!.Value, Casting.ToFloat(exponent)!.Value);
         if (value is double || exponent is double)
             return result;
         // TODO: better handling for integers
-        return (long)result;
+        return Casting.ToInt(result);
     }
 }
