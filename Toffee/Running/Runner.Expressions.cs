@@ -5,9 +5,9 @@ namespace Toffee.Running;
 
 public partial class Runner
 {
-    public object? Calculate(Expression expression)
+    public object? Calculate(Expression expression, EnvironmentStack? environmentStack = null)
     {
-        return CalculateDynamic(expression as dynamic);
+        return CalculateDynamic(expression as dynamic, environmentStack ?? new EnvironmentStack());
     }
 
     private object? CalculateDynamic(Expression expression)
@@ -15,190 +15,203 @@ public partial class Runner
         throw new NotImplementedException();
     }
 
-    private object? CalculateDynamic(BlockExpression blockExpression)
+    private object? CalculateDynamic(BlockExpression expression, EnvironmentStack environmentStack)
     {
-        foreach (var statement in blockExpression.Statements)
-            Run(statement);
-        return blockExpression.ResultExpression is not null
-            ? Calculate(blockExpression.ResultExpression)
+        environmentStack.Enter();
+        foreach (var statement in expression.Statements)
+            Run(statement, environmentStack);
+        var result = expression.ResultExpression is not null
+            ? Calculate(expression.ResultExpression, environmentStack)
             : null;
+        environmentStack.Leave();
+        return result;
     }
 
-    private object? CalculateDynamic(ConditionalExpression conditionalExpression)
+    private object? CalculateDynamic(ConditionalExpression expression, EnvironmentStack environmentStack)
     {
         throw new NotImplementedException();
     }
 
-    private object? CalculateDynamic(ForLoopExpression forLoopExpression)
+    private object? CalculateDynamic(ForLoopExpression expression, EnvironmentStack environmentStack)
     {
         throw new NotImplementedException();
     }
 
-    private object? CalculateDynamic(WhileLoopExpression whileLoopExpression)
+    private object? CalculateDynamic(WhileLoopExpression expression, EnvironmentStack environmentStack)
     {
         throw new NotImplementedException();
     }
 
-    private object? CalculateDynamic(FunctionDefinitionExpression functionDefinitionExpression)
+    private object? CalculateDynamic(FunctionDefinitionExpression expression, EnvironmentStack environmentStack)
     {
         throw new NotImplementedException();
     }
 
-    private object? CalculateDynamic(PatternMatchingExpression patternMatchingExpression)
+    private object? CalculateDynamic(PatternMatchingExpression expression, EnvironmentStack environmentStack)
     {
         throw new NotImplementedException();
     }
 
-    private object? CalculateDynamic(GroupingExpression groupingExpression)
+    private object? CalculateDynamic(GroupingExpression expression, EnvironmentStack environmentStack)
     {
-        return Calculate(groupingExpression);
+        return Calculate(expression, environmentStack);
     }
 
-    private object? CalculateDynamic(BinaryExpression binaryExpression)
+    private object? CalculateDynamic(BinaryExpression expression, EnvironmentStack environmentStack)
     {
         // TODO: describe order of evaluation
-        var leftResult = Calculate(binaryExpression.Left);
-        var rightResult = Calculate(binaryExpression.Right);
+        var leftResult = Calculate(expression.Left, environmentStack);
+        var rightResult = Calculate(expression.Right, environmentStack);
 
-        if (binaryExpression.Operator == Operator.NamespaceAccess)
+        if (expression.Operator == Operator.NamespaceAccess)
             throw new NotImplementedException();  // TODO: little sense
 
-        if (binaryExpression.Operator == Operator.Addition)
+        if (expression.Operator == Operator.Addition)
             return Arithmetical.Add(CastToNumber(leftResult), CastToNumber(rightResult));
-        if (binaryExpression.Operator == Operator.Subtraction)
+        if (expression.Operator == Operator.Subtraction)
             return Arithmetical.Subtract(CastToNumber(leftResult), CastToNumber(rightResult));
-        if (binaryExpression.Operator == Operator.Multiplication)
+        if (expression.Operator == Operator.Multiplication)
             return Arithmetical.Multiply(CastToNumber(leftResult), CastToNumber(rightResult));
-        if (binaryExpression.Operator == Operator.Division)
+        if (expression.Operator == Operator.Division)
             return Arithmetical.Divide(CastToNumber(leftResult), CastToNumber(rightResult));
-        if (binaryExpression.Operator == Operator.Remainder)
+        if (expression.Operator == Operator.Remainder)
             return Arithmetical.Remainder(CastToNumber(leftResult), CastToNumber(rightResult));
-        if (binaryExpression.Operator == Operator.Exponentiation)
+        if (expression.Operator == Operator.Exponentiation)
             return Arithmetical.Exponentiate(CastToNumber(leftResult), CastToNumber(rightResult));
 
-        if (binaryExpression.Operator == Operator.Concatenation)
+        if (expression.Operator == Operator.Concatenation)
             return Character.Concatenate(Cast(leftResult, DataType.String), Cast(rightResult, DataType.String));
 
-        if (binaryExpression.Operator == Operator.LessThanComparison)
+        if (expression.Operator == Operator.LessThanComparison)
             return Relational.IsLessThan(leftResult, rightResult);
-        if (binaryExpression.Operator == Operator.LessOrEqualComparison)
+        if (expression.Operator == Operator.LessOrEqualComparison)
             return Relational.IsLessOrEqual(leftResult, rightResult);
-        if (binaryExpression.Operator == Operator.GreaterThanComparison)
+        if (expression.Operator == Operator.GreaterThanComparison)
             return Relational.IsGreaterThan(leftResult, rightResult);
-        if (binaryExpression.Operator == Operator.GreaterOrEqualComparison)
+        if (expression.Operator == Operator.GreaterOrEqualComparison)
             return Relational.IsGreaterOrEqual(leftResult, rightResult);
-        if (binaryExpression.Operator == Operator.EqualComparison)
+        if (expression.Operator == Operator.EqualComparison)
             return Relational.IsEqualTo(leftResult, rightResult);
-        if (binaryExpression.Operator == Operator.NotEqualComparison)
+        if (expression.Operator == Operator.NotEqualComparison)
             return Relational.IsNotEqualTo(leftResult, rightResult);
 
-        if (binaryExpression.Operator == Operator.Disjunction)
+        if (expression.Operator == Operator.Disjunction)
             return Logical.Disjoin(Cast(leftResult, DataType.Bool), Cast(rightResult, DataType.Bool));
-        if (binaryExpression.Operator == Operator.Conjunction)
+        if (expression.Operator == Operator.Conjunction)
             return Logical.Conjoin(Cast(leftResult, DataType.Bool), Cast(rightResult, DataType.Bool));
 
         // TODO: check if it makes sense
-        if (binaryExpression.Operator == Operator.PatternMatchingDisjunction)
+        if (expression.Operator == Operator.PatternMatchingDisjunction)
             return Logical.Disjoin(Cast(leftResult, DataType.Bool), Cast(rightResult, DataType.Bool));
-        if (binaryExpression.Operator == Operator.PatternMatchingConjunction)
+        if (expression.Operator == Operator.PatternMatchingConjunction)
             return Logical.Conjoin(Cast(leftResult, DataType.Bool), Cast(rightResult, DataType.Bool));
 
-        if (binaryExpression.Operator == Operator.NullCoalescing)
+        if (expression.Operator == Operator.NullCoalescing)
             return leftResult ?? rightResult;
-        if (binaryExpression.Operator == Operator.NullSafePipe)
+        if (expression.Operator == Operator.NullSafePipe)
             throw new NotImplementedException();
 
-        if (binaryExpression.Operator == Operator.Assignment)
-            throw new NotImplementedException();
-        if (binaryExpression.Operator == Operator.AdditionAssignment)
-            throw new NotImplementedException();
-        if (binaryExpression.Operator == Operator.SubtractionAssignment)
-            throw new NotImplementedException();
-        if (binaryExpression.Operator == Operator.MultiplicationAssignment)
-            throw new NotImplementedException();
-        if (binaryExpression.Operator == Operator.DivisionAssignment)
-            throw new NotImplementedException();
-        if (binaryExpression.Operator == Operator.RemainderAssignment)
-            throw new NotImplementedException();
+        if (expression.Operator is Operator.Assignment or Operator.AdditionAssignment or Operator.SubtractionAssignment
+                or Operator.MultiplicationAssignment or Operator.DivisionAssignment or Operator.RemainderAssignment)
+            return PerformAssignment(expression.Left, rightResult, expression.Operator, environmentStack);
 
-        throw new ArgumentOutOfRangeException(nameof(binaryExpression.Operator), binaryExpression.Operator, "Invalid operator");
+        throw new ArgumentOutOfRangeException(nameof(expression.Operator), expression.Operator, "Invalid operator");
     }
 
-    private object? CalculateDynamic(UnaryExpression unaryExpression)
+    private object? PerformAssignment(Expression left, object? right, Operator assignmentOperator, EnvironmentStack environmentStack)
     {
-        var innerResult = Calculate(unaryExpression.Expression);
+        if (left is not IdentifierExpression identifierExpression)
+            throw new NotImplementedException();
 
-        if (unaryExpression.Operator == Operator.NumberPromotion)
+        var valueToAssign = assignmentOperator switch
+        {
+            Operator.Assignment => right,
+            Operator.AdditionAssignment => Arithmetical.Add(environmentStack.Access(identifierExpression.Name), right),
+            Operator.SubtractionAssignment => Arithmetical.Subtract(environmentStack.Access(identifierExpression.Name), right),
+            Operator.MultiplicationAssignment => Arithmetical.Multiply(environmentStack.Access(identifierExpression.Name), right),
+            Operator.DivisionAssignment => Arithmetical.Divide(environmentStack.Access(identifierExpression.Name), right),
+            Operator.RemainderAssignment => Arithmetical.Remainder(environmentStack.Access(identifierExpression.Name), right),
+            _ => throw new NotSupportedException()
+        };
+        environmentStack.Assign(identifierExpression.Name, valueToAssign);
+        return valueToAssign;
+    }
+
+    private object? CalculateDynamic(UnaryExpression expression, EnvironmentStack environmentStack)
+    {
+        var innerResult = Calculate(expression.Expression, environmentStack);
+
+        if (expression.Operator == Operator.NumberPromotion)
             return CastToNumber(innerResult);
-        if (unaryExpression.Operator == Operator.ArithmeticNegation)
+        if (expression.Operator == Operator.ArithmeticNegation)
             return Arithmetical.Negate(CastToNumber(innerResult));
 
-        if (unaryExpression.Operator == Operator.LogicalNegation)
+        if (expression.Operator == Operator.LogicalNegation)
             return Logical.Negate(Cast(innerResult, DataType.Bool));
 
         // TODO: little sense here
-        if (unaryExpression.Operator == Operator.PatternMatchingLessThanComparison)
+        if (expression.Operator == Operator.PatternMatchingLessThanComparison)
             throw new NotImplementedException();
-        if (unaryExpression.Operator == Operator.PatternMatchingLessOrEqualComparison)
+        if (expression.Operator == Operator.PatternMatchingLessOrEqualComparison)
             throw new NotImplementedException();
-        if (unaryExpression.Operator == Operator.PatternMatchingGreaterThanComparison)
+        if (expression.Operator == Operator.PatternMatchingGreaterThanComparison)
             throw new NotImplementedException();
-        if (unaryExpression.Operator == Operator.PatternMatchingGreaterOrEqualComparison)
+        if (expression.Operator == Operator.PatternMatchingGreaterOrEqualComparison)
             throw new NotImplementedException();
-        if (unaryExpression.Operator == Operator.PatternMatchingEqualComparison)
+        if (expression.Operator == Operator.PatternMatchingEqualComparison)
             throw new NotImplementedException();
-        if (unaryExpression.Operator == Operator.PatternMatchingNotEqualComparison)
+        if (expression.Operator == Operator.PatternMatchingNotEqualComparison)
             throw new NotImplementedException();
 
-        throw new ArgumentOutOfRangeException(nameof(unaryExpression.Operator), unaryExpression.Operator, "Invalid operator");
+        throw new ArgumentOutOfRangeException(nameof(expression.Operator), expression.Operator, "Invalid operator");
     }
 
-    private object? CalculateDynamic(FunctionCallExpression functionCallExpression)
+    private object? CalculateDynamic(FunctionCallExpression expression, EnvironmentStack environmentStack)
     {
         throw new NotImplementedException();
     }
 
-    private object? CalculateDynamic(IdentifierExpression identifierExpression)
+    private object? CalculateDynamic(IdentifierExpression expression, EnvironmentStack environmentStack)
+    {
+        return environmentStack.Access(expression.Name);
+    }
+
+    private object? CalculateDynamic(NamespaceAccessExpression expression, EnvironmentStack environmentStack)
     {
         throw new NotImplementedException();
     }
 
-    private object? CalculateDynamic(NamespaceAccessExpression namespaceAccessExpression)
+    private object? CalculateDynamic(LiteralExpression expression, EnvironmentStack environmentStack)
     {
-        throw new NotImplementedException();
-    }
-
-    private object? CalculateDynamic(LiteralExpression literalExpression)
-    {
-        if (literalExpression.Value is ulong integerValue)
+        if (expression.Value is ulong integerValue)
             /* at this point unsigned literal value can be no greater than 9223372036854775807
              * or 9223372036854775808 which overflows to -9223372036854775808 (in case of later negation)
              */
             return unchecked((long)integerValue);
-        return literalExpression.Value;
+        return expression.Value;
     }
 
-    private object? CalculateDynamic(TypeCastExpression typeCastExpression)
+    private object? CalculateDynamic(TypeCastExpression expression, EnvironmentStack environmentStack)
     {
-        var value = Calculate(typeCastExpression.Expression);
-        return Cast(value, typeCastExpression.Type);
+        var value = Calculate(expression.Expression, environmentStack);
+        return Cast(value, expression.Type);
     }
 
-    private object? CalculateDynamic(TypeCheckExpression typeCheckExpression)
+    private object? CalculateDynamic(TypeCheckExpression expression, EnvironmentStack environmentStack)
     {
-        var value = Calculate(typeCheckExpression.Expression);
-        return typeCheckExpression.IsInequalityCheck ^ value switch
+        var value = Calculate(expression.Expression, environmentStack);
+        return expression.IsInequalityCheck ^ value switch
         {
-            null => typeCheckExpression.Type == DataType.Null,
-            long => typeCheckExpression.Type == DataType.Integer,
-            double => typeCheckExpression.Type == DataType.Float,
-            string => typeCheckExpression.Type == DataType.String,
-            bool => typeCheckExpression.Type == DataType.Bool,
+            null => expression.Type == DataType.Null,
+            long => expression.Type == DataType.Integer,
+            double => expression.Type == DataType.Float,
+            string => expression.Type == DataType.String,
+            bool => expression.Type == DataType.Bool,
             _ => throw new NotImplementedException()
         };
     }
 
-    private object? CalculateDynamic(PatternTypeCheckExpression patternTypeCheckExpression)
+    private object? CalculateDynamic(PatternTypeCheckExpression expression, EnvironmentStack environmentStack)
     {
         throw new NotImplementedException();
     }
