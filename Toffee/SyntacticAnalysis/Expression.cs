@@ -14,7 +14,7 @@ public record BlockExpression(IList<Statement> Statements, Expression? ResultExp
 }
 public record ConditionalExpression(IList<ConditionalElement> Branches, BlockExpression? ElseBranch = null)
     : Expression(new Position(), new Position());
-public record ForLoopExpression(ForLoopRange Range, BlockExpression Body)
+public record ForLoopExpression(ForLoopRange Range, BlockExpression Body, string? CounterName = null)
     : Expression(new Position(), new Position());
 public record WhileLoopExpression(Expression Condition, BlockExpression Body)
     : Expression(new Position(), new Position());

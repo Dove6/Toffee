@@ -65,11 +65,23 @@ public partial class Runner
             ? Relational.IsLessThan
             : Relational.IsGreaterThan;
 
+        if (expression.CounterName is not null)
+        {
+            environmentStack.Push();
+            environmentStack.Initialize(expression.CounterName);
+        }
+
         while (rangePredicate(counter, stopValue) is true)
         {
+            if (expression.CounterName is not null)
+                environmentStack.Assign(expression.CounterName, counter);
             Calculate(expression.Body, environmentStack);
             counter = Arithmetical.Add(counter, stepValue);
         }
+
+        if (expression.CounterName is not null)
+            environmentStack.Pop();
+
         return counter;
     }
 

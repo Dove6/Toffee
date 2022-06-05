@@ -58,11 +58,13 @@ public class EnvironmentStack
         _stack.Add(environment ?? new Environment(ImmutableDictionary<string, Variable>.Empty));
     }
 
-    public void Pop()
+    public Environment Pop()
     {
         if (_stack.Count <= 1)
             throw new NotImplementedException();
+        var environment = CurrentEnvironment;
         _stack.RemoveAt(_stack.Count - 1);
+        return environment;
     }
 
     public EnvironmentStack Clone()
