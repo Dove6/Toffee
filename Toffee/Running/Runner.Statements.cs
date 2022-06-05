@@ -4,49 +4,53 @@ namespace Toffee.Running;
 
 public partial class Runner
 {
-    public void Run(Statement statement, EnvironmentStack? environmentStack)
+    public void Run(Statement statement, EnvironmentStack? environmentStack = null)
     {
-        RunDynamic(statement as dynamic, environmentStack ?? new EnvironmentStack());
+        var environmentStackBackup = _environmentStack;
+        if (environmentStack is not null)
+            _environmentStack = environmentStack;
+        RunDynamic(statement as dynamic);
+        _environmentStack = environmentStackBackup;
     }
 
-    private void RunDynamic(Statement statement, EnvironmentStack environmentStack)
+    private void RunDynamic(Statement statement)
     {
         throw new NotImplementedException();
     }
 
-    private void RunDynamic(NamespaceImportStatement statement, EnvironmentStack environmentStack)
+    private void RunDynamic(NamespaceImportStatement statement)
     {
         throw new NotImplementedException();
     }
 
-    private void RunDynamic(VariableInitializationListStatement statement, EnvironmentStack environmentStack)
+    private void RunDynamic(VariableInitializationListStatement statement)
     {
         foreach (var variable in statement.Items)
         {
             object? initialValue = null;
             if (variable.InitialValue is not null)
-                initialValue = Calculate(variable.InitialValue, environmentStack);
-            environmentStack.Initialize(variable.Name, initialValue, variable.IsConst);
+                initialValue = Calculate(variable.InitialValue);
+            _environmentStack.Initialize(variable.Name, initialValue, variable.IsConst);
         }
     }
 
-    private void RunDynamic(BreakStatement statement, EnvironmentStack environmentStack)
+    private void RunDynamic(BreakStatement statement)
     {
         throw new NotImplementedException();
     }
 
-    private void RunDynamic(BreakIfStatement statement, EnvironmentStack environmentStack)
+    private void RunDynamic(BreakIfStatement statement)
     {
         throw new NotImplementedException();
     }
 
-    private void RunDynamic(ReturnStatement statement, EnvironmentStack environmentStack)
+    private void RunDynamic(ReturnStatement statement)
     {
         throw new NotImplementedException();
     }
 
-    private void RunDynamic(ExpressionStatement statement, EnvironmentStack environmentStack)
+    private void RunDynamic(ExpressionStatement statement)
     {
-        Calculate(statement.Expression, environmentStack);
+        Calculate(statement.Expression);
     }
 }

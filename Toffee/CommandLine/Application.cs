@@ -78,17 +78,16 @@ public class Application
     private void RunParser()
     {
         var runner = new Runner(_logger);
-        var environmentStack = new EnvironmentStack();
         while (_parser!.Advance() is not null)
         {
             var statement = _parser.CurrentStatement!;
             if (statement is ExpressionStatement expressionStatement)
             {
                 Console.Write("Output: ");
-                Console.WriteLine(Stringify(runner.Calculate(expressionStatement.Expression, environmentStack)));
+                Console.WriteLine(Stringify(runner.Calculate(expressionStatement.Expression)));
             }
             else
-                runner.Run(_parser.CurrentStatement!, environmentStack);
+                runner.Run(_parser.CurrentStatement!);
         }
     }
 }

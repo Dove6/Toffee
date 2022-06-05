@@ -1,13 +1,19 @@
-﻿using Toffee.Running.Operations;
+﻿using Toffee.Running.Functions;
+using Toffee.Running.Operations;
 using Toffee.SyntacticAnalysis;
 
 namespace Toffee.Running;
 
 public partial class Runner
 {
-    public object? Calculate(Expression expression, EnvironmentStack? environmentStack)
+    public object? Calculate(Expression expression, EnvironmentStack? environmentStack = null)
     {
-        return CalculateDynamic(expression as dynamic, environmentStack ?? new EnvironmentStack());
+        var environmentStackBackup = _environmentStack;
+        if (environmentStack is not null)
+            _environmentStack = environmentStack;
+        var result = CalculateDynamic(expression as dynamic);
+        _environmentStack = environmentStackBackup;
+        return result;
     }
 
     private object? CalculateDynamic(Expression expression)
@@ -15,41 +21,40 @@ public partial class Runner
         throw new NotImplementedException();
     }
 
-    private object? CalculateDynamic(BlockExpression expression, EnvironmentStack environmentStack)
+    private object? CalculateDynamic(BlockExpression expression)
     {
-        environmentStack.Push();
+        using var environmentGuard = _environmentStack.PushGuard();
         foreach (var statement in expression.Statements)
-            Run(statement, environmentStack);
+            Run(statement);
         var result = expression.ResultExpression is not null
-            ? Calculate(expression.ResultExpression, environmentStack)
+            ? Calculate(expression.ResultExpression)
             : null;
-        environmentStack.Pop();
         return result;
     }
 
-    private object? CalculateDynamic(ConditionalExpression expression, EnvironmentStack environmentStack)
+    private object? CalculateDynamic(ConditionalExpression expression)
     {
         var consequentToRun = expression.Branches.FirstOrDefault(x =>
         {
-            var conditionValue = Calculate(x.Condition, environmentStack);
+            var conditionValue = Calculate(x.Condition);
             return Casting.ToBool(conditionValue) is true;
         })?.Consequent;
         consequentToRun ??= expression.ElseBranch;
         return consequentToRun is not null
-            ? Calculate(consequentToRun, environmentStack)
+            ? Calculate(consequentToRun)
             : null;
     }
 
-    private object? CalculateDynamic(ForLoopExpression expression, EnvironmentStack environmentStack)
+    private object? CalculateDynamic(ForLoopExpression expression)
     {
         object? startValue = 0L;
         object? stepValue = 1L;
-        var stopValue = Casting.ToNumber(Calculate(expression.Range.PastTheEnd, environmentStack));
+        var stopValue = Casting.ToNumber(Calculate(expression.Range.PastTheEnd));
 
         if (expression.Range.Start is not null)
-            startValue = Casting.ToNumber(Calculate(expression.Range.Start, environmentStack));
+            startValue = Casting.ToNumber(Calculate(expression.Range.Start));
         if (expression.Range.Step is not null)
-            stepValue = Casting.ToNumber(Calculate(expression.Range.Step, environmentStack));
+            stepValue = Casting.ToNumber(Calculate(expression.Range.Step));
         if (startValue is double || stepValue is double || stopValue is double)
         {
             startValue = Casting.ToFloat(startValue);
@@ -65,53 +70,49 @@ public partial class Runner
             ? Relational.IsLessThan
             : Relational.IsGreaterThan;
 
+        using var environmentGuard = _environmentStack.PushGuard();
+
         if (expression.CounterName is not null)
-        {
-            environmentStack.Push();
-            environmentStack.Initialize(expression.CounterName);
-        }
+            _environmentStack.Initialize(expression.CounterName);
 
         while (rangePredicate(counter, stopValue) is true)
         {
             if (expression.CounterName is not null)
-                environmentStack.Assign(expression.CounterName, counter);
-            Calculate(expression.Body, environmentStack);
+                _environmentStack.Assign(expression.CounterName, counter);
+            Calculate(expression.Body);
             counter = Arithmetical.Add(counter, stepValue);
         }
-
-        if (expression.CounterName is not null)
-            environmentStack.Pop();
 
         return counter;
     }
 
-    private object? CalculateDynamic(WhileLoopExpression expression, EnvironmentStack environmentStack)
+    private object? CalculateDynamic(WhileLoopExpression expression)
     {
-        while (Casting.ToBool(Calculate(expression.Condition, environmentStack)) is true)
-            Calculate(expression.Body, environmentStack);
-        return Calculate(expression.Condition, environmentStack);
+        while (Casting.ToBool(Calculate(expression.Condition)) is true)
+            Calculate(expression.Body);
+        return Calculate(expression.Condition);
     }
 
-    private object? CalculateDynamic(FunctionDefinitionExpression expression, EnvironmentStack environmentStack)
+    private object? CalculateDynamic(FunctionDefinitionExpression expression)
+    {
+        return new UserFunction(expression, _environmentStack.Clone());
+    }
+
+    private object? CalculateDynamic(PatternMatchingExpression expression)
     {
         throw new NotImplementedException();
     }
 
-    private object? CalculateDynamic(PatternMatchingExpression expression, EnvironmentStack environmentStack)
+    private object? CalculateDynamic(GroupingExpression expression)
     {
-        throw new NotImplementedException();
+        return Calculate(expression);
     }
 
-    private object? CalculateDynamic(GroupingExpression expression, EnvironmentStack environmentStack)
-    {
-        return Calculate(expression, environmentStack);
-    }
-
-    private object? CalculateDynamic(BinaryExpression expression, EnvironmentStack environmentStack)
+    private object? CalculateDynamic(BinaryExpression expression)
     {
         // TODO: describe order of evaluation
-        var leftResult = Calculate(expression.Left, environmentStack);
-        var rightResult = Calculate(expression.Right, environmentStack);
+        var leftResult = Calculate(expression.Left);
+        var rightResult = Calculate(expression.Right);
 
         if (expression.Operator == Operator.NamespaceAccess)
             throw new NotImplementedException();  // TODO: little sense
@@ -163,12 +164,12 @@ public partial class Runner
 
         if (expression.Operator is Operator.Assignment or Operator.AdditionAssignment or Operator.SubtractionAssignment
                 or Operator.MultiplicationAssignment or Operator.DivisionAssignment or Operator.RemainderAssignment)
-            return PerformAssignment(expression.Left, rightResult, expression.Operator, environmentStack);
+            return PerformAssignment(expression.Left, rightResult, expression.Operator);
 
         throw new ArgumentOutOfRangeException(nameof(expression.Operator), expression.Operator, "Invalid operator");
     }
 
-    private object? PerformAssignment(Expression left, object? right, Operator assignmentOperator, EnvironmentStack environmentStack)
+    private object? PerformAssignment(Expression left, object? right, Operator assignmentOperator)
     {
         if (left is not IdentifierExpression identifierExpression)
             throw new NotImplementedException();
@@ -176,20 +177,20 @@ public partial class Runner
         var valueToAssign = assignmentOperator switch
         {
             Operator.Assignment => right,
-            Operator.AdditionAssignment => Arithmetical.Add(environmentStack.Access(identifierExpression.Name), right),
-            Operator.SubtractionAssignment => Arithmetical.Subtract(environmentStack.Access(identifierExpression.Name), right),
-            Operator.MultiplicationAssignment => Arithmetical.Multiply(environmentStack.Access(identifierExpression.Name), right),
-            Operator.DivisionAssignment => Arithmetical.Divide(environmentStack.Access(identifierExpression.Name), right),
-            Operator.RemainderAssignment => Arithmetical.Remainder(environmentStack.Access(identifierExpression.Name), right),
+            Operator.AdditionAssignment => Arithmetical.Add(_environmentStack.Access(identifierExpression.Name), right),
+            Operator.SubtractionAssignment => Arithmetical.Subtract(_environmentStack.Access(identifierExpression.Name), right),
+            Operator.MultiplicationAssignment => Arithmetical.Multiply(_environmentStack.Access(identifierExpression.Name), right),
+            Operator.DivisionAssignment => Arithmetical.Divide(_environmentStack.Access(identifierExpression.Name), right),
+            Operator.RemainderAssignment => Arithmetical.Remainder(_environmentStack.Access(identifierExpression.Name), right),
             _ => throw new NotSupportedException()
         };
-        environmentStack.Assign(identifierExpression.Name, valueToAssign);
+        _environmentStack.Assign(identifierExpression.Name, valueToAssign);
         return valueToAssign;
     }
 
-    private object? CalculateDynamic(UnaryExpression expression, EnvironmentStack environmentStack)
+    private object? CalculateDynamic(UnaryExpression expression)
     {
-        var innerResult = Calculate(expression.Expression, environmentStack);
+        var innerResult = Calculate(expression.Expression);
 
         if (expression.Operator == Operator.NumberPromotion)
             return Casting.ToNumber(innerResult);
@@ -216,19 +217,23 @@ public partial class Runner
         throw new ArgumentOutOfRangeException(nameof(expression.Operator), expression.Operator, "Invalid operator");
     }
 
-    private object? CalculateDynamic(FunctionCallExpression expression, EnvironmentStack environmentStack)
+    private object? CalculateDynamic(FunctionCallExpression expression)
     {
-        throw new NotImplementedException();
+        var calleeValue = Calculate(expression.Callee);
+        if (calleeValue is not IFunction function)
+            throw new NotImplementedException();
+
+        return function.Call(this, expression.Arguments.Select(x => Calculate(x)).ToList());
     }
 
-    private object? CalculateDynamic(IdentifierExpression expression, EnvironmentStack environmentStack)
+    private object? CalculateDynamic(IdentifierExpression expression)
     {
         if (expression.NamespaceLevels.Count > 0)
             throw new NotImplementedException();
-        return environmentStack.Access(expression.Name);
+        return _environmentStack.Access(expression.Name);
     }
 
-    private object? CalculateDynamic(LiteralExpression expression, EnvironmentStack environmentStack)
+    private object? CalculateDynamic(LiteralExpression expression)
     {
         if (expression.Value is ulong integerValue)
             /* at this point unsigned literal value can be no greater than 9223372036854775807
@@ -238,15 +243,15 @@ public partial class Runner
         return expression.Value;
     }
 
-    private object? CalculateDynamic(TypeCastExpression expression, EnvironmentStack environmentStack)
+    private object? CalculateDynamic(TypeCastExpression expression)
     {
-        var value = Calculate(expression.Expression, environmentStack);
+        var value = Calculate(expression.Expression);
         return Casting.To(value, expression.Type);
     }
 
-    private object? CalculateDynamic(TypeCheckExpression expression, EnvironmentStack environmentStack)
+    private object? CalculateDynamic(TypeCheckExpression expression)
     {
-        var value = Calculate(expression.Expression, environmentStack);
+        var value = Calculate(expression.Expression);
         return expression.IsInequalityCheck ^ value switch
         {
             null => expression.Type == DataType.Null,
@@ -258,7 +263,7 @@ public partial class Runner
         };
     }
 
-    private object? CalculateDynamic(PatternTypeCheckExpression expression, EnvironmentStack environmentStack)
+    private object? CalculateDynamic(PatternTypeCheckExpression expression)
     {
         throw new NotImplementedException();
     }

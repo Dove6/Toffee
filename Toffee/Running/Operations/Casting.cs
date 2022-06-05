@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using Toffee.Running.Functions;
 using Toffee.SyntacticAnalysis;
 
 namespace Toffee.Running.Operations;
@@ -93,6 +94,15 @@ public static class Casting
                 "false" => false,
                 _ => null
             },
+            _ => throw new ArgumentOutOfRangeException(nameof(value), value, null)  // TODO: throws
+        };
+    }
+
+    public static IFunction? ToFunction(object? value)
+    {
+        return value switch
+        {
+            IFunction functionValue => functionValue,
             _ => throw new ArgumentOutOfRangeException(nameof(value), value, null)  // TODO: throws
         };
     }

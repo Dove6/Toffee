@@ -53,23 +53,50 @@ public class EnvironmentStack
         CurrentEnvironment = CurrentEnvironment.WithInitialized(identifier, new Variable(initialValue, isConst));
     }
 
-    public void Push(Environment? environment = null)
+    private void Push(Environment? environment = null)
     {
         _stack.Add(environment ?? new Environment(ImmutableDictionary<string, Variable>.Empty));
     }
 
-    public Environment Pop()
+    private void Pop()
     {
         if (_stack.Count <= 1)
             throw new NotImplementedException();
-        var environment = CurrentEnvironment;
         _stack.RemoveAt(_stack.Count - 1);
-        return environment;
     }
 
     public EnvironmentStack Clone()
     {
         return new EnvironmentStack { _stack = new List<Environment>(_stack) };
+    }
+
+    public EnvironmentGuard PushGuard(Environment? environment = null)
+    {
+        Push(environment);
+        return new EnvironmentGuard(this);
+    }
+
+    public class EnvironmentGuard : IDisposable
+    {
+        private EnvironmentStack? _environmentStack;
+
+        public EnvironmentGuard(EnvironmentStack environmentStack) => _environmentStack = environmentStack;
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposing)
+                return;
+            if (_environmentStack == null)
+                return;
+            _environmentStack.Pop();
+            _environmentStack = null;
+        }
     }
 };
 
