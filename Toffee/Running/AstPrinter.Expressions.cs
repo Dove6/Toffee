@@ -182,11 +182,8 @@ public partial class AstPrinter
     private void PrintDynamic(IdentifierExpression expression, int indentLevel)
     {
         PrintHeader(expression, indentLevel, expression.Name);
-    }
-
-    private void PrintDynamic(NamespaceAccessExpression expression, int indentLevel)
-    {
-        PrintHeader(expression, indentLevel, $"{string.Join('.', expression.NamespaceLevels)}.{expression.Name}");
+        if (expression.NamespaceLevels.Count > 0)
+            Print($"namespace: {string.Join('.', expression.NamespaceLevels)}", indentLevel + 1);
     }
 
     private void PrintDynamic(LiteralExpression expression, int indentLevel)

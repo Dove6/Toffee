@@ -30,10 +30,12 @@ public record UnaryExpression(Operator Operator, Expression Expression)
     : Expression(new Position(), new Position());
 public record FunctionCallExpression(Expression Callee, IList<Expression> Arguments)
     : Expression(new Position(), new Position());
-public record IdentifierExpression(string Name)
-    : Expression(new Position(), new Position());
-public record NamespaceAccessExpression(IList<string> NamespaceLevels, string Name)
-    : Expression(new Position(), new Position());
+public record IdentifierExpression(IList<string> NamespaceLevels, string Name)
+    : Expression(new Position(), new Position())
+{
+    public IdentifierExpression(string name) : this(new List<string>(), name)
+    { }
+}
 public record LiteralExpression(DataType Type, object? Value)
     : Expression(new Position(), new Position());
 public record TypeCastExpression(DataType Type, Expression Expression)

@@ -183,12 +183,9 @@ public partial class Runner
 
     private object? CalculateDynamic(IdentifierExpression expression, EnvironmentStack environmentStack)
     {
+        if (expression.NamespaceLevels.Count > 0)
+            throw new NotImplementedException();
         return environmentStack.Access(expression.Name);
-    }
-
-    private object? CalculateDynamic(NamespaceAccessExpression expression, EnvironmentStack environmentStack)
-    {
-        throw new NotImplementedException();
     }
 
     private object? CalculateDynamic(LiteralExpression expression, EnvironmentStack environmentStack)

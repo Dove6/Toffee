@@ -23,7 +23,7 @@ public class OperatorsPriorityTestData : IEnumerable<object[]>
                 Helpers.GetDefaultToken(TokenType.RightParenthesis),
                 Helpers.GetDefaultToken(TokenType.Semicolon)
             },
-            new FunctionCallExpression(new NamespaceAccessExpression(new List<string> { "a", "b" }, "c"),
+            new FunctionCallExpression(new IdentifierExpression(new List<string> { "a", "b" }, "c"),
                 new List<Expression>())
         };
         // () higher than ^

@@ -100,9 +100,6 @@
       <Compile Update="SyntacticAnalysis\StatementParsingTests.NamespaceImport.cs">
         <DependentUpon>StatementParsingTests.cs</DependentUpon>
       </Compile>
-      <Compile Update="SyntacticAnalysis\ExpressionParsingTests.NamespaceAccess.cs">
-        <DependentUpon>ExpressionParsingTests.cs</DependentUpon>
-      </Compile>
     </ItemGroup>
 
 </Project>

@@ -695,16 +695,13 @@ private Expression? ParseDisjunctionPatternExpression() => SupplyPosition(() =>
             return LiteralMapper.MapToLiteralExpression(literal);
         if (TryConsumeToken(out var identifier, TokenType.Identifier))
         {
-            if (!TryEnsureToken(TokenType.OperatorDot))
-                return new IdentifierExpression((string)identifier.Content!);
-
             var namespaceLevels = new List<string>();
             while (TryConsumeToken(out _, TokenType.OperatorDot))
             {
                 namespaceLevels.Add((string)identifier.Content!);
                 identifier = ConsumeToken(TokenType.Identifier);
             }
-            return new NamespaceAccessExpression(namespaceLevels, (string)identifier.Content!);
+            return new IdentifierExpression(namespaceLevels, (string)identifier.Content!);
         }
         if (TryConsumeToken(out var castingType, TypeMapper.CastingTypeTokenTypes))
             return new TypeCastExpression(TypeMapper.MapToCastingType(castingType.Type), ParseParenthesizedExpression());
