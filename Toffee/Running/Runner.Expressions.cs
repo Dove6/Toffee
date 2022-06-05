@@ -1,4 +1,5 @@
-﻿using Toffee.SyntacticAnalysis;
+﻿using Toffee.Running.Operations;
+using Toffee.SyntacticAnalysis;
 
 namespace Toffee.Running;
 
@@ -55,37 +56,110 @@ public partial class Runner
 
     private object? CalculateDynamic(BinaryExpression binaryExpression)
     {
-        throw new NotImplementedException();
+        // TODO: describe order of evaluation
+        var leftResult = Calculate(binaryExpression.Left);
+        var rightResult = Calculate(binaryExpression.Right);
+
+        if (binaryExpression.Operator == Operator.NamespaceAccess)
+            throw new NotImplementedException();  // TODO: little sense
+
+        if (binaryExpression.Operator == Operator.Addition)
+            return Arithmetical.Add(CastToNumber(leftResult), CastToNumber(rightResult));
+        if (binaryExpression.Operator == Operator.Subtraction)
+            return Arithmetical.Subtract(CastToNumber(leftResult), CastToNumber(rightResult));
+        if (binaryExpression.Operator == Operator.Multiplication)
+            return Arithmetical.Multiply(CastToNumber(leftResult), CastToNumber(rightResult));
+        if (binaryExpression.Operator == Operator.Division)
+            return Arithmetical.Divide(CastToNumber(leftResult), CastToNumber(rightResult));
+        if (binaryExpression.Operator == Operator.Remainder)
+            return Arithmetical.Remainder(CastToNumber(leftResult), CastToNumber(rightResult));
+        if (binaryExpression.Operator == Operator.Exponentiation)
+            return Arithmetical.Exponentiate(CastToNumber(leftResult), CastToNumber(rightResult));
+
+        if (binaryExpression.Operator == Operator.Concatenation)
+            return Character.Concatenate(Cast(leftResult, DataType.String), Cast(rightResult, DataType.String));
+
+        if (binaryExpression.Operator == Operator.LessThanComparison)
+            return Relational.IsLessThan(leftResult, rightResult);
+        if (binaryExpression.Operator == Operator.LessOrEqualComparison)
+            return Relational.IsLessOrEqual(leftResult, rightResult);
+        if (binaryExpression.Operator == Operator.GreaterThanComparison)
+            return Relational.IsGreaterThan(leftResult, rightResult);
+        if (binaryExpression.Operator == Operator.GreaterOrEqualComparison)
+            return Relational.IsGreaterOrEqual(leftResult, rightResult);
+        if (binaryExpression.Operator == Operator.EqualComparison)
+            return Relational.IsEqualTo(leftResult, rightResult);
+        if (binaryExpression.Operator == Operator.NotEqualComparison)
+            return Relational.IsNotEqualTo(leftResult, rightResult);
+
+        // TODO: little sense here
+        if (binaryExpression.Operator == Operator.EqualTypeCheck)
+            throw new NotImplementedException();
+        if (binaryExpression.Operator == Operator.NotEqualTypeCheck)
+            throw new NotImplementedException();
+
+        if (binaryExpression.Operator == Operator.Disjunction)
+            return Logical.Disjoin(Cast(leftResult, DataType.Bool), Cast(rightResult, DataType.Bool));
+        if (binaryExpression.Operator == Operator.Conjunction)
+            return Logical.Conjoin(Cast(leftResult, DataType.Bool), Cast(rightResult, DataType.Bool));
+
+        // TODO: check if it makes sense
+        if (binaryExpression.Operator == Operator.PatternMatchingDisjunction)
+            return Logical.Disjoin(Cast(leftResult, DataType.Bool), Cast(rightResult, DataType.Bool));
+        if (binaryExpression.Operator == Operator.PatternMatchingConjunction)
+            return Logical.Conjoin(Cast(leftResult, DataType.Bool), Cast(rightResult, DataType.Bool));
+
+        if (binaryExpression.Operator == Operator.NullCoalescing)
+            return leftResult ?? rightResult;
+        if (binaryExpression.Operator == Operator.NullSafePipe)
+            throw new NotImplementedException();
+
+        if (binaryExpression.Operator == Operator.Assignment)
+            throw new NotImplementedException();
+        if (binaryExpression.Operator == Operator.AdditionAssignment)
+            throw new NotImplementedException();
+        if (binaryExpression.Operator == Operator.SubtractionAssignment)
+            throw new NotImplementedException();
+        if (binaryExpression.Operator == Operator.MultiplicationAssignment)
+            throw new NotImplementedException();
+        if (binaryExpression.Operator == Operator.DivisionAssignment)
+            throw new NotImplementedException();
+        if (binaryExpression.Operator == Operator.RemainderAssignment)
+            throw new NotImplementedException();
+
+        throw new ArgumentOutOfRangeException(nameof(binaryExpression.Operator), binaryExpression.Operator, "Invalid operator");
     }
 
     private object? CalculateDynamic(UnaryExpression unaryExpression)
     {
         var innerResult = Calculate(unaryExpression.Expression);
+
         if (unaryExpression.Operator == Operator.NumberPromotion)
-        {
-            // TODO: detect float/int
-            var castedResult =  Cast(innerResult, DataType.Integer);
-            return castedResult;
-        }
+            return CastToNumber(innerResult);
         if (unaryExpression.Operator == Operator.ArithmeticNegation)
-        {
-            // TODO: detect float/int
-            var castedResult = Cast(innerResult, DataType.Integer);
-            return castedResult switch
-            {
-                long integerValue => -integerValue,
-                double floatValue => -floatValue,
-                _ => null
-            };
-        }
+            return Arithmetical.Negate(CastToNumber(innerResult));
+
         if (unaryExpression.Operator == Operator.LogicalNegation)
-        {
-            return Cast(innerResult, DataType.Bool) switch
-            {
-                bool boolValue => !boolValue,
-                _ => null
-            };
-        }
+            return Logical.Negate(Cast(innerResult, DataType.Bool));
+
+        // TODO: little sense here
+        if (unaryExpression.Operator == Operator.PatternMatchingLessThanComparison)
+            throw new NotImplementedException();
+        if (unaryExpression.Operator == Operator.PatternMatchingLessOrEqualComparison)
+            throw new NotImplementedException();
+        if (unaryExpression.Operator == Operator.PatternMatchingGreaterThanComparison)
+            throw new NotImplementedException();
+        if (unaryExpression.Operator == Operator.PatternMatchingGreaterOrEqualComparison)
+            throw new NotImplementedException();
+        if (unaryExpression.Operator == Operator.PatternMatchingEqualComparison)
+            throw new NotImplementedException();
+        if (unaryExpression.Operator == Operator.PatternMatchingNotEqualComparison)
+            throw new NotImplementedException();
+        if (unaryExpression.Operator == Operator.PatternMatchingEqualTypeCheck)
+            throw new NotImplementedException();
+        if (unaryExpression.Operator == Operator.PatternMatchingNotEqualTypeCheck)
+            throw new NotImplementedException();
+
         throw new ArgumentOutOfRangeException(nameof(unaryExpression.Operator), unaryExpression.Operator, "Invalid operator");
     }
 

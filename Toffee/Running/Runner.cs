@@ -17,6 +17,31 @@ public partial class Runner : IRunner
 
     private void EmitWarning(RunnerWarning warning) => _errorHandler?.Handle(warning);
 
+    private static object? CastToNumber(object? value)
+    {
+        if (value is null)
+            return null;
+
+        return value switch
+        {
+            long integerValue => integerValue,
+            double floatValue => floatValue,
+            string stringValue => CastToNumber(stringValue),
+            bool boolValue => boolValue ? 1L : 0L,
+            _ => throw new NotImplementedException()
+        };
+    }
+
+    private static object? CastToNumber(string value)
+    {
+        // TODO: mimic lexer implementation
+        if (long.TryParse(value, out var integerValue))
+            return integerValue;
+        if (double.TryParse(value, out var floatValue))
+            return floatValue;
+        return null;
+    }
+
     private static object? Cast(object? value, DataType type)
     {
         if (value is null)

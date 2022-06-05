@@ -1,4 +1,5 @@
-﻿using CommandDotNet;
+﻿using System.Globalization;
+using CommandDotNet;
 using Toffee.ErrorHandling;
 using Toffee.LexicalAnalysis;
 using Toffee.Running;
@@ -62,6 +63,17 @@ public class Application
             printer.Print(_parser.CurrentStatement!);
     }
 
+    private static string Stringify(object? value)
+    {
+        return value switch
+        {
+            null => "null",
+            string stringValue => $"\"{stringValue}\"",
+            double floatValue => floatValue.ToString(CultureInfo.InvariantCulture),
+            var other => $"{other}"
+        };
+    }
+
     private void RunParser()
     {
         var runner = new Runner(_logger);
@@ -69,7 +81,7 @@ public class Application
         {
             var statement = _parser.CurrentStatement!;
             if (statement is ExpressionStatement expressionStatement)
-                Console.WriteLine(runner.Calculate(expressionStatement.Expression));
+                Console.WriteLine(Stringify(runner.Calculate(expressionStatement.Expression)));
             else
                 runner.Run(_parser.CurrentStatement!);
         }
