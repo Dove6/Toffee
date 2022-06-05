@@ -30,7 +30,7 @@ public partial class AstPrinter
     private static void PrintDynamic(NamespaceImportStatement statement, int indentLevel)
     {
         foreach (var level in statement.NamespaceLevels)
-            Print(level.Name, indentLevel);
+            Print(level, indentLevel);
     }
 
     private void PrintDynamic(VariableInitializationListStatement statement, int indentLevel)

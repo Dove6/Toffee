@@ -12,7 +12,7 @@ public partial class ExpressionParsingTest
     [Trait("Category", "While loop expressions")]
     [Theory]
     [ClassData(typeof(WhileLoopExpressionTestData))]
-    public void WhileLoopExpressionsShouldBeParsedCorrectly(Token[] tokenSequence, Expression expectedCondition, Expression expectedBody)
+    public void WhileLoopExpressionsShouldBeParsedCorrectly(Token[] tokenSequence, Expression expectedExpression)
     {
         var lexerMock = new LexerMock(tokenSequence);
         var errorHandlerMock = new ParserErrorHandlerMock();
@@ -24,10 +24,7 @@ public partial class ExpressionParsingTest
         expressionStatement.Should().NotBeNull();
         expressionStatement!.IsTerminated.Should().Be(true);
 
-        var whileLoopExpression = expressionStatement.Expression.As<WhileLoopExpression>();
-        whileLoopExpression.Should().NotBeNull();
-        whileLoopExpression.Condition.Should().BeEquivalentTo(expectedCondition, Helpers.ProvideOptions);
-        whileLoopExpression.Body.Should().BeEquivalentTo(expectedBody, Helpers.ProvideOptions);
+        expressionStatement.Expression.Should().BeEquivalentTo(expectedExpression, Helpers.ProvideOptions);
 
         Assert.False(errorHandlerMock.HadErrors);
         Assert.False(errorHandlerMock.HadWarnings);

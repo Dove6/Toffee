@@ -6,21 +6,21 @@ public abstract record Expression(Position StartPosition, Position EndPosition);
 
 public record BlockExpression(IList<Statement> Statements, Expression? ResultExpression = null)
     : Expression(new Position(), new Position());
-public record ConditionalExpression(ConditionalElement IfPart, IList<ConditionalElement> ElifParts, Expression? ElsePart = null)
+public record ConditionalExpression(IList<ConditionalElement> Branches, BlockExpression? ElseBranch = null)
     : Expression(new Position(), new Position());
-public record ForLoopExpression(ForLoopRange Range, Expression Body, string? CounterName = null)
+public record ForLoopExpression(ForLoopRange Range, BlockExpression Body, string? CounterName = null)
     : Expression(new Position(), new Position());
-public record WhileLoopExpression(Expression Condition, Expression Body)
+public record WhileLoopExpression(Expression Condition, BlockExpression Body)
     : Expression(new Position(), new Position());
 public record FunctionDefinitionExpression(IList<FunctionParameter> Parameters, BlockExpression Body)
     : Expression(new Position(), new Position());
-public record PatternMatchingExpression(Expression Argument, IList<PatternMatchingBranch> Branches, Expression? Default = null)
+public record PatternMatchingExpression(Expression Argument, IList<PatternMatchingBranch> Branches, BlockExpression? DefaultBranch = null)
     : Expression(new Position(), new Position());
 
-public record ConditionalElement(Expression Condition, Expression Consequent);
+public record ConditionalElement(Expression Condition, BlockExpression Consequent);
 public record ForLoopRange(Expression PastTheEnd, Expression? Start = null, Expression? Step = null);
 public record FunctionParameter(string Name, bool IsConst = false, bool IsNullAllowed = true);
-public record PatternMatchingBranch(Expression? Pattern, Expression Consequent);
+public record PatternMatchingBranch(Expression? Pattern, BlockExpression Consequent);
 
 public record GroupingExpression(Expression Expression)
     : Expression(new Position(), new Position());
@@ -28,13 +28,17 @@ public record BinaryExpression(Expression Left, Operator Operator, Expression Ri
     : Expression(new Position(), new Position());
 public record UnaryExpression(Operator Operator, Expression Expression)
     : Expression(new Position(), new Position());
-public record FunctionCallExpression(Expression Expression, IList<Expression> Arguments)
+public record FunctionCallExpression(Expression Callee, IList<Expression> Arguments)
     : Expression(new Position(), new Position());
 public record IdentifierExpression(string Name)
+    : Expression(new Position(), new Position());
+public record NamespaceAccessExpression(IList<string> NamespaceLevels, string Name)
     : Expression(new Position(), new Position());
 public record LiteralExpression(DataType Type, object? Value)
     : Expression(new Position(), new Position());
 public record TypeCastExpression(DataType Type, Expression Expression)
     : Expression(new Position(), new Position());
-public record TypeExpression(DataType Type)
+public record TypeCheckExpression(Expression Expression, DataType Type, bool IsInequalityCheck = false)
+    : Expression(new Position(), new Position());
+public record PatternTypeCheckExpression(DataType Type, bool IsInequalityCheck = false)
     : Expression(new Position(), new Position());

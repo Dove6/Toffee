@@ -79,13 +79,13 @@
       <Compile Update="SyntacticAnalysis\ExpressionParsingTests.Literal.cs">
         <DependentUpon>ExpressionParsingTests.cs</DependentUpon>
       </Compile>
-      <Compile Update="SyntacticAnalysis\ExpressionParsingTests.TypeCast.cs">
+      <Compile Update="SyntacticAnalysis\ExpressionParsingTests.TypeCheckingCast.cs">
         <DependentUpon>ExpressionParsingTests.cs</DependentUpon>
       </Compile>
       <Compile Update="SyntacticAnalysis\ExpressionParsingTests.Identifier.cs">
         <DependentUpon>ExpressionParsingTests.cs</DependentUpon>
       </Compile>
-      <Compile Update="SyntacticAnalysis\ExpressionParsingTests.Type.cs">
+      <Compile Update="SyntacticAnalysis\ExpressionParsingTests.TypeChecking.cs">
         <DependentUpon>ExpressionParsingTests.cs</DependentUpon>
       </Compile>
       <Compile Update="SyntacticAnalysis\StatementParsingTests.Break.cs">
@@ -99,6 +99,9 @@
       </Compile>
       <Compile Update="SyntacticAnalysis\StatementParsingTests.NamespaceImport.cs">
         <DependentUpon>StatementParsingTests.cs</DependentUpon>
+      </Compile>
+      <Compile Update="SyntacticAnalysis\ExpressionParsingTests.NamespaceAccess.cs">
+        <DependentUpon>ExpressionParsingTests.cs</DependentUpon>
       </Compile>
     </ItemGroup>
 

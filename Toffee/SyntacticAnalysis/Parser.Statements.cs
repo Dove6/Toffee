@@ -58,15 +58,15 @@ public partial class Parser
         if (!TryConsumeToken(out _, TokenType.KeywordPull))
             return null;
 
-        var list = new List<IdentifierExpression>();
+        var list = new List<string>();
         var firstIdentifier = ConsumeToken(TokenType.Identifier);
-        list.Add(new IdentifierExpression((string)firstIdentifier.Content!));
+        list.Add((string)firstIdentifier.Content!);
 
         while (!TryEnsureToken(TokenType.Semicolon))
         {
             ConsumeToken(TokenType.OperatorDot);
             var nextIdentifier = ConsumeToken(TokenType.Identifier);
-            list.Add(new IdentifierExpression((string)nextIdentifier.Content!));
+            list.Add((string)nextIdentifier.Content!);
         }
 
         return new NamespaceImportStatement(list);
@@ -85,6 +85,7 @@ public partial class Parser
         };
         while (TryConsumeToken(out _, TokenType.Comma))
             list.Add(ParseVariableInitialization());
+        // TODO: warn about init = null;, err about init const;
 
         return new VariableInitializationListStatement(list);
     });

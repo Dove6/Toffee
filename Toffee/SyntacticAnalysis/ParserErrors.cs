@@ -44,12 +44,6 @@ public record ExpectedSemicolon(Position Position, TokenType? ActualTokenType = 
         : this(actualStatement.StartPosition, null, actualStatement.GetType())
     { }
 }
-public record ExpectedIdentifier(Position Position, Type ActualType) : ParserError(Position)
-{
-    public ExpectedIdentifier(Expression actualExpression)
-        : this(actualExpression.StartPosition, actualExpression.GetType())
-    { }
-}
 public record IntegerOutOfRange(Position Position, ulong Value, bool Negative = false) : ParserError(Position)
 {
     public IntegerOutOfRange(LiteralExpression actualExpression)
@@ -72,7 +66,6 @@ public static class ParserErrorExtensions
         { typeof(ExpectedBlockExpression), "Unexpected token instead of a block expression" },
         { typeof(ExpectedPatternExpression), "Unexpected token instead of a pattern expression" },
         { typeof(ExpectedSemicolon), "Expected terminating semicolon" },
-        { typeof(ExpectedIdentifier), "Expected only identifiers in namespace path" },
         { typeof(IntegerOutOfRange), "Literal integer above maximum (positive) value or below minimum (negative) value" },
         { typeof(ExpectedParameter), "Expected parameter in parameter list" }
     }.ToImmutableDictionary();

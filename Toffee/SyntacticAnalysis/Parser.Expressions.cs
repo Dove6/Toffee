@@ -81,13 +81,13 @@ public partial class Parser
         if (!TryMatchConditionalIfPart(false, out var ifPart))
             return null;
 
-        var elifPartList = new List<ConditionalElement>();
+        var branchList = new List<ConditionalElement> { ifPart! };
         while (TryMatchConditionalIfPart(true, out var elifPart))
-            elifPartList.Add(elifPart!);
+            branchList.Add(elifPart!);
 
         return TryMatchConditionalElsePart(out var elsePart)
-            ? new ConditionalExpression(ifPart!, elifPartList, elsePart)
-            : new ConditionalExpression(ifPart!, elifPartList);
+            ? new ConditionalExpression(branchList, elsePart)
+            : new ConditionalExpression(branchList);
     });
 
     // conditional_if_part
@@ -103,19 +103,22 @@ public partial class Parser
 
         var condition = ParseParenthesizedExpression();
         var consequent = ParseExpression();
-        ifPart = new ConditionalElement(condition, consequent);
+        var blockConsequent = consequent as BlockExpression ?? new BlockExpression(new List<Statement>(), consequent);
+        ifPart = new ConditionalElement(condition, blockConsequent);
         return true;
     }
 
     // conditional_else_part
     //     = KW_ELSE, unterminated_statement;
-    private bool TryMatchConditionalElsePart(out Expression? elsePart)
+    private bool TryMatchConditionalElsePart(out BlockExpression? elsePart)
     {
         elsePart = null;
         if (!TryConsumeToken(out _, TokenType.KeywordElse))
             return false;
 
-        elsePart = ParseExpression();
+        var consequent = ParseExpression();
+        var blockConsequent = consequent as BlockExpression ?? new BlockExpression(new List<Statement>(), consequent);
+        elsePart = blockConsequent;
         return true;
     }
 
@@ -137,7 +140,10 @@ public partial class Parser
             return null;
 
         var (counterName, loopRange) = ParseForLoopSpecification();
-        return new ForLoopExpression(loopRange, ParseExpression(), counterName);
+        var body = ParseExpression();
+        var blockBody = body as BlockExpression ?? new BlockExpression(new List<Statement>(), body);
+        // TODO: warn about ignored expression
+        return new ForLoopExpression(loopRange, blockBody, counterName);
     });
 
     // for_loop_specification
@@ -186,7 +192,10 @@ public partial class Parser
             return null;
 
         var condition = ParseParenthesizedExpression();
-        return new WhileLoopExpression(condition, ParseExpression());
+        var body = ParseExpression();
+        var blockBody = body as BlockExpression ?? new BlockExpression(new List<Statement>(), body);
+        // TODO: warn about ignored expression
+        return new WhileLoopExpression(condition, blockBody);
     });
 
     // function_definition
@@ -267,9 +276,13 @@ public partial class Parser
             }
             patternSpecificationList.Add(specification);
         }
+        // TODO: err about default being not last, occuring more than once, warn about it being missing
 
         InterceptParserError(() => ConsumeToken(TokenType.RightBrace));
-        return new PatternMatchingExpression(argument, patternSpecificationList, defaultConsequent);
+        var blockDefaultConsequent = defaultConsequent as BlockExpression;
+        if (blockDefaultConsequent is null && defaultConsequent is not null)
+            blockDefaultConsequent = new BlockExpression(new List<Statement>(), defaultConsequent);
+        return new PatternMatchingExpression(argument, patternSpecificationList, blockDefaultConsequent);
     });
 
     // pattern_specification
@@ -288,7 +301,9 @@ public partial class Parser
         InterceptParserError(() => ConsumeToken(TokenType.Colon));
         var consequent = ParseExpression();
         InterceptParserError(() => ConsumeToken(TokenType.Semicolon));
-        specification = new PatternMatchingBranch(condition, consequent);
+
+        var blockConsequent = consequent as BlockExpression ?? new BlockExpression(new List<Statement>(), consequent);
+        specification = new PatternMatchingBranch(condition, blockConsequent);
         return true;
     }
 
@@ -346,11 +361,9 @@ private Expression? ParseDisjunctionPatternExpression() => SupplyPosition(() =>
 
         if (TryConsumeToken(out _, TokenType.KeywordIs))
         {
-            var typeCheckOperator = TryConsumeToken(out _, TokenType.KeywordNot)
-                ? Operator.PatternMatchingNotEqualTypeCheck
-                : Operator.PatternMatchingEqualTypeCheck;
+            var isInequalityCheck = TryConsumeToken(out _, TokenType.KeywordNot);
             if (TryConsumeToken(out var type, TypeMapper.TypeTokenTypes))
-                return new UnaryExpression(typeCheckOperator, new TypeExpression(TypeMapper.MapToType(type.Type)));
+                return new PatternTypeCheckExpression(TypeMapper.MapToType(type.Type), isInequalityCheck);
             throw new ParserException(new UnexpectedToken(_lexer.CurrentToken, TypeMapper.TypeTokenTypes));
         }
 
@@ -459,11 +472,9 @@ private Expression? ParseDisjunctionPatternExpression() => SupplyPosition(() =>
 
         while (TryConsumeToken(out _, TokenType.KeywordIs))
         {
-            var typeCheckOperator = TryConsumeToken(out _, TokenType.KeywordNot)
-                ? Operator.NotEqualTypeCheck
-                : Operator.EqualTypeCheck;
-            var right = new TypeExpression(TypeMapper.MapToType(ConsumeToken(TypeMapper.TypeTokenTypes).Type));
-            expression = new BinaryExpression(expression, typeCheckOperator, right);
+            var isInequalityCheck = TryConsumeToken(out _, TokenType.KeywordNot);
+            var typeToken = ConsumeToken(TypeMapper.TypeTokenTypes);
+            expression = new TypeCheckExpression(expression, TypeMapper.MapToType(typeToken.Type), isInequalityCheck);
         }
         return expression;
     });
@@ -587,7 +598,7 @@ private Expression? ParseDisjunctionPatternExpression() => SupplyPosition(() =>
     private Expression? ParseExponentiationExpression() => SupplyPosition(() =>
     {
         var components = new Stack<Expression>();
-        var expression = ParseNamespaceAccessOrFunctionCallExpression();
+        var expression = ParseFunctionCallExpression();
         if (expression is null)
             return null;
 
@@ -596,7 +607,7 @@ private Expression? ParseDisjunctionPatternExpression() => SupplyPosition(() =>
             if (expression is LiteralExpression { Type: DataType.Integer, Value: > 9223372036854775807ul } badLiteral)
                 EmitError(new IntegerOutOfRange(badLiteral));
             components.Push(expression);
-            expression = ParseNamespaceAccessOrFunctionCallExpression();
+            expression = ParseFunctionCallExpression();
             if (expression is null)
                 throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
         }
@@ -606,41 +617,22 @@ private Expression? ParseDisjunctionPatternExpression() => SupplyPosition(() =>
         return expression;
     });
 
-    // namespace_access_or_function_call
-    //     = primary_expression, { function_call_part } { OP_DOT, primary_expression, { function_call_part } };
-    private Expression? ParseNamespaceAccessOrFunctionCallExpression() => SupplyPosition(() =>
+    // function_call
+    //     = primary_expression, { function_call_part };
+    private Expression? ParseFunctionCallExpression() => SupplyPosition(() =>
     {
         var expression = ParsePrimaryExpression();
         if (expression is null)
             return null;
 
-        var lastNonFunctionElement = expression;
         while (TryParseFunctionCallPart(out var arguments))
-            expression = new FunctionCallExpression(expression, arguments!);
-        var lastElement = expression;
-
-        var consumedAnyDot = false;
-        while (TryConsumeToken(out _, TokenType.OperatorDot))
-        {
-            consumedAnyDot = true;
-            if (lastElement is not IdentifierExpression)
-                EmitError(new ExpectedIdentifier(lastElement));
-            var right = ParsePrimaryExpression();
-            if (right is null)
-                throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
-            lastNonFunctionElement = lastElement = right;
-            expression = new BinaryExpression(expression, Operator.NamespaceAccess, right);
-            while (TryParseFunctionCallPart(out var arguments))
-                lastElement = expression = new FunctionCallExpression(expression, arguments!);
-        }
-        if (consumedAnyDot && lastNonFunctionElement is not IdentifierExpression)
-            EmitError(new ExpectedIdentifier(lastNonFunctionElement));
+            expression = new FunctionCallExpression(expression, arguments);
         return expression;
     });
 
     // function_call_part
     //     = LEFT_PARENTHESIS, arguments_list, RIGHT_PARENTHESIS;
-    private bool TryParseFunctionCallPart(out List<Expression>? functionArguments)
+    private bool TryParseFunctionCallPart(out List<Expression> functionArguments)
     {
         functionArguments = new List<Expression>();
         if (!TryConsumeToken(out _, TokenType.LeftParenthesis))
@@ -670,14 +662,25 @@ private Expression? ParseDisjunctionPatternExpression() => SupplyPosition(() =>
 
     // primary_expression
     //     = LITERAL
-    //     | IDENTIFIER
+    //     | IDENTIFIER, { OP_DOT, IDENTIFIER }
     //     | [ CASTING_TYPE ], LEFT_PARENTHESIS, expression, RIGHT_PARENTHESIS;
     private Expression? ParsePrimaryExpression() => SupplyPosition(() =>
     {
         if (TryConsumeToken(out var literal, LiteralMapper.LiteralTokenTypes))
             return LiteralMapper.MapToLiteralExpression(literal);
         if (TryConsumeToken(out var identifier, TokenType.Identifier))
-            return new IdentifierExpression((string)identifier.Content!);
+        {
+            if (!TryEnsureToken(TokenType.OperatorDot))
+                return new IdentifierExpression((string)identifier.Content!);
+
+            var namespaceLevels = new List<string>();
+            while (TryConsumeToken(out _, TokenType.OperatorDot))
+            {
+                namespaceLevels.Add((string)identifier.Content!);
+                identifier = ConsumeToken(TokenType.Identifier);
+            }
+            return new NamespaceAccessExpression(namespaceLevels, (string)identifier.Content!);
+        }
         if (TryConsumeToken(out var castingType, TypeMapper.CastingTypeTokenTypes))
             return new TypeCastExpression(TypeMapper.MapToCastingType(castingType.Type), ParseParenthesizedExpression());
         if (!TryConsumeToken(out _, TokenType.LeftParenthesis))

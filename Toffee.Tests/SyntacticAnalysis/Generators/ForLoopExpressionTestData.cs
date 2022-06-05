@@ -29,7 +29,7 @@ public class ForLoopExpressionTestData : IEnumerable<object[]>
             },
             null!,
             new ForLoopRange(new IdentifierExpression("a")),
-            new IdentifierExpression("b")
+            new BlockExpression(new List<Statement>(), new IdentifierExpression("b"))
         };
         // with start:stop range
         yield return new object[]
@@ -47,7 +47,7 @@ public class ForLoopExpressionTestData : IEnumerable<object[]>
             },
             null!,
             new ForLoopRange(Start: new IdentifierExpression("a"), PastTheEnd: new IdentifierExpression("b")),
-            new IdentifierExpression("c")
+            new BlockExpression(new List<Statement>(), new IdentifierExpression("c"))
         };
         // with start:stop:step range
         yield return new object[]
@@ -67,7 +67,7 @@ public class ForLoopExpressionTestData : IEnumerable<object[]>
             },
             null!,
             new ForLoopRange(Start: new IdentifierExpression("a"), PastTheEnd: new IdentifierExpression("b"), Step: new IdentifierExpression("c")),
-            new IdentifierExpression("d")
+            new BlockExpression(new List<Statement>(), new IdentifierExpression("d"))
         };
         // with counter
         yield return new object[]
@@ -85,7 +85,7 @@ public class ForLoopExpressionTestData : IEnumerable<object[]>
             },
             "a",
             new ForLoopRange(new IdentifierExpression("b")),
-            new IdentifierExpression("c")
+            new BlockExpression(new List<Statement>(), new IdentifierExpression("c"))
         };
         // with counter and start:stop range
         yield return new object[]
@@ -105,7 +105,7 @@ public class ForLoopExpressionTestData : IEnumerable<object[]>
             },
             "a",
             new ForLoopRange(Start: new IdentifierExpression("b"), PastTheEnd: new IdentifierExpression("c")),
-            new IdentifierExpression("d")
+            new BlockExpression(new List<Statement>(), new IdentifierExpression("d"))
         };
         // with counter and start:stop:step range
         yield return new object[]
@@ -127,7 +127,7 @@ public class ForLoopExpressionTestData : IEnumerable<object[]>
             },
             "a",
             new ForLoopRange(Start: new IdentifierExpression("b"), PastTheEnd: new IdentifierExpression("c"), Step: new IdentifierExpression("d")),
-            new IdentifierExpression("e")
+            new BlockExpression(new List<Statement>(), new IdentifierExpression("e"))
         };
     }
 

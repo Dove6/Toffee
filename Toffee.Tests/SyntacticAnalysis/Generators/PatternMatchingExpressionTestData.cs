@@ -31,9 +31,7 @@ public class PatternMatchingExpressionTestData : IEnumerable<object[]>
                 rightBrace,
                 semicolonToken
             },
-            new IdentifierExpression("a"),
-            Array.Empty<PatternMatchingBranch>(),
-            (null as Expression)!
+            new PatternMatchingExpression(new IdentifierExpression("a"), new List<PatternMatchingBranch>())
         };
         // with non-default branch
         yield return new object[]
@@ -52,12 +50,12 @@ public class PatternMatchingExpressionTestData : IEnumerable<object[]>
                 rightBrace,
                 semicolonToken
             },
-            new IdentifierExpression("a"),
-            new[]
-            {
-                new PatternMatchingBranch(new IdentifierExpression("b"), new IdentifierExpression("c"))
-            },
-            (null as Expression)!
+            new PatternMatchingExpression(new IdentifierExpression("a"),
+                new List<PatternMatchingBranch>
+                {
+                    new(new IdentifierExpression("b"),
+                        new BlockExpression(new List<Statement>(), new IdentifierExpression("c")))
+                })
         };
         // with default branch
         yield return new object[]
@@ -76,9 +74,8 @@ public class PatternMatchingExpressionTestData : IEnumerable<object[]>
                 rightBrace,
                 semicolonToken
             },
-            new IdentifierExpression("a"),
-            Array.Empty<PatternMatchingBranch>(),
-            new IdentifierExpression("b")
+            new PatternMatchingExpression(new IdentifierExpression("a"), new List<PatternMatchingBranch>(),
+                new BlockExpression(new List<Statement>(), new IdentifierExpression("b")))
         };
         // with more than one non-default branch
         yield return new object[]
@@ -101,13 +98,14 @@ public class PatternMatchingExpressionTestData : IEnumerable<object[]>
                 rightBrace,
                 semicolonToken
             },
-            new IdentifierExpression("a"),
-            new[]
-            {
-                new PatternMatchingBranch(new IdentifierExpression("b"), new IdentifierExpression("c")),
-                new PatternMatchingBranch(new IdentifierExpression("d"), new IdentifierExpression("e"))
-            },
-            (null as Expression)!
+            new PatternMatchingExpression(new IdentifierExpression("a"),
+                new List<PatternMatchingBranch>
+                {
+                    new(new IdentifierExpression("b"),
+                        new BlockExpression(new List<Statement>(), new IdentifierExpression("c"))),
+                    new(new IdentifierExpression("d"),
+                        new BlockExpression(new List<Statement>(), new IdentifierExpression("e")))
+                })
         };
         // with both non-default and default branch
         yield return new object[]
@@ -130,12 +128,13 @@ public class PatternMatchingExpressionTestData : IEnumerable<object[]>
                 rightBrace,
                 semicolonToken
             },
-            new IdentifierExpression("a"),
-            new[]
-            {
-                new PatternMatchingBranch(new IdentifierExpression("b"), new IdentifierExpression("c"))
-            },
-            new IdentifierExpression("d")
+            new PatternMatchingExpression(new IdentifierExpression("a"),
+                new List<PatternMatchingBranch>
+                {
+                    new(new IdentifierExpression("b"),
+                        new BlockExpression(new List<Statement>(), new IdentifierExpression("c")))
+                },
+                new BlockExpression(new List<Statement>(), new IdentifierExpression("d")))
         };
     }
 

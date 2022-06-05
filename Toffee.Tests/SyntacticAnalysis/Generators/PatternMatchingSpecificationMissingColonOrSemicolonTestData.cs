@@ -36,7 +36,8 @@ public class PatternMatchingSpecificationMissingColonOrSemicolonTestData : IEnum
                 semicolonToken
             },
             new PatternMatchingExpression(new IdentifierExpression("a"),
-                new List<PatternMatchingBranch> { new(new IdentifierExpression("b"), new IdentifierExpression("c")) }),
+                new List<PatternMatchingBranch> { new(new IdentifierExpression("b"),
+                    new BlockExpression(new List<Statement>(), new IdentifierExpression("c"))) }),
             new UnexpectedToken(new Position(6, 1, 6), TokenType.Identifier, TokenType.Colon)
         };
         // non-default branch, missing semicolon
@@ -56,7 +57,8 @@ public class PatternMatchingSpecificationMissingColonOrSemicolonTestData : IEnum
                 semicolonToken
             },
             new PatternMatchingExpression(new IdentifierExpression("a"),
-                new List<PatternMatchingBranch> { new(new IdentifierExpression("b"), new IdentifierExpression("c")) }),
+                new List<PatternMatchingBranch> { new(new IdentifierExpression("b"),
+                    new BlockExpression(new List<Statement>(), new IdentifierExpression("c"))) }),
             new UnexpectedToken(new Position(8, 1, 8), TokenType.Identifier, TokenType.Semicolon)
         };
         // default branch, missing colon
@@ -76,7 +78,7 @@ public class PatternMatchingSpecificationMissingColonOrSemicolonTestData : IEnum
                 semicolonToken
             },
             new PatternMatchingExpression(new IdentifierExpression("a"), new List<PatternMatchingBranch>(),
-                new IdentifierExpression("b")),
+                new BlockExpression(new List<Statement>(), new IdentifierExpression("b"))),
             new UnexpectedToken(new Position(6, 1, 6), TokenType.Identifier, TokenType.Colon)
         };
         // default branch, missing semicolon
@@ -96,7 +98,7 @@ public class PatternMatchingSpecificationMissingColonOrSemicolonTestData : IEnum
                 semicolonToken
             },
             new PatternMatchingExpression(new IdentifierExpression("a"), new List<PatternMatchingBranch>(),
-                new IdentifierExpression("b")),
+                new BlockExpression(new List<Statement>(), new IdentifierExpression("b"))),
             new UnexpectedToken(new Position(8, 1, 8), TokenType.Identifier, TokenType.Semicolon)
         };
     }

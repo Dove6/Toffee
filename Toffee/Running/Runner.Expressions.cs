@@ -92,12 +92,6 @@ public partial class Runner
         if (binaryExpression.Operator == Operator.NotEqualComparison)
             return Relational.IsNotEqualTo(leftResult, rightResult);
 
-        // TODO: little sense here
-        if (binaryExpression.Operator == Operator.EqualTypeCheck)
-            throw new NotImplementedException();
-        if (binaryExpression.Operator == Operator.NotEqualTypeCheck)
-            throw new NotImplementedException();
-
         if (binaryExpression.Operator == Operator.Disjunction)
             return Logical.Disjoin(Cast(leftResult, DataType.Bool), Cast(rightResult, DataType.Bool));
         if (binaryExpression.Operator == Operator.Conjunction)
@@ -155,10 +149,6 @@ public partial class Runner
             throw new NotImplementedException();
         if (unaryExpression.Operator == Operator.PatternMatchingNotEqualComparison)
             throw new NotImplementedException();
-        if (unaryExpression.Operator == Operator.PatternMatchingEqualTypeCheck)
-            throw new NotImplementedException();
-        if (unaryExpression.Operator == Operator.PatternMatchingNotEqualTypeCheck)
-            throw new NotImplementedException();
 
         throw new ArgumentOutOfRangeException(nameof(unaryExpression.Operator), unaryExpression.Operator, "Invalid operator");
     }
@@ -169,6 +159,11 @@ public partial class Runner
     }
 
     private object? CalculateDynamic(IdentifierExpression identifierExpression)
+    {
+        throw new NotImplementedException();
+    }
+
+    private object? CalculateDynamic(NamespaceAccessExpression namespaceAccessExpression)
     {
         throw new NotImplementedException();
     }
@@ -185,10 +180,25 @@ public partial class Runner
 
     private object? CalculateDynamic(TypeCastExpression typeCastExpression)
     {
-        throw new NotImplementedException();
+        var value = Calculate(typeCastExpression.Expression);
+        return Cast(value, typeCastExpression.Type);
     }
 
-    private object? CalculateDynamic(TypeExpression typeExpression)
+    private object? CalculateDynamic(TypeCheckExpression typeCheckExpression)
+    {
+        var value = Calculate(typeCheckExpression.Expression);
+        return typeCheckExpression.IsInequalityCheck ^ value switch
+        {
+            null => typeCheckExpression.Type == DataType.Null,
+            long => typeCheckExpression.Type == DataType.Integer,
+            double => typeCheckExpression.Type == DataType.Float,
+            string => typeCheckExpression.Type == DataType.String,
+            bool => typeCheckExpression.Type == DataType.Bool,
+            _ => throw new NotImplementedException()
+        };
+    }
+
+    private object? CalculateDynamic(PatternTypeCheckExpression patternTypeCheckExpression)
     {
         throw new NotImplementedException();
     }

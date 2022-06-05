@@ -87,7 +87,7 @@ public partial class ExpressionParsingTest
     [Trait("Category", "Nesting")]
     [Theory]
     [ClassData(typeof(OperatorsPriorityTestData))]
-    public void ExpressionsShouldBeParsedWithRespectToOperatorsPriority(Token[] tokenSequence, Expression expectedExpression, bool shouldIgnoreErrors = false)
+    public void ExpressionsShouldBeParsedWithRespectToOperatorsPriority(Token[] tokenSequence, Expression expectedExpression)
     {
         var lexerMock = new LexerMock(tokenSequence);
         var errorHandlerMock = new ParserErrorHandlerMock();
@@ -101,8 +101,7 @@ public partial class ExpressionParsingTest
 
         expressionStatement.Expression.Should().BeEquivalentTo(expectedExpression, Helpers.ProvideOptions);
 
-        if (!shouldIgnoreErrors)
-            Assert.False(errorHandlerMock.HadErrors);
+        Assert.False(errorHandlerMock.HadErrors);
         Assert.False(errorHandlerMock.HadWarnings);
     }
 

@@ -4,7 +4,7 @@ namespace Toffee.SyntacticAnalysis;
 
 public abstract record Statement(Position StartPosition, Position EndPosition, bool IsTerminated = false);
 
-public record NamespaceImportStatement(IList<IdentifierExpression> NamespaceLevels)
+public record NamespaceImportStatement(IList<string> NamespaceLevels)
     : Statement(new Position(), new Position());
 public record VariableInitializationListStatement(IList<VariableInitialization> Items)
     : Statement(new Position(), new Position());

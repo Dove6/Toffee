@@ -81,17 +81,15 @@ public class OperatorsAssociativityTestData : IEnumerable<object[]>
                     x.Type == TokenType.KeywordIs
                         ? isNegated ? new[] { x, Helpers.GetDefaultToken(TokenType.KeywordNot) } : new[] { x }
                         : new[] { x }).ToArray(),
-                new BinaryExpression(
-                    new BinaryExpression(
+                new TypeCheckExpression(
+                    new TypeCheckExpression(
                         new IdentifierExpression("a"),
-                        isNegated ? Operator.NotEqualTypeCheck : Operator.EqualTypeCheck,
-                        new TypeExpression(DataType.Integer)),
-                    isNegated ? Operator.NotEqualTypeCheck : Operator.EqualTypeCheck,
-                    new TypeExpression(DataType.Integer))
+                        DataType.Integer,
+                        isNegated),
+                    DataType.Integer,
+                    isNegated)
             };
 
-        // .
-        yield return GenerateLeftBinary(TokenType.OperatorDot, Operator.NamespaceAccess);
         // ()
         yield return new object[]
         {

@@ -27,7 +27,7 @@ public partial class ExpressionParsingTest
 
         var functionCallExpression = expressionStatement.Expression.As<FunctionCallExpression>();
         functionCallExpression.Should().NotBeNull();
-        functionCallExpression.Expression.Should().BeEquivalentTo(expectedCalledExpression, Helpers.ProvideOptions);
+        functionCallExpression.Callee.Should().BeEquivalentTo(expectedCalledExpression, Helpers.ProvideOptions);
         functionCallExpression.Arguments.ToArray().Should().BeEquivalentTo(expectedArguments, Helpers.ProvideOptions);
 
         Assert.False(errorHandlerMock.HadErrors);

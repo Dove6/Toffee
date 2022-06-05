@@ -1,4 +1,3 @@
-using System.Linq;
 using FluentAssertions;
 using Toffee.LexicalAnalysis;
 using Toffee.Scanning;
@@ -94,55 +93,6 @@ public partial class ExpressionParsingTest
     }
 
     [Trait("Category", "Unary expressions")]
-    [Trait("Category", "Pattern matching expressions")]
-    [Theory]
-    [InlineData(new[] { TokenType.KeywordIs }, TokenType.KeywordInt, Operator.PatternMatchingEqualTypeCheck, DataType.Integer)]
-    [InlineData(new[] { TokenType.KeywordIs, TokenType.KeywordNot }, TokenType.KeywordNull, Operator.PatternMatchingNotEqualTypeCheck, DataType.Null)]
-    public void TypeCheckingUnaryPatternMatchingExpressionsShouldBeParsedCorrectly(TokenType[] operatorTokenTypes, TokenType typeTokenType, Operator expectedOperator, DataType expectedType)
-    {
-        var tokenSequence = new[]
-        {
-            Helpers.GetDefaultToken(TokenType.KeywordMatch),
-            Helpers.GetDefaultToken(TokenType.LeftParenthesis),
-            new Token(TokenType.Identifier, "a"),
-            Helpers.GetDefaultToken(TokenType.RightParenthesis),
-            Helpers.GetDefaultToken(TokenType.LeftBrace)
-        }.Concat(operatorTokenTypes.Select(Helpers.GetDefaultToken)).Concat(new[]
-        {
-            Helpers.GetDefaultToken(typeTokenType),
-            Helpers.GetDefaultToken(TokenType.Colon),
-            new Token(TokenType.Identifier, "d"),
-            Helpers.GetDefaultToken(TokenType.Semicolon),
-            Helpers.GetDefaultToken(TokenType.RightBrace),
-            Helpers.GetDefaultToken(TokenType.Semicolon)
-        }).ToArray();
-
-        var expectedExpression = new TypeExpression(expectedType);
-
-        var lexerMock = new LexerMock(tokenSequence);
-        var errorHandlerMock = new ParserErrorHandlerMock();
-        IParser parser = new Parser(lexerMock, errorHandlerMock);
-
-        parser.Advance();
-
-        var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
-        expressionStatement.Should().NotBeNull();
-        expressionStatement!.IsTerminated.Should().Be(true);
-
-        var patternMatchingExpression = expressionStatement.Expression.As<PatternMatchingExpression>();
-        patternMatchingExpression.Should().NotBeNull();
-        patternMatchingExpression.Branches.Should().HaveCount(1);
-
-        var unaryExpression = patternMatchingExpression.Branches[0].Pattern.As<UnaryExpression>();
-        unaryExpression.Should().NotBeNull();
-        unaryExpression.Operator.Should().Be(expectedOperator);
-        unaryExpression.Expression.Should().BeEquivalentTo(expectedExpression, Helpers.ProvideOptions);
-
-        Assert.False(errorHandlerMock.HadErrors);
-        Assert.False(errorHandlerMock.HadWarnings);
-    }
-
-    [Trait("Category", "Unary expressions")]
     [Trait("Category", "Negative")]
     [Theory]
     [InlineData(TokenType.OperatorPlus)]
@@ -209,55 +159,6 @@ public partial class ExpressionParsingTest
         parser.CurrentStatement.Should().BeNull();
 
         errorHandlerMock.HandledErrors[0].Should().BeEquivalentTo(expectedError);
-
-        Assert.False(errorHandlerMock.HadWarnings);
-    }
-
-    [Trait("Category", "Negative")]
-    [Trait("Category", "Unary expressions")]
-    [Trait("Category", "Pattern matching expressions")]
-    [Trait("Category", "Type expressions")]
-    [Trait("Category", "Negative")]
-    [Theory]
-    [InlineData(new[] { TokenType.KeywordIs })]
-    [InlineData(new[] { TokenType.KeywordIs, TokenType.KeywordNot })]
-    public void MissingTypeInTypeCheckingUnaryPatternMatchingExpressionsShouldBeDetectedProperly(TokenType[] operatorTokenTypes)
-    {
-        var tokenSequence = new[]
-        {
-            Helpers.GetDefaultToken(TokenType.KeywordMatch),
-            Helpers.GetDefaultToken(TokenType.LeftParenthesis),
-            new Token(TokenType.Identifier, "a"),
-            Helpers.GetDefaultToken(TokenType.RightParenthesis),
-            Helpers.GetDefaultToken(TokenType.LeftBrace)
-        }.Concat(operatorTokenTypes.Select(Helpers.GetDefaultToken)).Concat(new[]
-        {
-            Helpers.GetDefaultToken(TokenType.Colon),
-            new Token(TokenType.Identifier, "d"),
-            Helpers.GetDefaultToken(TokenType.Semicolon),
-            Helpers.GetDefaultToken(TokenType.RightBrace),
-            Helpers.GetDefaultToken(TokenType.Semicolon)
-        }).ToArray();
-
-        var errorPosition = (uint)operatorTokenTypes.Length + 5;
-        var expectedError = new UnexpectedToken(new Position(errorPosition, 1, errorPosition), TokenType.Colon);
-
-        var lexerMock = new LexerMock(tokenSequence);
-        var errorHandlerMock = new ParserErrorHandlerMock();
-        IParser parser = new Parser(lexerMock, errorHandlerMock);
-
-        parser.Advance();
-
-        parser.CurrentStatement.Should().BeNull();
-
-        errorHandlerMock.HandledErrors[0].Should()
-            .BeEquivalentTo(expectedError, o => o.Excluding(i => i.Name == "ExpectedType"));
-        errorHandlerMock.HandledErrors[0].As<UnexpectedToken>().ExpectedType.Should().Contain(TokenType.KeywordInt);
-        errorHandlerMock.HandledErrors[0].As<UnexpectedToken>().ExpectedType.Should().Contain(TokenType.KeywordFloat);
-        errorHandlerMock.HandledErrors[0].As<UnexpectedToken>().ExpectedType.Should().Contain(TokenType.KeywordString);
-        errorHandlerMock.HandledErrors[0].As<UnexpectedToken>().ExpectedType.Should().Contain(TokenType.KeywordBool);
-        errorHandlerMock.HandledErrors[0].As<UnexpectedToken>().ExpectedType.Should().Contain(TokenType.KeywordFunction);
-        errorHandlerMock.HandledErrors[0].As<UnexpectedToken>().ExpectedType.Should().Contain(TokenType.KeywordNull);
 
         Assert.False(errorHandlerMock.HadWarnings);
     }

@@ -14,7 +14,7 @@ public partial class ExpressionParsingTest
     [Trait("Category", "Pattern matching expressions")]
     [Theory]
     [ClassData(typeof(PatternMatchingExpressionTestData))]
-    public void PatternMatchingExpressionsShouldBeParsedCorrectly(Token[] tokenSequence, Expression expectedArgument, PatternMatchingBranch[] expectedBranches, Expression? expectedDefault)
+    public void PatternMatchingExpressionsShouldBeParsedCorrectly(Token[] tokenSequence, Expression expectedExpression)
     {
         var lexerMock = new LexerMock(tokenSequence);
         var errorHandlerMock = new ParserErrorHandlerMock();
@@ -26,11 +26,7 @@ public partial class ExpressionParsingTest
         expressionStatement.Should().NotBeNull();
         expressionStatement!.IsTerminated.Should().Be(true);
 
-        var patternMatchingExpression = expressionStatement.Expression.As<PatternMatchingExpression>();
-        patternMatchingExpression.Should().NotBeNull();
-        patternMatchingExpression.Argument.Should().BeEquivalentTo(expectedArgument, Helpers.ProvideOptions);
-        patternMatchingExpression.Branches.ToArray().Should().BeEquivalentTo(expectedBranches, Helpers.ProvideOptions);
-        patternMatchingExpression.Default.Should().BeEquivalentTo(expectedDefault, Helpers.ProvideOptions);
+        expressionStatement.Expression.Should().BeEquivalentTo(expectedExpression, Helpers.ProvideOptions);
 
         Assert.False(errorHandlerMock.HadErrors);
         Assert.False(errorHandlerMock.HadWarnings);
@@ -128,7 +124,7 @@ public partial class ExpressionParsingTest
 
         var expectedExpression = new PatternMatchingExpression(new IdentifierExpression("a"),
             new List<PatternMatchingBranch> { new(new GroupingExpression(new IdentifierExpression("b")),
-                new IdentifierExpression("c")) });
+                new BlockExpression(new List<Statement>(), new IdentifierExpression("c"))) });
 
         var expectedError = new UnexpectedToken(new Position(7, 1, 7), TokenType.Colon, TokenType.RightParenthesis);
 

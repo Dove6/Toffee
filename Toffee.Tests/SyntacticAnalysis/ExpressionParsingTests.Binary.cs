@@ -1,9 +1,7 @@
-﻿using System.Linq;
-using FluentAssertions;
+﻿using FluentAssertions;
 using Toffee.LexicalAnalysis;
 using Toffee.Scanning;
 using Toffee.SyntacticAnalysis;
-using Toffee.Tests.SyntacticAnalysis.Generators;
 using Xunit;
 
 namespace Toffee.Tests.SyntacticAnalysis;
@@ -12,7 +10,6 @@ public partial class ExpressionParsingTest
 {
     [Trait("Category", "Binary expressions")]
     [Theory]
-    [InlineData(TokenType.OperatorDot, Operator.NamespaceAccess)]
     [InlineData(TokenType.OperatorCaret, Operator.Exponentiation)]
     [InlineData(TokenType.OperatorPlus, Operator.Addition)]
     [InlineData(TokenType.OperatorMinus, Operator.Subtraction)]
@@ -49,41 +46,6 @@ public partial class ExpressionParsingTest
         var expectedRightExpression = new IdentifierExpression(rightIdentifierName);
 
         var lexerMock = new LexerMock(leftToken, opToken, rightToken, Helpers.GetDefaultToken(TokenType.Semicolon));
-        var errorHandlerMock = new ParserErrorHandlerMock();
-        IParser parser = new Parser(lexerMock, errorHandlerMock);
-
-        parser.Advance();
-
-        var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
-        expressionStatement.Should().NotBeNull();
-        expressionStatement!.IsTerminated.Should().Be(true);
-
-        var expression = expressionStatement.Expression.As<BinaryExpression>();
-        expression.Should().NotBeNull();
-        expression!.Left.Should().BeEquivalentTo(expectedLeftExpression, Helpers.ProvideOptions);
-        expression.Operator.Should().Be(expectedOperator);
-        expression.Right.Should().BeEquivalentTo(expectedRightExpression, Helpers.ProvideOptions);
-
-        Assert.False(errorHandlerMock.HadErrors);
-        Assert.False(errorHandlerMock.HadWarnings);
-    }
-
-    [Trait("Category", "Binary expressions")]
-    [Theory]
-    [InlineData(new[] { TokenType.KeywordIs }, TokenType.KeywordInt, Operator.EqualTypeCheck, DataType.Integer)]
-    [InlineData(new[] { TokenType.KeywordIs, TokenType.KeywordNot }, TokenType.KeywordNull, Operator.NotEqualTypeCheck, DataType.Null)]
-    public void TypeCheckingBinaryExpressionsShouldBeParsedCorrectly(TokenType[] operatorTokenTypes, TokenType typeTokenType, Operator expectedOperator, DataType expectedType)
-    {
-        const string leftIdentifierName = "a";
-        var leftToken = new Token(TokenType.Identifier, leftIdentifierName);
-        var expectedLeftExpression = new IdentifierExpression(leftIdentifierName);
-
-        var opTokens = operatorTokenTypes.Select(Helpers.GetDefaultToken).ToArray();
-
-        var rightToken = Helpers.GetDefaultToken(typeTokenType);
-        var expectedRightExpression = new TypeExpression(expectedType);
-
-        var lexerMock = new LexerMock(opTokens.Prepend(leftToken).Append(rightToken).AppendSemicolon());
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
@@ -211,42 +173,6 @@ public partial class ExpressionParsingTest
     }
 
     [Trait("Category", "Binary expressions")]
-    [Trait("Category", "Negative")]
-    [Theory]
-    [InlineData(new[] { TokenType.KeywordIs })]
-    [InlineData(new[] { TokenType.KeywordIs, TokenType.KeywordNot })]
-    public void MissingTypeInTypeCheckingBinaryExpressionsShouldBeDetectedProperly(TokenType[] operatorTokenTypes)
-    {
-        const string leftIdentifierName = "a";
-
-        var tokenSequence = operatorTokenTypes.Select(Helpers.GetDefaultToken)
-            .Prepend(new Token(TokenType.Identifier, leftIdentifierName))
-            .AppendSemicolon();
-
-        var errorPosition = (uint)operatorTokenTypes.Length + 1;
-        var expectedError = new UnexpectedToken(new Position(errorPosition, 1, errorPosition), TokenType.Semicolon);
-
-        var lexerMock = new LexerMock(tokenSequence);
-        var errorHandlerMock = new ParserErrorHandlerMock();
-        IParser parser = new Parser(lexerMock, errorHandlerMock);
-
-        parser.Advance();
-
-        parser.CurrentStatement.Should().BeNull();
-
-        errorHandlerMock.HandledErrors[0].Should()
-            .BeEquivalentTo(expectedError, o => o.Excluding(i => i.Name == "ExpectedType"));
-        errorHandlerMock.HandledErrors[0].As<UnexpectedToken>().ExpectedType.Should().Contain(TokenType.KeywordInt);
-        errorHandlerMock.HandledErrors[0].As<UnexpectedToken>().ExpectedType.Should().Contain(TokenType.KeywordFloat);
-        errorHandlerMock.HandledErrors[0].As<UnexpectedToken>().ExpectedType.Should().Contain(TokenType.KeywordString);
-        errorHandlerMock.HandledErrors[0].As<UnexpectedToken>().ExpectedType.Should().Contain(TokenType.KeywordBool);
-        errorHandlerMock.HandledErrors[0].As<UnexpectedToken>().ExpectedType.Should().Contain(TokenType.KeywordFunction);
-        errorHandlerMock.HandledErrors[0].As<UnexpectedToken>().ExpectedType.Should().Contain(TokenType.KeywordNull);
-
-        Assert.False(errorHandlerMock.HadWarnings);
-    }
-
-    [Trait("Category", "Binary expressions")]
     [Trait("Category", "Pattern matching expressions")]
     [Trait("Category", "Negative")]
     [Theory]
@@ -281,28 +207,6 @@ public partial class ExpressionParsingTest
         parser.Advance();
 
         parser.CurrentStatement.Should().BeNull();
-
-        errorHandlerMock.HandledErrors[0].Should().BeEquivalentTo(expectedError);
-
-        Assert.False(errorHandlerMock.HadWarnings);
-    }
-
-    [Trait("Category", "Namespace import statements")]
-    [Trait("Category", "Negative")]
-    [Theory]
-    [ClassData(typeof(NamespaceAccessExpressionNonIdentifiersTestData))]
-    public void NonIdentifiersInNamespaceAccessExpressionsShouldBeDetectedProperly(Token[] tokenSequence, Expression expectedExpression, ParserError expectedError)
-    {
-        var lexerMock = new LexerMock(tokenSequence);
-        var errorHandlerMock = new ParserErrorHandlerMock();
-        IParser parser = new Parser(lexerMock, errorHandlerMock);
-
-        parser.Advance();
-
-        var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
-        expressionStatement.IsTerminated.Should().BeTrue();
-
-        expressionStatement.Expression.Should().BeEquivalentTo(expectedExpression, Helpers.ProvideOptions);
 
         errorHandlerMock.HandledErrors[0].Should().BeEquivalentTo(expectedError);
 

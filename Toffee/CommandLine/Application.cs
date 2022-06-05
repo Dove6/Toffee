@@ -70,6 +70,7 @@ public class Application
             null => "null",
             string stringValue => $"\"{stringValue}\"",
             double floatValue => floatValue.ToString(CultureInfo.InvariantCulture),
+            bool boolValue => boolValue ? "true" : "false",
             var other => $"{other}"
         };
     }

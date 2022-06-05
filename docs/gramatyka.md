@@ -102,8 +102,8 @@ unary_prefixed
     | exponentiation;
 exponentiation
     = namespace_access_or_function_call, { OP_CARET, exponentiation };
-namespace_access_or_function_call
-    = primary_expression, { function_call_part } { OP_DOT, primary_expression, { function_call_part } };
+function_call
+    = primary_expression, { function_call_part };
 function_call_part
     = LEFT_PARENTHESIS, arguments_list, RIGHT_PARENTHESIS;
 arguments_list
@@ -112,7 +112,7 @@ argument
     = expression;
 primary_expression
     = LITERAL
-    | IDENTIFIER
+    | IDENTIFIER, { OP_DOT, IDENTIFIER }
     | [ CASTING_TYPE ], LEFT_PARENTHESIS, expression, RIGHT_PARENTHESIS;
 ```
 
