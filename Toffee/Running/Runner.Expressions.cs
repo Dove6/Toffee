@@ -38,7 +38,7 @@ public partial class Runner
         foreach (var statement in expression.Statements)
         {
             Run(statement);
-            if (_environmentStack.ExecutionInterrupted)
+            if (ExecutionInterrupted)
                 return null;
         }
         var result = expression.ResultExpression is not null
@@ -95,7 +95,7 @@ public partial class Runner
             if (expression.CounterName is not null)
                 _environmentStack.Assign(expression.CounterName, counter);
             Calculate(expression.Body);
-            if (_environmentStack.ExecutionInterrupted)
+            if (ExecutionInterrupted)
                 return counter;
             counter = Arithmetical.Add(counter, stepValue);
         }
@@ -110,7 +110,7 @@ public partial class Runner
         while (Casting.ToBool(conditionValue = Calculate(expression.Condition)) is true)
         {
             Calculate(expression.Body);
-            if (_environmentStack.ExecutionInterrupted)
+            if (ExecutionInterrupted)
                 return conditionValue;
         }
         return conditionValue;

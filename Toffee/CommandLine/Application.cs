@@ -63,31 +63,10 @@ public class Application
             printer.Print(_parser.CurrentStatement!);
     }
 
-    private static string Stringify(object? value)
-    {
-        return value switch
-        {
-            null => "null",
-            string stringValue => $"\"{stringValue}\"",
-            double floatValue => floatValue.ToString(CultureInfo.InvariantCulture),
-            bool boolValue => boolValue ? "true" : "false",
-            var other => $"{other}"
-        };
-    }
-
     private void RunParser()
     {
         var runner = new Runner(_logger);
-        while (_parser!.Advance() is not null)
-        {
-            var statement = _parser.CurrentStatement!;
-            if (statement is ExpressionStatement expressionStatement)
-            {
-                Console.Write("Output: ");
-                Console.WriteLine(Stringify(runner.Calculate(expressionStatement.Expression)));
-            }
-            else
-                runner.Run(_parser.CurrentStatement!);
-        }
+        while (!runner.ShouldQuit && _parser!.Advance() is not null)
+            runner.Run(_parser.CurrentStatement!);
     }
 }

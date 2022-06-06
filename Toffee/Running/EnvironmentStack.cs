@@ -13,7 +13,6 @@ public class EnvironmentStack
     public object? ReturnValue { get; private set; }
     public bool ReturnEncountered { get; private set; }
     public bool BreakEncountered { get; private set; }
-    public bool ExecutionInterrupted => ReturnEncountered || BreakEncountered;
 
     // TODO: move to parser
     private bool _isInFunction;
@@ -164,9 +163,12 @@ public class EnvironmentStack
 
 public class Environment
 {
-    private IDictionary<string, Variable> _variables = new Dictionary<string, Variable>();
+    private IDictionary<string, Variable> _variables;
 
     public EnvironmentType Type { get; init; } = EnvironmentType.Block;
+
+    public Environment(IDictionary<string, Variable>? variables = null) =>
+        _variables = variables ?? new Dictionary<string, Variable>();
 
     public bool Has(string identifier) => _variables.ContainsKey(identifier);
 
