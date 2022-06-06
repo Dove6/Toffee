@@ -16,9 +16,13 @@ public partial class Runner
             var result = CalculateDynamic(expression as dynamic);
             return result;
         }
+        catch (RunnerException e)
+        {
+            Console.WriteLine(e.Error);
+        }
         catch (Exception e)
         {
-            Console.WriteLine(e);
+            Console.WriteLine(e.Message);
         }
         finally
         {

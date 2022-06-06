@@ -14,9 +14,13 @@ public partial class Runner
         {
             RunDynamic(statement as dynamic);
         }
+        catch (RunnerException e)
+        {
+            Console.WriteLine(e.Error);
+        }
         catch (Exception e)
         {
-            Console.WriteLine(e);
+            Console.WriteLine(e.Message);
         }
         finally
         {
