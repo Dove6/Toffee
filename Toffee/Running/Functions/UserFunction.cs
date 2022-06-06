@@ -16,7 +16,7 @@ public class UserFunction : IFunction
     public object? Call(IRunner runner, IList<object?> arguments)
     {
         if (arguments.Count != _source.Parameters.Count)
-            throw new NotImplementedException();
+            throw new RunnerException(new BadArgumentCount());
 
         using var closureGuard = _closure.PushGuard(EnvironmentType.Function);
         // TODO: make sure parameters have unique names
@@ -24,7 +24,7 @@ public class UserFunction : IFunction
         {
             _closure.Initialize(_source.Parameters[i].Name, arguments[i], _source.Parameters[i].IsConst);
             if (!_source.Parameters[i].IsNullAllowed && arguments[i] is null)
-                throw new NotImplementedException();
+                throw new RunnerException(new NonNullArgumentRequired());
         }
 
         foreach (var statement in _source.Body.Statements)

@@ -15,7 +15,7 @@ public static class Casting
             double floatValue => floatValue,
             string stringValue => ToNumber(stringValue),
             bool boolValue => boolValue ? 1L : 0L,
-            _ => throw new NotImplementedException()
+            _ => throw new RunnerException(new BadCast())
         };
     }
 
@@ -37,7 +37,7 @@ public static class Casting
             DataType.Float => ToFloat(value),
             DataType.String => ToString(value),
             DataType.Bool => ToBool(value),
-            _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)  // TODO: throws
+            _ => throw new RunnerException(new BadCast())
         };
     }
 
@@ -49,8 +49,13 @@ public static class Casting
             long integerValue => integerValue,
             double floatValue => (long)Math.Truncate(floatValue),
             bool boolValue => boolValue ? 1L : 0L,
-            string stringValue => throw new NotImplementedException(),
-            _ => throw new ArgumentOutOfRangeException(nameof(value), value, null)  // TODO: throws
+            string stringValue => long.TryParse(stringValue,
+                NumberStyles.Integer,
+                CultureInfo.InvariantCulture,
+                out var parsedStringValue)
+                ? parsedStringValue
+                : null,
+            _ => throw new RunnerException(new BadCast())
         };
     }
 
@@ -62,8 +67,13 @@ public static class Casting
             long integerValue => Convert.ToDouble(integerValue),
             double floatValue => floatValue,
             bool boolValue => boolValue ? 1.0 : 0.0,
-            string stringValue => throw new NotImplementedException(),
-            _ => throw new ArgumentOutOfRangeException(nameof(value), value, null)  // TODO: throws
+            string stringValue => double.TryParse(stringValue,
+                NumberStyles.Float,
+                CultureInfo.InvariantCulture,
+                out var parsedStringValue)
+                ? parsedStringValue
+                : null,
+            _ => throw new RunnerException(new BadCast())
         };
     }
 
@@ -76,7 +86,7 @@ public static class Casting
             double floatValue => floatValue.ToString(CultureInfo.InvariantCulture),
             bool boolValue => boolValue.ToString(CultureInfo.InvariantCulture).ToLowerInvariant(),
             string stringValue => stringValue,
-            _ => throw new ArgumentOutOfRangeException(nameof(value), value, null)  // TODO: throws
+            _ => throw new RunnerException(new BadCast())
         };
     }
 
@@ -94,16 +104,16 @@ public static class Casting
                 "false" => false,
                 _ => null
             },
-            _ => throw new ArgumentOutOfRangeException(nameof(value), value, null)  // TODO: throws
+            _ => throw new RunnerException(new BadCast())
         };
     }
 
-    public static IFunction? ToFunction(object? value)
+    public static IFunction ToFunction(object? value)
     {
         return value switch
         {
             IFunction functionValue => functionValue,
-            _ => throw new ArgumentOutOfRangeException(nameof(value), value, null)  // TODO: throws
+            _ => throw new RunnerException(new BadCast())
         };
     }
 }

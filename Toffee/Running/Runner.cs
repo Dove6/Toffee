@@ -18,7 +18,7 @@ public partial class Runner : IRunner
         _errorHandler = errorHandler;
         _environmentStack = environmentStack ?? new EnvironmentStack(new Environment(new Dictionary<string, Variable>
         {
-            { "print", new Variable(new PrintFunction(), false) },
+            { "print", new Variable(new PrintFunction(Console.Out), false) },
             { "quit", new Variable(new QuitFunction(), false) }
         }));
     }

@@ -19,7 +19,7 @@ public static class Arithmetical
         // TODO: describe promotion rules
         if (augend is double || addend is double)
             return Casting.ToFloat(augend) + Casting.ToFloat(addend);
-        return Casting.ToInt(augend) + Casting.ToInt(addend);
+        return unchecked(Casting.ToInt(augend) + Casting.ToInt(addend));
     }
 
     public static object? Subtract(object? minuend, object? subtrahend)
@@ -29,7 +29,7 @@ public static class Arithmetical
         // TODO: describe promotion rules
         if (minuend is double || subtrahend is double)
             return Casting.ToFloat(minuend) - Casting.ToFloat(subtrahend);
-        return Casting.ToInt(minuend) - Casting.ToInt(subtrahend);
+        return unchecked(Casting.ToInt(minuend) - Casting.ToInt(subtrahend));
     }
 
     public static object? Multiply(object? multiplier, object? multiplicand)
@@ -39,7 +39,7 @@ public static class Arithmetical
         // TODO: describe promotion rules
         if (multiplier is double || multiplicand is double)
             return Casting.ToFloat(multiplier) * Casting.ToFloat(multiplicand);
-        return Casting.ToInt(multiplier) * Casting.ToInt(multiplicand);
+        return unchecked(Casting.ToInt(multiplier) * Casting.ToInt(multiplicand));
     }
 
     public static object? Divide(object? dividend, object? divisor)
@@ -50,7 +50,7 @@ public static class Arithmetical
         if (dividend is double || divisor is double)
             return Casting.ToFloat(dividend) / Casting.ToFloat(divisor);
         if (divisor is 0L)
-            throw new NotImplementedException();
+            throw new RunnerException(new ZeroDivision());
         return Casting.ToInt(dividend) / Casting.ToInt(divisor);
     }
 
@@ -62,7 +62,7 @@ public static class Arithmetical
         if (dividend is double || divisor is double)
             return Casting.ToFloat(dividend) % Casting.ToFloat(divisor);
         if (divisor is 0L)
-            throw new NotImplementedException();
+            throw new RunnerException(new ZeroDivision());
         return Casting.ToInt(dividend) % Casting.ToInt(divisor);
     }
 

@@ -24,11 +24,6 @@ public partial class Runner
         }
     }
 
-    private void RunDynamic(Statement statement)
-    {
-        throw new NotImplementedException();
-    }
-
     private void RunDynamic(NamespaceImportStatement statement)
     {
         throw new NotImplementedException();

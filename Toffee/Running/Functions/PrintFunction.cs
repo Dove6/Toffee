@@ -4,10 +4,14 @@ namespace Toffee.Running.Functions;
 
 public class PrintFunction : IFunction
 {
+    private readonly TextWriter _writer;
+
+    public PrintFunction(TextWriter writer) => _writer = writer;
+
     public object? Call(IRunner runner, IList<object?> arguments)
     {
         foreach (var argument in arguments)
-            Console.WriteLine(Stringify(argument));
+            _writer.WriteLine(Stringify(argument));
         return null;
     }
 

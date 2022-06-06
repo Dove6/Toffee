@@ -50,7 +50,6 @@ public partial class Parser : IParser
 
     private void EmitError(ParserError error) => _errorHandler?.Handle(error);
 
-    // TODO: actually use the method
     private void EmitWarning(ParserWarning warning) => _errorHandler?.Handle(warning);
 
     private void InterceptParserError(Action throwingAction)

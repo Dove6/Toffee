@@ -27,11 +27,6 @@ public partial class Runner
         return null;
     }
 
-    private object? CalculateDynamic(Expression expression)
-    {
-        throw new NotImplementedException();
-    }
-
     private object? CalculateDynamic(BlockExpression expression)
     {
         using var environmentGuard = _environmentStack.PushGuard();
@@ -78,7 +73,7 @@ public partial class Runner
         }
 
         if (startValue is null || stepValue is null || stopValue is null)
-            throw new NotImplementedException();
+            throw new RunnerException(new NullInForLoopRange());
 
         var counter = startValue;
         Func<object?, object?, bool?> rangePredicate = Relational.IsGreaterThan(stepValue, 0L) is true
@@ -132,9 +127,6 @@ public partial class Runner
         var leftResult = Calculate(expression.Left);
         var rightResult = Calculate(expression.Right);
 
-        if (expression.Operator == Operator.NamespaceAccess)
-            throw new NotImplementedException();  // TODO: little sense
-
         if (expression.Operator == Operator.Addition)
             return Arithmetical.Add(Casting.ToNumber(leftResult), Casting.ToNumber(rightResult));
         if (expression.Operator == Operator.Subtraction)
@@ -159,7 +151,13 @@ public partial class Runner
         if (expression.Operator == Operator.NullCoalescing)
             return leftResult ?? rightResult;
         if (expression.Operator == Operator.NullSafePipe)
-            throw new NotImplementedException();
+        {
+            var value = Calculate(expression.Left);
+            var callee = Casting.ToFunction(expression.Right);
+            return value is not null
+                ? callee!.Call(this, new List<object?> { value })
+                : null;
+        }
 
         if (expression.Operator is Operator.Assignment or Operator.AdditionAssignment or Operator.SubtractionAssignment
                 or Operator.MultiplicationAssignment or Operator.DivisionAssignment or Operator.RemainderAssignment)
@@ -171,7 +169,7 @@ public partial class Runner
     private object? PerformAssignment(Expression left, object? right, Operator assignmentOperator)
     {
         if (left is not IdentifierExpression identifierExpression)
-            throw new NotImplementedException();
+            throw new RunnerException(new InvalidLvalue());
 
         var valueToAssign = assignmentOperator switch
         {
@@ -204,17 +202,14 @@ public partial class Runner
 
     private object? CalculateDynamic(FunctionCallExpression expression)
     {
-        var calleeValue = Calculate(expression.Callee);
-        if (calleeValue is not IFunction function)
-            throw new NotImplementedException();
-
+        var function = Casting.ToFunction(Calculate(expression.Callee));
         return function.Call(this, expression.Arguments.Select(x => Calculate(x)).ToList());
     }
 
     private object? CalculateDynamic(IdentifierExpression expression)
     {
         if (expression.NamespaceLevels.Count > 0)
-            throw new NotImplementedException();
+            throw new ArgumentException(null, nameof(expression));
         return _environmentStack.Access(expression.Name);
     }
 
@@ -244,14 +239,14 @@ public partial class Runner
             double => expression.Type == DataType.Float,
             string => expression.Type == DataType.String,
             bool => expression.Type == DataType.Bool,
-            _ => throw new NotImplementedException()
+            IFunction => expression.Type == DataType.Function
         };
     }
 
     private bool? CalculateDynamic(ComparisonExpression expression)
     {
         if (expression.Comparisons.Count == 0)
-            throw new NotImplementedException();
+            throw new ArgumentException(null, nameof(expression));
         var operatorList = expression.Comparisons.Select(x => x.Operator);
         var valueList = expression.Comparisons.Select(x => x.Right).Prepend(expression.Left).Select(x => Calculate(x))
             .ToList();
@@ -264,8 +259,7 @@ public partial class Runner
                     Operator.GreaterThanComparison => Relational.IsGreaterThan(values.a, values.b),
                     Operator.GreaterOrEqualComparison => Relational.IsGreaterOrEqual(values.a, values.b),
                     Operator.EqualComparison => Relational.IsEqualTo(values.a, values.b),
-                    Operator.NotEqualComparison => Relational.IsNotEqualTo(values.a, values.b),
-                    _ => throw new NotImplementedException()
+                    Operator.NotEqualComparison => Relational.IsNotEqualTo(values.a, values.b)
                 }).ToList();
         return resultList.Aggregate((acc, next) => Logical.Conjoin(acc, next));
     }

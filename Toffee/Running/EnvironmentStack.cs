@@ -14,7 +14,6 @@ public class EnvironmentStack
     public bool ReturnEncountered { get; private set; }
     public bool BreakEncountered { get; private set; }
 
-    // TODO: move to parser
     private bool _isInFunction;
     private bool _isInLoop;
     private EnvironmentType? _currentNonBlockType;
@@ -33,7 +32,7 @@ public class EnvironmentStack
     public void RegisterReturn(object? value)
     {
         if (!_isInFunction)
-            throw new NotImplementedException();
+            throw new RunnerException(new ReturnOutsideOfFunction());
         ReturnValue = value;
         ReturnEncountered = true;
     }
@@ -41,7 +40,7 @@ public class EnvironmentStack
     public void RegisterBreak()
     {
         if (_currentNonBlockType != EnvironmentType.Loop)
-            throw new NotImplementedException();
+            throw new RunnerException(new BreakOutsideOfLoop());
         BreakEncountered = true;
     }
 
@@ -54,7 +53,7 @@ public class EnvironmentStack
     {
         var environmentIndex = LocateOnStack(identifier);
         if (environmentIndex is null)
-            throw new NotImplementedException();
+            throw new RunnerException(new VariableUndefined());
         return GetEnvironmentAt(environmentIndex.Value).Access(identifier);
     }
 
@@ -62,14 +61,14 @@ public class EnvironmentStack
     {
         var environmentIndex = LocateOnStack(identifier);
         if (environmentIndex is null)
-            throw new NotImplementedException();
+            throw new RunnerException(new VariableUndefined());
         GetEnvironmentAt(environmentIndex.Value).Assign(identifier, value);
     }
 
     public void Initialize(string identifier, object? initialValue = null, bool isConst = false)
     {
         if (CurrentEnvironment.Has(identifier))
-            throw new NotImplementedException();
+            throw new RunnerException(new VariableAlreadyDefined());
         CurrentEnvironment.Initialize(identifier, initialValue, isConst);
     }
 
@@ -99,7 +98,7 @@ public class EnvironmentStack
     private void Pop()
     {
         if (_stack.Count <= 1)
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         var removedEnvironment = CurrentEnvironment;
         _stack = _stack.SkipLast(1).ToList();
         if (removedEnvironment.Type == EnvironmentType.Function)
@@ -180,17 +179,17 @@ public class Environment
     public object? Access(string identifier)
     {
         if (!_variables.ContainsKey(identifier))
-            throw new NotImplementedException();
+            throw new RunnerException(new VariableUndefined());
         return _variables[identifier].Value;
     }
 
     public void Assign(string identifier, object? value)
     {
         if (!_variables.ContainsKey(identifier))
-            throw new NotImplementedException();
+            throw new RunnerException(new VariableUndefined());
         var variable = _variables[identifier];
         if (variable.IsConst)
-            throw new NotImplementedException();
+            throw new RunnerException(new AssignmentToConst());
         _variables[identifier].Value = value;
     }
 
