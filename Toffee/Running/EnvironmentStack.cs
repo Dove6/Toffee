@@ -10,6 +10,16 @@ public class EnvironmentStack
         set => _stack[^1] = value;
     }
 
+    public object? ReturnValue { get; private set; }
+    public bool ReturnEncountered { get; private set; }
+    public bool BreakEncountered { get; private set; }
+    public bool ExecutionInterrupted => ReturnEncountered || BreakEncountered;
+
+    // TODO: move to parser
+    private bool _isInFunction;
+    private bool _isInLoop;
+    private EnvironmentType? _currentNonBlockType;
+
     private Environment GetEnvironmentAt(int indexFromTop) => _stack[new Index(indexFromTop + 1, true)];
 
     private void SetEnvironmentAt(int indexFromTop, Environment environment) =>
@@ -20,6 +30,21 @@ public class EnvironmentStack
         .Where(indexedEnvironment => indexedEnvironment.environment.Has(identifier))
         .Select(indexedEnvironment => (int?)indexedEnvironment.index)
         .FirstOrDefault();
+
+    public void RegisterReturn(object? value)
+    {
+        if (!_isInFunction)
+            throw new NotImplementedException();
+        ReturnValue = value;
+        ReturnEncountered = true;
+    }
+
+    public void RegisterBreak()
+    {
+        if (_currentNonBlockType != EnvironmentType.Loop)
+            throw new NotImplementedException();
+        BreakEncountered = true;
+    }
 
     public EnvironmentStack(Environment? initialEnvironment = null)
     {
@@ -54,16 +79,52 @@ public class EnvironmentStack
         CurrentEnvironment = CurrentEnvironment.Clone();
     }
 
-    private void Push(Environment? environment = null)
+    private void Push(EnvironmentType type)
     {
-        _stack = _stack.Append(environment ?? new Environment()).ToList();
+        _stack = _stack.Append(new Environment { Type = type }).ToList();
+        if (type == EnvironmentType.Function)
+        {
+            _currentNonBlockType = EnvironmentType.Function;
+            _isInFunction = true;
+            ReturnEncountered = false;
+            ReturnValue = null;
+        }
+        if (type == EnvironmentType.Loop)
+        {
+            _currentNonBlockType = EnvironmentType.Loop;
+            _isInLoop = true;
+            BreakEncountered = false;
+        }
     }
 
     private void Pop()
     {
         if (_stack.Count <= 1)
             throw new NotImplementedException();
+        var removedEnvironment = CurrentEnvironment;
         _stack = _stack.SkipLast(1).ToList();
+        if (removedEnvironment.Type == EnvironmentType.Function)
+        {
+            ReturnEncountered = false;
+            ReturnValue = null;
+            _isInFunction = _isInFunction
+                ? _stack.Reverse().FirstOrDefault(x => x.Type == EnvironmentType.Function) is not null
+                : _isInFunction;
+        }
+        if (removedEnvironment.Type == EnvironmentType.Loop)
+        {
+            BreakEncountered = false;
+            _isInLoop = _isInLoop
+                ? _stack.Reverse().FirstOrDefault(x => x.Type == EnvironmentType.Loop) is not null
+                : _isInLoop;
+        }
+        _currentNonBlockType = _isInFunction switch
+        {
+            true when !_isInLoop => EnvironmentType.Function,
+            false when _isInLoop => EnvironmentType.Loop,
+            false when !_isInLoop => null,
+            _ => _stack.Reverse().FirstOrDefault(x => x.Type != EnvironmentType.Block)?.Type
+        };
     }
 
     public EnvironmentStack Clone()
@@ -71,9 +132,9 @@ public class EnvironmentStack
         return new EnvironmentStack { _stack = new List<Environment>(_stack) };
     }
 
-    public EnvironmentGuard PushGuard(Environment? environment = null)
+    public EnvironmentGuard PushGuard(EnvironmentType type = EnvironmentType.Block)
     {
-        Push(environment);
+        Push(type);
         return new EnvironmentGuard(this);
     }
 
@@ -105,6 +166,8 @@ public class Environment
 {
     private IDictionary<string, Variable> _variables = new Dictionary<string, Variable>();
 
+    public EnvironmentType Type { get; init; } = EnvironmentType.Block;
+
     public bool Has(string identifier) => _variables.ContainsKey(identifier);
 
     public void Initialize(string identifier, object? value, bool isConst)
@@ -130,6 +193,13 @@ public class Environment
     }
 
     public Environment Clone() => new() { _variables = new Dictionary<string, Variable>(_variables) };
+}
+
+public enum EnvironmentType
+{
+    Function,
+    Loop,
+    Block
 }
 
 public record Variable(object? Value, bool IsConst)

@@ -9,8 +9,18 @@ public partial class Runner
         var environmentStackBackup = _environmentStack;
         if (environmentStack is not null)
             _environmentStack = environmentStack;
-        RunDynamic(statement as dynamic);
-        _environmentStack = environmentStackBackup;
+        try
+        {
+            RunDynamic(statement as dynamic);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
+        finally
+        {
+            _environmentStack = environmentStackBackup;
+        }
     }
 
     private void RunDynamic(Statement statement)
@@ -37,17 +47,21 @@ public partial class Runner
 
     private void RunDynamic(BreakStatement statement)
     {
-        throw new NotImplementedException();
+        _environmentStack.RegisterBreak();
     }
 
     private void RunDynamic(BreakIfStatement statement)
     {
+        // TODO: desugar
         throw new NotImplementedException();
     }
 
     private void RunDynamic(ReturnStatement statement)
     {
-        throw new NotImplementedException();
+        var returnValue = statement.Value is not null
+            ? Calculate(statement.Value)
+            : null;
+        _environmentStack.RegisterReturn(returnValue);
     }
 
     private void RunDynamic(ExpressionStatement statement)

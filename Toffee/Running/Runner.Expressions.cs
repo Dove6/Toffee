@@ -11,9 +11,20 @@ public partial class Runner
         var environmentStackBackup = _environmentStack;
         if (environmentStack is not null)
             _environmentStack = environmentStack;
-        var result = CalculateDynamic(expression as dynamic);
-        _environmentStack = environmentStackBackup;
-        return result;
+        try
+        {
+            var result = CalculateDynamic(expression as dynamic);
+            return result;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
+        finally
+        {
+            _environmentStack = environmentStackBackup;
+        }
+        return null;
     }
 
     private object? CalculateDynamic(Expression expression)
@@ -25,7 +36,11 @@ public partial class Runner
     {
         using var environmentGuard = _environmentStack.PushGuard();
         foreach (var statement in expression.Statements)
+        {
             Run(statement);
+            if (_environmentStack.ExecutionInterrupted)
+                return null;
+        }
         var result = expression.ResultExpression is not null
             ? Calculate(expression.ResultExpression)
             : null;
@@ -70,7 +85,7 @@ public partial class Runner
             ? Relational.IsLessThan
             : Relational.IsGreaterThan;
 
-        using var environmentGuard = _environmentStack.PushGuard();
+        using var environmentGuard = _environmentStack.PushGuard(EnvironmentType.Loop);
 
         if (expression.CounterName is not null)
             _environmentStack.Initialize(expression.CounterName);
@@ -80,6 +95,8 @@ public partial class Runner
             if (expression.CounterName is not null)
                 _environmentStack.Assign(expression.CounterName, counter);
             Calculate(expression.Body);
+            if (_environmentStack.ExecutionInterrupted)
+                return counter;
             counter = Arithmetical.Add(counter, stepValue);
         }
 
@@ -88,9 +105,15 @@ public partial class Runner
 
     private object? CalculateDynamic(WhileLoopExpression expression)
     {
-        while (Casting.ToBool(Calculate(expression.Condition)) is true)
+        object? conditionValue;
+        using var environmentGuard = _environmentStack.PushGuard(EnvironmentType.Loop);
+        while (Casting.ToBool(conditionValue = Calculate(expression.Condition)) is true)
+        {
             Calculate(expression.Body);
-        return Calculate(expression.Condition);
+            if (_environmentStack.ExecutionInterrupted)
+                return conditionValue;
+        }
+        return conditionValue;
     }
 
     private object? CalculateDynamic(FunctionDefinitionExpression expression)

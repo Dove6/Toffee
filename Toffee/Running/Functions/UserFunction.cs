@@ -18,7 +18,7 @@ public class UserFunction : IFunction
         if (arguments.Count != _source.Parameters.Count)
             throw new NotImplementedException();
 
-        using var closureGuard = _closure.PushGuard();
+        using var closureGuard = _closure.PushGuard(EnvironmentType.Function);
         // TODO: make sure parameters have unique names
         for (var i = 0; i < _source.Parameters.Count; i++)
         {
@@ -28,7 +28,11 @@ public class UserFunction : IFunction
         }
 
         foreach (var statement in _source.Body.Statements)
+        {
             runner.Run(statement, _closure);
+            if (_closure.ReturnEncountered)
+                return _closure.ReturnValue;
+        }
         return _source.Body.ResultExpression is not null
             ? runner.Calculate(_source.Body.ResultExpression, _closure)
             : null;
