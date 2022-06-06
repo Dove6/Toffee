@@ -25,7 +25,7 @@ public partial class AstPrinter
     private void Print(ConditionalElement conditional, int indentLevel)
     {
         Print("condition", indentLevel);
-        Print(conditional.Condition, indentLevel + 1);
+        Print(conditional.Condition!, indentLevel + 1);
         Print("consequent", indentLevel);
         Print(conditional.Consequent, indentLevel + 1);
     }
@@ -50,17 +50,6 @@ public partial class AstPrinter
         var mutability = parameter.IsConst ? "immutable" : "mutable";
         var optionality = parameter.IsNullAllowed ? "nullable" : "not nullable";
         Print($"{parameter.Name} ({mutability}, {optionality})", indentLevel);
-    }
-
-    private void Print(PatternMatchingBranch branch, int indentLevel)
-    {
-        Print("pattern", indentLevel);
-        if (branch.Pattern is null)
-            Print("default", indentLevel + 1);
-        else
-            Print(branch.Pattern, indentLevel + 1);
-        Print("consequent", indentLevel);
-        Print(branch.Consequent, indentLevel + 1);
     }
 
     private static void Print(DataType type, int indentLevel)
@@ -128,22 +117,6 @@ public partial class AstPrinter
             Print(parameter, indentLevel + 2);
         Print("body", indentLevel + 1);
         Print(expression.Body, indentLevel + 2);
-    }
-
-    private void PrintDynamic(PatternMatchingExpression expression, int indentLevel)
-    {
-        PrintHeader(expression, indentLevel);
-        Print("argument", indentLevel + 1);
-        Print(expression.Argument, indentLevel + 2);
-        foreach (var branch in expression.Branches)
-        {
-            Print("branch", indentLevel + 1);
-            Print(branch, indentLevel + 2);
-        }
-        if (expression.DefaultBranch is null)
-            return;
-        Print("default", indentLevel + 1);
-        Print(expression.DefaultBranch, indentLevel + 2);
     }
 
     private void PrintDynamic(GroupingExpression expression, int indentLevel)

@@ -31,7 +31,8 @@ public class PatternMatchingExpressionTestData : IEnumerable<object[]>
                 rightBrace,
                 semicolonToken
             },
-            new PatternMatchingExpression(new IdentifierExpression("a"), new List<PatternMatchingBranch>())
+            new ConditionalExpression(new List<ConditionalElement>()),
+            typeof(DefaultBranchMissing)
         };
         // with non-default branch
         yield return new object[]
@@ -50,12 +51,13 @@ public class PatternMatchingExpressionTestData : IEnumerable<object[]>
                 rightBrace,
                 semicolonToken
             },
-            new PatternMatchingExpression(new IdentifierExpression("a"),
-                new List<PatternMatchingBranch>
-                {
-                    new(new IdentifierExpression("b"),
-                        new BlockExpression(new List<Statement>(), new IdentifierExpression("c")))
-                })
+            new ConditionalExpression(new List<ConditionalElement>
+            {
+                new(new FunctionCallExpression(new IdentifierExpression("b"),
+                        new List<Expression> { new IdentifierExpression("a") }),
+                    new BlockExpression(new List<Statement>(), new IdentifierExpression("c")))
+            }),
+            typeof(DefaultBranchMissing)
         };
         // with default branch
         yield return new object[]
@@ -74,8 +76,8 @@ public class PatternMatchingExpressionTestData : IEnumerable<object[]>
                 rightBrace,
                 semicolonToken
             },
-            new PatternMatchingExpression(new IdentifierExpression("a"), new List<PatternMatchingBranch>(),
-                new BlockExpression(new List<Statement>(), new IdentifierExpression("b")))
+            new ConditionalExpression(new List<ConditionalElement>(),
+                    new BlockExpression(new List<Statement>(), new IdentifierExpression("b")))
         };
         // with more than one non-default branch
         yield return new object[]
@@ -98,14 +100,16 @@ public class PatternMatchingExpressionTestData : IEnumerable<object[]>
                 rightBrace,
                 semicolonToken
             },
-            new PatternMatchingExpression(new IdentifierExpression("a"),
-                new List<PatternMatchingBranch>
-                {
-                    new(new IdentifierExpression("b"),
-                        new BlockExpression(new List<Statement>(), new IdentifierExpression("c"))),
-                    new(new IdentifierExpression("d"),
-                        new BlockExpression(new List<Statement>(), new IdentifierExpression("e")))
-                })
+            new ConditionalExpression(new List<ConditionalElement>
+            {
+                new(new FunctionCallExpression(new IdentifierExpression("b"),
+                        new List<Expression> { new IdentifierExpression("a") }),
+                    new BlockExpression(new List<Statement>(), new IdentifierExpression("c"))),
+                new(new FunctionCallExpression(new IdentifierExpression("d"),
+                        new List<Expression> { new IdentifierExpression("a") }),
+                    new BlockExpression(new List<Statement>(), new IdentifierExpression("e")))
+            }),
+            typeof(DefaultBranchMissing)
         };
         // with both non-default and default branch
         yield return new object[]
@@ -128,10 +132,10 @@ public class PatternMatchingExpressionTestData : IEnumerable<object[]>
                 rightBrace,
                 semicolonToken
             },
-            new PatternMatchingExpression(new IdentifierExpression("a"),
-                new List<PatternMatchingBranch>
+            new ConditionalExpression(new List<ConditionalElement>
                 {
-                    new(new IdentifierExpression("b"),
+                    new(new FunctionCallExpression(new IdentifierExpression("b"),
+                            new List<Expression> { new IdentifierExpression("a") }),
                         new BlockExpression(new List<Statement>(), new IdentifierExpression("c")))
                 },
                 new BlockExpression(new List<Statement>(), new IdentifierExpression("d")))

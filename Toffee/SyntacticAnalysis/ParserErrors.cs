@@ -55,6 +55,16 @@ public record ExpectedParameter(Position Position, TokenType ActualType) : Parse
     public ExpectedParameter(Token actualToken) : this(actualToken.StartPosition, actualToken.Type)
     { }
 }
+public record BranchAfterDefaultPattern(Position Position) : ParserError(Position)
+{
+    public BranchAfterDefaultPattern(Expression pattern) : this(pattern.StartPosition)
+    { }
+}
+public record DuplicatedDefaultPattern(Position Position) : ParserError(Position)
+{
+    public DuplicatedDefaultPattern(Expression consequent) : this(consequent.StartPosition)
+    { }
+}
 
 public static class ParserErrorExtensions
 {
@@ -67,7 +77,9 @@ public static class ParserErrorExtensions
         { typeof(ExpectedPatternExpression), "Unexpected token instead of a pattern expression" },
         { typeof(ExpectedSemicolon), "Expected terminating semicolon" },
         { typeof(IntegerOutOfRange), "Literal integer above maximum (positive) value or below minimum (negative) value" },
-        { typeof(ExpectedParameter), "Expected parameter in parameter list" }
+        { typeof(ExpectedParameter), "Expected parameter in parameter list" },
+        { typeof(BranchAfterDefaultPattern), "No branches should follow the default pattern" },
+        { typeof(DuplicatedDefaultPattern), "Default pattern cannot be used more than once" }
     }.ToImmutableDictionary();
 
     public static string ToMessage(this ParserError error) =>

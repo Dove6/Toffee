@@ -1,4 +1,5 @@
-﻿using FluentAssertions;
+﻿using System.Collections.Generic;
+using FluentAssertions;
 using Toffee.LexicalAnalysis;
 using Toffee.Scanning;
 using Toffee.SyntacticAnalysis;
@@ -68,8 +69,8 @@ public partial class ExpressionParsingTest
     [Trait("Category", "Binary expressions")]
     [Trait("Category", "Pattern matching expressions")]
     [Theory]
-    [InlineData(TokenType.KeywordOr, Operator.PatternMatchingDisjunction)]
-    [InlineData(TokenType.KeywordAnd, Operator.PatternMatchingConjunction)]
+    [InlineData(TokenType.KeywordOr, Operator.Disjunction)]
+    [InlineData(TokenType.KeywordAnd, Operator.Conjunction)]
     public void BinaryPatternMatchingExpressionsShouldBeParsedCorrectly(TokenType operatorTokenType, Operator expectedOperator)
     {
         const string leftIdentifierName = "b";
@@ -92,8 +93,10 @@ public partial class ExpressionParsingTest
             Helpers.GetDefaultToken(TokenType.Semicolon)
         };
 
-        var expectedLeftExpression = new IdentifierExpression(leftIdentifierName);
-        var expectedRightExpression = new IdentifierExpression(rightIdentifierName);
+        var expectedLeftExpression = new FunctionCallExpression(new IdentifierExpression(leftIdentifierName),
+            new List<Expression> { new IdentifierExpression("a") });
+        var expectedRightExpression = new FunctionCallExpression(new IdentifierExpression(rightIdentifierName),
+            new List<Expression> { new IdentifierExpression("a") });
 
         var lexerMock = new LexerMock(tokenSequence);
         var errorHandlerMock = new ParserErrorHandlerMock();
@@ -105,18 +108,20 @@ public partial class ExpressionParsingTest
         expressionStatement.Should().NotBeNull();
         expressionStatement!.IsTerminated.Should().Be(true);
 
-        var patternMatchingExpression = expressionStatement.Expression.As<PatternMatchingExpression>();
+        var patternMatchingExpression = expressionStatement.Expression.As<ConditionalExpression>();
         patternMatchingExpression.Should().NotBeNull();
         patternMatchingExpression.Branches.Should().HaveCount(1);
 
-        var binaryExpression = patternMatchingExpression.Branches[0].Pattern.As<BinaryExpression>();
+        var binaryExpression = patternMatchingExpression.Branches[0].Condition.As<BinaryExpression>();
         binaryExpression.Should().NotBeNull();
         binaryExpression!.Left.Should().BeEquivalentTo(expectedLeftExpression, Helpers.ProvideOptions);
         binaryExpression.Operator.Should().Be(expectedOperator);
         binaryExpression.Right.Should().BeEquivalentTo(expectedRightExpression, Helpers.ProvideOptions);
 
         Assert.False(errorHandlerMock.HadErrors);
-        Assert.False(errorHandlerMock.HadWarnings);
+
+        errorHandlerMock.HandledWarnings.Count.Should().Be(1);
+        errorHandlerMock.HandledWarnings[0].Should().BeOfType<DefaultBranchMissing>();
     }
 
     [Trait("Category", "Binary expressions")]

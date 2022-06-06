@@ -35,10 +35,14 @@ public class PatternMatchingSpecificationMissingColonOrSemicolonTestData : IEnum
                 rightBrace,
                 semicolonToken
             },
-            new PatternMatchingExpression(new IdentifierExpression("a"),
-                new List<PatternMatchingBranch> { new(new IdentifierExpression("b"),
-                    new BlockExpression(new List<Statement>(), new IdentifierExpression("c"))) }),
-            new UnexpectedToken(new Position(6, 1, 6), TokenType.Identifier, TokenType.Colon)
+            new ConditionalExpression(new List<ConditionalElement>
+            {
+                new(new FunctionCallExpression(new IdentifierExpression("b"),
+                        new List<Expression> { new IdentifierExpression("a") }),
+                    new BlockExpression(new List<Statement>(), new IdentifierExpression("c")))
+            }),
+            new UnexpectedToken(new Position(6, 1, 6), TokenType.Identifier, TokenType.Colon),
+            typeof(DefaultBranchMissing)
         };
         // non-default branch, missing semicolon
         yield return new object[]
@@ -56,10 +60,14 @@ public class PatternMatchingSpecificationMissingColonOrSemicolonTestData : IEnum
                 rightBrace,
                 semicolonToken
             },
-            new PatternMatchingExpression(new IdentifierExpression("a"),
-                new List<PatternMatchingBranch> { new(new IdentifierExpression("b"),
-                    new BlockExpression(new List<Statement>(), new IdentifierExpression("c"))) }),
-            new UnexpectedToken(new Position(8, 1, 8), TokenType.Identifier, TokenType.Semicolon)
+            new ConditionalExpression(new List<ConditionalElement>
+            {
+                new(new FunctionCallExpression(new IdentifierExpression("b"),
+                        new List<Expression> { new IdentifierExpression("a") }),
+                    new BlockExpression(new List<Statement>(), new IdentifierExpression("c")))
+            }),
+            new UnexpectedToken(new Position(8, 1, 8), TokenType.Identifier, TokenType.Semicolon),
+            typeof(DefaultBranchMissing)
         };
         // default branch, missing colon
         yield return new object[]
@@ -77,7 +85,7 @@ public class PatternMatchingSpecificationMissingColonOrSemicolonTestData : IEnum
                 rightBrace,
                 semicolonToken
             },
-            new PatternMatchingExpression(new IdentifierExpression("a"), new List<PatternMatchingBranch>(),
+            new ConditionalExpression(new List<ConditionalElement>(),
                 new BlockExpression(new List<Statement>(), new IdentifierExpression("b"))),
             new UnexpectedToken(new Position(6, 1, 6), TokenType.Identifier, TokenType.Colon)
         };
@@ -97,7 +105,7 @@ public class PatternMatchingSpecificationMissingColonOrSemicolonTestData : IEnum
                 rightBrace,
                 semicolonToken
             },
-            new PatternMatchingExpression(new IdentifierExpression("a"), new List<PatternMatchingBranch>(),
+            new ConditionalExpression(new List<ConditionalElement>(),
                 new BlockExpression(new List<Statement>(), new IdentifierExpression("b"))),
             new UnexpectedToken(new Position(8, 1, 8), TokenType.Identifier, TokenType.Semicolon)
         };

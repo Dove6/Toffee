@@ -151,14 +151,15 @@ public partial class ExpressionParsingTest
         expressionStatement.Should().NotBeNull();
         expressionStatement!.IsTerminated.Should().Be(true);
 
-        var patternMatchingExpression = expressionStatement.Expression.As<PatternMatchingExpression>();
+        var patternMatchingExpression = expressionStatement.Expression.As<ConditionalExpression>();
         patternMatchingExpression.Should().NotBeNull();
         patternMatchingExpression.Branches.Should().HaveCount(1);
 
-        patternMatchingExpression.Branches[0].Pattern.Should().BeEquivalentTo(expectedExpression, Helpers.ProvideOptions);
+        patternMatchingExpression.Branches[0].Condition.Should().BeEquivalentTo(expectedExpression, Helpers.ProvideOptions);
 
         Assert.False(errorHandlerMock.HadErrors);
-        Assert.False(errorHandlerMock.HadWarnings);
+        errorHandlerMock.HandledWarnings.Count.Should().Be(1);
+        errorHandlerMock.HandledWarnings[0].Should().BeOfType<DefaultBranchMissing>();
     }
 
     [Trait("Category", "Type check expressions")]

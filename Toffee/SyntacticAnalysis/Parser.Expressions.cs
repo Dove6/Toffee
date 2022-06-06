@@ -285,37 +285,42 @@ public partial class Parser
         var argument = ParseParenthesizedExpression();
         InterceptParserError(() => ConsumeToken(TokenType.LeftBrace));
 
-        var patternSpecificationList = new List<PatternMatchingBranch>();
+        var patternSpecificationList = new List<ConditionalElement>();
         var defaultConsequent = (Expression?)null;
-        while (TryParsePatternSpecification(out var specification))
+        while (TryParsePatternSpecification(argument, out var specification))
         {
-            if (specification!.Pattern is null)
-            {
+            if (defaultConsequent is not null)
+                if (specification!.Condition is null)
+                    EmitError(new DuplicatedDefaultPattern(specification.Consequent));
+                else
+                    EmitError(new BranchAfterDefaultPattern(specification.Condition));
+            if (specification!.Condition is null)
                 defaultConsequent = specification.Consequent;
-                break;
-            }
-            patternSpecificationList.Add(specification);
+            else
+                patternSpecificationList.Add(specification);
         }
-        // TODO: err about default being not last, occuring more than once, warn about it being missing
+        if (defaultConsequent is null)
+            EmitWarning(new DefaultBranchMissing(_lexer.CurrentToken.StartPosition));
 
         InterceptParserError(() => ConsumeToken(TokenType.RightBrace));
         var blockDefaultConsequent = defaultConsequent as BlockExpression;
         if (blockDefaultConsequent is null && defaultConsequent is not null)
             blockDefaultConsequent = new BlockExpression(new List<Statement>(), defaultConsequent);
-        return new PatternMatchingExpression(argument, patternSpecificationList, blockDefaultConsequent);
+
+        return new ConditionalExpression(patternSpecificationList, blockDefaultConsequent);
     });
 
     // pattern_specification
     //     = pattern_expression, COLON, expression, SEMICOLON;
     // default_pattern_specification
     //     = KW_DEFAULT, COLON, expression, SEMICOLON;
-    private bool TryParsePatternSpecification(out PatternMatchingBranch? specification)
+    private bool TryParsePatternSpecification(Expression argument, out ConditionalElement? specification)
     {
         specification = null;
 
         var isDefault = TryConsumeToken(out _, TokenType.KeywordDefault);
         var condition = (Expression?)null;
-        if (!isDefault && (condition = ParseDisjunctionPatternExpression()) is null)
+        if (!isDefault && (condition = ParseDisjunctionPatternExpression(argument)) is null)
             return false;
 
         InterceptParserError(() => ConsumeToken(TokenType.Colon));
@@ -328,7 +333,7 @@ public partial class Parser
                               ?? new BlockExpression(new List<Statement>(), expressionStatement.Expression);
         else
             blockConsequent = new BlockExpression(new List<Statement> { consequent });
-        specification = new PatternMatchingBranch(condition, blockConsequent);
+        specification = new ConditionalElement(condition, blockConsequent);
         return true;
     }
 
@@ -336,36 +341,36 @@ public partial class Parser
     //     = pattern_expression_disjunction;
     // pattern_expression_disjunction
     //     = pattern_expression_conjunction, { KW_OR, pattern_expression_conjunction };
-private Expression? ParseDisjunctionPatternExpression() => SupplyPosition(() =>
+private Expression? ParseDisjunctionPatternExpression(Expression argument) => SupplyPosition(() =>
     {
-        var expression = ParseConjunctionPatternExpression();
+        var expression = ParseConjunctionPatternExpression(argument);
         if (expression is null)
             return null;
 
         while (TryConsumeToken(out _, TokenType.KeywordOr))
         {
-            var right = ParseConjunctionPatternExpression();
+            var right = ParseConjunctionPatternExpression(argument);
             if (right is null)
                 throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
-            expression = new BinaryExpression(expression, Operator.PatternMatchingDisjunction, right);
+            expression = new BinaryExpression(expression, Operator.Disjunction, right);
         }
         return expression;
     });
 
     // pattern_expression_conjunction
     //     = pattern_expression_non_associative, { KW_AND, pattern_expression_non_associative };
-    private Expression? ParseConjunctionPatternExpression() => SupplyPosition(() =>
+    private Expression? ParseConjunctionPatternExpression(Expression argument) => SupplyPosition(() =>
     {
-        var expression = ParseNonAssociativePatternExpression();
+        var expression = ParseNonAssociativePatternExpression(argument);
         if (expression is null)
             return null;
 
         while (TryConsumeToken(out _, TokenType.KeywordAnd))
         {
-            var right = ParseNonAssociativePatternExpression();
+            var right = ParseNonAssociativePatternExpression(argument);
             if (right is null)
                 throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
-            expression = new BinaryExpression(expression, Operator.PatternMatchingConjunction, right);
+            expression = new BinaryExpression(expression, Operator.Conjunction, right);
         }
         return expression;
     });
@@ -375,11 +380,12 @@ private Expression? ParseDisjunctionPatternExpression() => SupplyPosition(() =>
     //     | OP_TYPE_CHECK, TYPE
     //     | expression
     //     | LEFT_PARENTHESIS, pattern_expression_disjunction, RIGHT_PARENTHESIS;
-    private Expression? ParseNonAssociativePatternExpression() => SupplyPosition(() =>
+    private Expression? ParseNonAssociativePatternExpression(Expression argument) => SupplyPosition(() =>
     {
         if (TryConsumeToken(out var comparisonOperator, OperatorMapper.PatternMatchingComparisonTokenTypes))
             if (TryConsumeToken(out var literal, LiteralMapper.LiteralTokenTypes))
-                return new UnaryExpression(OperatorMapper.MapPatternMatchingComparisonOperator(comparisonOperator.Type),
+                return new BinaryExpression(argument,
+                    OperatorMapper.MapPatternMatchingComparisonOperator(comparisonOperator.Type),
                     LiteralMapper.MapToLiteralExpression(literal));
             else
                 throw new ParserException(new UnexpectedToken(_lexer.CurrentToken, LiteralMapper.LiteralTokenTypes));
@@ -388,14 +394,19 @@ private Expression? ParseDisjunctionPatternExpression() => SupplyPosition(() =>
         {
             var isInequalityCheck = TryConsumeToken(out _, TokenType.KeywordNot);
             if (TryConsumeToken(out var type, TypeMapper.TypeTokenTypes))
-                return new PatternTypeCheckExpression(TypeMapper.MapToType(type.Type), isInequalityCheck);
+                return new TypeCheckExpression(argument, TypeMapper.MapToType(type.Type), isInequalityCheck);
             throw new ParserException(new UnexpectedToken(_lexer.CurrentToken, TypeMapper.TypeTokenTypes));
         }
 
         if (!TryConsumeToken(out _, TokenType.LeftParenthesis))
-            return ParseAssignmentExpression();
+        {
+            var assignmentExpression = ParseAssignmentExpression();
+            return assignmentExpression is not null
+                ? new FunctionCallExpression(assignmentExpression, new List<Expression> { argument })
+                : null;
+        }
 
-        var patternExpression = ParseDisjunctionPatternExpression();
+        var patternExpression = ParseDisjunctionPatternExpression(argument);
         if (patternExpression is null)
             throw new ParserException(new ExpectedPatternExpression(_lexer.CurrentToken));
         InterceptParserError(() => ConsumeToken(TokenType.RightParenthesis));

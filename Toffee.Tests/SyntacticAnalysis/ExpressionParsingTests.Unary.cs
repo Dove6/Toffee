@@ -43,12 +43,12 @@ public partial class ExpressionParsingTest
     [Trait("Category", "Unary expressions")]
     [Trait("Category", "Pattern matching expressions")]
     [Theory]
-    [InlineData(TokenType.OperatorLess, Operator.PatternMatchingLessThanComparison)]
-    [InlineData(TokenType.OperatorLessEquals, Operator.PatternMatchingLessOrEqualComparison)]
-    [InlineData(TokenType.OperatorGreater, Operator.PatternMatchingGreaterThanComparison)]
-    [InlineData(TokenType.OperatorGreaterEquals, Operator.PatternMatchingGreaterOrEqualComparison)]
-    [InlineData(TokenType.OperatorEqualsEquals, Operator.PatternMatchingEqualComparison)]
-    [InlineData(TokenType.OperatorBangEquals, Operator.PatternMatchingNotEqualComparison)]
+    [InlineData(TokenType.OperatorLess, Operator.LessThanComparison)]
+    [InlineData(TokenType.OperatorLessEquals, Operator.LessOrEqualComparison)]
+    [InlineData(TokenType.OperatorGreater, Operator.GreaterThanComparison)]
+    [InlineData(TokenType.OperatorGreaterEquals, Operator.GreaterOrEqualComparison)]
+    [InlineData(TokenType.OperatorEqualsEquals, Operator.EqualComparison)]
+    [InlineData(TokenType.OperatorBangEquals, Operator.NotEqualComparison)]
     public void UnaryPatternMatchingExpressionsShouldBeParsedCorrectly(TokenType operatorTokenType, Operator expectedOperator)
     {
         var tokenSequence = new[]
@@ -79,17 +79,18 @@ public partial class ExpressionParsingTest
         expressionStatement.Should().NotBeNull();
         expressionStatement!.IsTerminated.Should().Be(true);
 
-        var patternMatchingExpression = expressionStatement.Expression.As<PatternMatchingExpression>();
+        var patternMatchingExpression = expressionStatement.Expression.As<ConditionalExpression>();
         patternMatchingExpression.Should().NotBeNull();
         patternMatchingExpression.Branches.Should().HaveCount(1);
 
-        var unaryExpression = patternMatchingExpression.Branches[0].Pattern.As<UnaryExpression>();
-        unaryExpression.Should().NotBeNull();
-        unaryExpression.Operator.Should().Be(expectedOperator);
-        unaryExpression.Expression.Should().BeEquivalentTo(expectedExpression, Helpers.ProvideOptions);
+        var binaryExpression = patternMatchingExpression.Branches[0].Condition.As<BinaryExpression>();
+        binaryExpression.Should().NotBeNull();
+        binaryExpression.Operator.Should().Be(expectedOperator);
+        binaryExpression.Right.Should().BeEquivalentTo(expectedExpression, Helpers.ProvideOptions);
 
         Assert.False(errorHandlerMock.HadErrors);
-        Assert.False(errorHandlerMock.HadWarnings);
+        errorHandlerMock.HandledWarnings.Count.Should().Be(1);
+        errorHandlerMock.HandledWarnings[0].Should().BeOfType<DefaultBranchMissing>();
     }
 
     [Trait("Category", "Unary expressions")]

@@ -20,13 +20,10 @@ public record WhileLoopExpression(Expression Condition, BlockExpression Body)
     : Expression(new Position(), new Position());
 public record FunctionDefinitionExpression(IList<FunctionParameter> Parameters, BlockExpression Body)
     : Expression(new Position(), new Position());
-public record PatternMatchingExpression(Expression Argument, IList<PatternMatchingBranch> Branches, BlockExpression? DefaultBranch = null)
-    : Expression(new Position(), new Position());
 
-public record ConditionalElement(Expression Condition, BlockExpression Consequent);
+public record ConditionalElement(Expression? Condition, BlockExpression Consequent);
 public record ForLoopRange(Expression PastTheEnd, Expression? Start = null, Expression? Step = null);
 public record FunctionParameter(string Name, bool IsConst = false, bool IsNullAllowed = true);
-public record PatternMatchingBranch(Expression? Pattern, BlockExpression Consequent);
 
 public record GroupingExpression(Expression Expression)
     : Expression(new Position(), new Position());

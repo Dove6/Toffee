@@ -51,7 +51,7 @@ public partial class Runner
     {
         var consequentToRun = expression.Branches.FirstOrDefault(x =>
         {
-            var conditionValue = Calculate(x.Condition);
+            var conditionValue = Calculate(x.Condition!);
             return Casting.ToBool(conditionValue) is true;
         })?.Consequent;
         consequentToRun ??= expression.ElseBranch;
@@ -121,11 +121,6 @@ public partial class Runner
         return new UserFunction(expression, _environmentStack.Clone());
     }
 
-    private object? CalculateDynamic(PatternMatchingExpression expression)
-    {
-        throw new NotImplementedException();
-    }
-
     private object? CalculateDynamic(GroupingExpression expression)
     {
         return Calculate(expression.Expression);
@@ -174,12 +169,6 @@ public partial class Runner
         if (expression.Operator == Operator.Conjunction)
             return Logical.Conjoin(Casting.ToBool(leftResult), Casting.ToBool(rightResult));
 
-        // TODO: check if it makes sense
-        if (expression.Operator == Operator.PatternMatchingDisjunction)
-            return Logical.Disjoin(Casting.ToBool(leftResult), Casting.ToBool(rightResult));
-        if (expression.Operator == Operator.PatternMatchingConjunction)
-            return Logical.Conjoin(Casting.ToBool(leftResult), Casting.ToBool(rightResult));
-
         if (expression.Operator == Operator.NullCoalescing)
             return leftResult ?? rightResult;
         if (expression.Operator == Operator.NullSafePipe)
@@ -222,20 +211,6 @@ public partial class Runner
 
         if (expression.Operator == Operator.LogicalNegation)
             return Logical.Negate(Casting.ToBool(innerResult));
-
-        // TODO: little sense here
-        if (expression.Operator == Operator.PatternMatchingLessThanComparison)
-            throw new NotImplementedException();
-        if (expression.Operator == Operator.PatternMatchingLessOrEqualComparison)
-            throw new NotImplementedException();
-        if (expression.Operator == Operator.PatternMatchingGreaterThanComparison)
-            throw new NotImplementedException();
-        if (expression.Operator == Operator.PatternMatchingGreaterOrEqualComparison)
-            throw new NotImplementedException();
-        if (expression.Operator == Operator.PatternMatchingEqualComparison)
-            throw new NotImplementedException();
-        if (expression.Operator == Operator.PatternMatchingNotEqualComparison)
-            throw new NotImplementedException();
 
         throw new ArgumentOutOfRangeException(nameof(expression.Operator), expression.Operator, "Invalid operator");
     }
