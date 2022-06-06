@@ -398,9 +398,12 @@ private Expression? ParseDisjunctionPatternExpression(Expression argument) => Su
     {
         if (TryConsumeToken(out var comparisonOperator, OperatorMapper.PatternMatchingComparisonTokenTypes))
             if (TryConsumeToken(out var literal, LiteralMapper.LiteralTokenTypes))
-                return new BinaryExpression(argument,
-                    OperatorMapper.MapPatternMatchingComparisonOperator(comparisonOperator.Type),
-                    LiteralMapper.MapToLiteralExpression(literal));
+                return new ComparisonExpression(argument,
+                    new List<ComparisonElement>
+                    {
+                        new(OperatorMapper.MapPatternMatchingComparisonOperator(comparisonOperator.Type),
+                            LiteralMapper.MapToLiteralExpression(literal))
+                    });
             else
                 throw new ParserException(new UnexpectedToken(_lexer.CurrentToken, LiteralMapper.LiteralTokenTypes));
 
