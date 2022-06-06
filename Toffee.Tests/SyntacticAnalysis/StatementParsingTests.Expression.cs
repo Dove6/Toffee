@@ -12,7 +12,7 @@ public partial class StatementParsingTests
     [Trait("Category", "Expression statements")]
     [Theory]
     [ClassData(typeof(ExpressionStatementTestData))]
-    public void ExpressionStatementsShouldBeParsedCorrectly(Token[] tokenSequence, Type expectedExpressionType, bool shouldHaveWarnings = false)
+    public void ExpressionStatementsShouldBeParsedCorrectly(Token[] tokenSequence, Type expectedExpressionType, params Type[] expectedWarnings)
     {
         var lexerMock = new LexerMock(tokenSequence);
         var errorHandlerMock = new ParserErrorHandlerMock();
@@ -26,6 +26,8 @@ public partial class StatementParsingTests
         expressionStatement.Expression.Should().BeOfType(expectedExpressionType);
 
         Assert.False(errorHandlerMock.HadErrors);
-        Assert.False(shouldHaveWarnings ^ errorHandlerMock.HadWarnings);
+
+        for (var i = 0; i < expectedWarnings.Length; i++)
+            errorHandlerMock.HandledWarnings[i].Should().BeOfType(expectedWarnings[i]);
     }
 }

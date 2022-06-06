@@ -27,7 +27,9 @@ public partial class ExpressionParsingTest
         expressionStatement.Expression.Should().BeEquivalentTo(expectedExpression, Helpers.ProvideOptions);
 
         Assert.False(errorHandlerMock.HadErrors);
-        Assert.False(errorHandlerMock.HadWarnings);
+
+        errorHandlerMock.HandledWarnings.Count.Should().Be(1);
+        errorHandlerMock.HandledWarnings[0].Should().BeOfType<IgnoredResultExpression>();
     }
 
     [Trait("Category", "While loop expressions")]

@@ -139,7 +139,7 @@ public class IntegrationRunnerTests
     }
 
     [Fact]
-    public void ExtendingCapturedScopeShoulNotBePossible()
+    public void ExtendingCapturedScopeShouldNotBePossible()
     {
         var testText = Join(new[]
         {
@@ -208,6 +208,77 @@ public class IntegrationRunnerTests
             "integer greater than 8",
             "null value",
             "no match"
+        });
+        var output = RunText(testText);
+        output.Should().Be(expectedOutput);
+    }
+
+    [Fact]
+    public void RecursionShouldWork()
+    {
+        var testText = Join(new[]
+        {
+            "init const factorial = functi(n) {",
+            "    if (n > 1)",
+            "        n * factorial(n - 1)",
+            "    else",
+            "        1",
+            "};",
+            "print(factorial(1));",
+            "print(factorial(5));",
+        });
+        var expectedOutput = Join(new[]
+        {
+            "1",
+            "120"
+        });
+        var output = RunText(testText);
+        output.Should().Be(expectedOutput);
+    }
+
+    [Fact]
+    public void ReturnShouldExitOnlyCurrentFunction()
+    {
+        var testText = Join(new[]
+        {
+            "init c = functi() {",
+            "    init inner = (functi() {",
+            "        return 5;",
+            "        6",
+            "    })();",
+            "    return inner + 2;",
+            "    10",
+            "};",
+            "print(c());"
+        });
+        var expectedOutput = Join(new[]
+        {
+            "7"
+        });
+        var output = RunText(testText);
+        output.Should().Be(expectedOutput);
+    }
+
+    [Fact]
+    public void BreakShouldExitOnlyCurrentLoop()
+    {
+        var testText = Join(new[]
+        {
+            "for(i, 2) {",
+            "    init inner;",
+            "    for(j, 9:-1:-1) {",
+            "        inner = j;",
+            "        break_if(j == 2);",
+            "    };",
+            "    print(i, inner);",
+            "};"
+        });
+        var expectedOutput = Join(new[]
+        {
+            "0",
+            "2",
+            "1",
+            "2"
         });
         var output = RunText(testText);
         output.Should().Be(expectedOutput);

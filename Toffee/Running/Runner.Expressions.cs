@@ -8,6 +8,7 @@ public partial class Runner
 {
     public object? Calculate(Expression expression, EnvironmentStack? environmentStack = null)
     {
+        _currentPosition = expression.StartPosition;
         var environmentStackBackup = _environmentStack;
         if (environmentStack is not null)
             _environmentStack = environmentStack;
@@ -18,7 +19,7 @@ public partial class Runner
         }
         catch (RunnerException e)
         {
-            Console.WriteLine(e.Error);
+            Console.WriteLine(e.Error with { Position = _currentPosition });
         }
         catch (Exception e)
         {
@@ -77,7 +78,11 @@ public partial class Runner
         }
 
         if (startValue is null || stepValue is null || stopValue is null)
-            throw new RunnerException(new NullInForLoopRange());
+            throw new RunnerException(new NullInForLoopRange(startValue is null
+                ? nameof(expression.Range.Start)
+                : stopValue is null
+                    ? nameof(expression.Range.PastTheEnd)
+                    : nameof(expression.Range.Step)));
 
         var counter = startValue;
         Func<object?, object?, bool?> rangePredicate = Relational.IsGreaterThan(stepValue, 0L) is true
@@ -159,7 +164,7 @@ public partial class Runner
             var value = Calculate(expression.Left);
             var callee = Casting.ToFunction(expression.Right);
             return value is not null
-                ? callee!.Call(this, new List<object?> { value })
+                ? callee.Call(this, new List<object?> { value })
                 : null;
         }
 
@@ -173,7 +178,7 @@ public partial class Runner
     private object? PerformAssignment(Expression left, object? right, Operator assignmentOperator)
     {
         if (left is not IdentifierExpression identifierExpression)
-            throw new RunnerException(new InvalidLvalue());
+            throw new RunnerException(new InvalidLvalue(left.GetType()));
 
         var valueToAssign = assignmentOperator switch
         {

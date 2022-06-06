@@ -1,5 +1,6 @@
 ﻿using Toffee.ErrorHandling;
 using Toffee.Running.Functions;
+using Toffee.Scanning;
 
 namespace Toffee.Running;
 
@@ -7,6 +8,8 @@ public partial class Runner : IRunner
 {
     private readonly IRunnerErrorHandler? _errorHandler;
     private EnvironmentStack _environmentStack;
+
+    private Position _currentPosition = new();
 
     public bool ShouldQuit { get; set; }
 

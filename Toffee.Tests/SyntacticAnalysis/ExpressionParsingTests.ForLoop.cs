@@ -1,3 +1,4 @@
+using System;
 using FluentAssertions;
 using Toffee.LexicalAnalysis;
 using Toffee.Scanning;
@@ -12,7 +13,7 @@ public partial class ExpressionParsingTest
     [Trait("Category", "For loop expressions")]
     [Theory]
     [ClassData(typeof(ForLoopExpressionTestData))]
-    public void ForLoopExpressionsShouldBeParsedCorrectly(Token[] tokenSequence, string? expectedCounterName, ForLoopRange expectedRange, Expression expectedBody)
+    public void ForLoopExpressionsShouldBeParsedCorrectly(Token[] tokenSequence, string? expectedCounterName, ForLoopRange expectedRange, Expression expectedBody, params Type[] expectedWarnings)
     {
         var lexerMock = new LexerMock(tokenSequence);
         var errorHandlerMock = new ParserErrorHandlerMock();
@@ -31,7 +32,9 @@ public partial class ExpressionParsingTest
         forLoopExpression.Body.Should().BeEquivalentTo(expectedBody, Helpers.ProvideOptions);
 
         Assert.False(errorHandlerMock.HadErrors);
-        Assert.False(errorHandlerMock.HadWarnings);
+
+        for (var i = 0; i < expectedWarnings.Length; i++)
+            errorHandlerMock.HandledWarnings[i].Should().BeOfType(expectedWarnings[i]);
     }
 
     [Trait("Category", "For loop expressions")]
@@ -56,7 +59,8 @@ public partial class ExpressionParsingTest
         for (var i = 0; i < expectedErrors.Length; i++)
             errorHandlerMock.HandledErrors[i].Should().BeEquivalentTo(expectedErrors[i]);
 
-        Assert.False(errorHandlerMock.HadWarnings);
+        errorHandlerMock.HandledWarnings.Count.Should().Be(1);
+        errorHandlerMock.HandledWarnings[0].Should().BeOfType<IgnoredResultExpression>();
     }
 
     [Trait("Category", "For loop expressions")]

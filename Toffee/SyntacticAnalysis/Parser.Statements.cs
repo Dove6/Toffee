@@ -83,8 +83,14 @@ public partial class Parser
             ParseVariableInitialization()
         };
         while (TryConsumeToken(out _, TokenType.Comma))
-            list.Add(ParseVariableInitialization());
-        // TODO: warn about init = null;, err about init const;
+        {
+            var initialization = ParseVariableInitialization();
+            list.Add(initialization);
+            if (initialization.IsConst)
+                EmitError(new ImplicitConstInitialization(initialization));
+            else if (initialization.InitialValue is LiteralExpression { Type: DataType.Null })
+                EmitWarning(new SuperfluousNullInitialValue(initialization));
+        }
 
         return new VariableInitializationListStatement(list);
     });
@@ -93,7 +99,7 @@ public partial class Parser
     //     = [ KW_CONST ], IDENTIFIER, [ OP_EQUALS, expression ];
     private VariableInitialization ParseVariableInitialization()
     {
-        var isConst = TryConsumeToken(out _, TokenType.KeywordConst);
+        var isConst = TryConsumeToken(out var constToken, TokenType.KeywordConst);
         var assignmentLikeTokenTypes =
             OperatorMapper.AssignmentTokenTypes.Append(TokenType.OperatorEqualsEquals).ToArray();
 
@@ -102,13 +108,15 @@ public partial class Parser
                 isConst ? new[] { TokenType.Identifier } : new[] { TokenType.KeywordConst, TokenType.Identifier }));
         var variableName = (string)identifier.Content!;
 
+        var position = isConst ? constToken.StartPosition : identifier.StartPosition;
+
         if (!TryConsumeToken(out var assignmentToken, assignmentLikeTokenTypes))
-            return new VariableInitialization(variableName, null, isConst);
+            return new VariableInitialization(variableName, null, isConst, position);
         var initialValue = ParseExpression();
         if (assignmentToken.Type == TokenType.OperatorEquals)
-            return new VariableInitialization(variableName, initialValue, isConst);
+            return new VariableInitialization(variableName, initialValue, isConst, position);
         EmitError(new UnexpectedToken(assignmentToken, TokenType.OperatorEquals));
-        return new VariableInitialization(variableName, initialValue, isConst);
+        return new VariableInitialization(variableName, initialValue, isConst, position);
     }
 
     // break

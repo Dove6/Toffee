@@ -15,5 +15,4 @@ public record ReturnStatement(Expression? Value = null)
 public record ExpressionStatement(Expression Expression)
     : Statement(new Position(), new Position());
 
-public record VariableInitialization(string Name, Expression? InitialValue = null, bool IsConst = false)
-    : Statement(new Position(), new Position());
+public record VariableInitialization(string Name, Expression? InitialValue = null, bool IsConst = false, Position? Position = null);

@@ -53,7 +53,7 @@ public class EnvironmentStack
     {
         var environmentIndex = LocateOnStack(identifier);
         if (environmentIndex is null)
-            throw new RunnerException(new VariableUndefined());
+            throw new RunnerException(new VariableUndefined(identifier));
         return GetEnvironmentAt(environmentIndex.Value).Access(identifier);
     }
 
@@ -61,14 +61,14 @@ public class EnvironmentStack
     {
         var environmentIndex = LocateOnStack(identifier);
         if (environmentIndex is null)
-            throw new RunnerException(new VariableUndefined());
+            throw new RunnerException(new VariableUndefined(identifier));
         GetEnvironmentAt(environmentIndex.Value).Assign(identifier, value);
     }
 
     public void Initialize(string identifier, object? initialValue = null, bool isConst = false)
     {
         if (CurrentEnvironment.Has(identifier))
-            throw new RunnerException(new VariableAlreadyDefined());
+            throw new RunnerException(new VariableAlreadyDefined(identifier));
         CurrentEnvironment.Initialize(identifier, initialValue, isConst);
     }
 
@@ -179,17 +179,17 @@ public class Environment
     public object? Access(string identifier)
     {
         if (!_variables.ContainsKey(identifier))
-            throw new RunnerException(new VariableUndefined());
+            throw new RunnerException(new VariableUndefined(identifier));
         return _variables[identifier].Value;
     }
 
     public void Assign(string identifier, object? value)
     {
         if (!_variables.ContainsKey(identifier))
-            throw new RunnerException(new VariableUndefined());
+            throw new RunnerException(new VariableUndefined(identifier));
         var variable = _variables[identifier];
         if (variable.IsConst)
-            throw new RunnerException(new AssignmentToConst());
+            throw new RunnerException(new AssignmentToConst(identifier));
         _variables[identifier].Value = value;
     }
 

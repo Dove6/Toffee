@@ -15,7 +15,7 @@ public static class Casting
             double floatValue => floatValue,
             string stringValue => ToNumber(stringValue),
             bool boolValue => boolValue ? 1L : 0L,
-            _ => throw new RunnerException(new BadCast())
+            _ => throw new RunnerException(new BadCast(DataType.Integer, DataType.Float))
         };
     }
 
@@ -37,7 +37,7 @@ public static class Casting
             DataType.Float => ToFloat(value),
             DataType.String => ToString(value),
             DataType.Bool => ToBool(value),
-            _ => throw new RunnerException(new BadCast())
+            _ => throw new RunnerException(new BadCast(type))
         };
     }
 
@@ -55,7 +55,7 @@ public static class Casting
                 out var parsedStringValue)
                 ? parsedStringValue
                 : null,
-            _ => throw new RunnerException(new BadCast())
+            _ => throw new RunnerException(new BadCast(DataType.Integer))
         };
     }
 
@@ -73,7 +73,7 @@ public static class Casting
                 out var parsedStringValue)
                 ? parsedStringValue
                 : null,
-            _ => throw new RunnerException(new BadCast())
+            _ => throw new RunnerException(new BadCast(DataType.Float))
         };
     }
 
@@ -86,7 +86,7 @@ public static class Casting
             double floatValue => floatValue.ToString(CultureInfo.InvariantCulture),
             bool boolValue => boolValue.ToString(CultureInfo.InvariantCulture).ToLowerInvariant(),
             string stringValue => stringValue,
-            _ => throw new RunnerException(new BadCast())
+            _ => throw new RunnerException(new BadCast(DataType.String))
         };
     }
 
@@ -104,7 +104,7 @@ public static class Casting
                 "false" => false,
                 _ => null
             },
-            _ => throw new RunnerException(new BadCast())
+            _ => throw new RunnerException(new BadCast(DataType.Bool))
         };
     }
 
@@ -113,7 +113,7 @@ public static class Casting
         return value switch
         {
             IFunction functionValue => functionValue,
-            _ => throw new RunnerException(new BadCast())
+            _ => throw new RunnerException(new BadCast(DataType.Function))
         };
     }
 }

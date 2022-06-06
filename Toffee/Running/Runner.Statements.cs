@@ -7,6 +7,7 @@ public partial class Runner
 {
     public void Run(Statement statement, EnvironmentStack? environmentStack = null)
     {
+        _currentPosition = statement.StartPosition;
         var environmentStackBackup = _environmentStack;
         if (environmentStack is not null)
             _environmentStack = environmentStack;
@@ -16,7 +17,7 @@ public partial class Runner
         }
         catch (RunnerException e)
         {
-            Console.WriteLine(e.Error);
+            Console.WriteLine(e.Error with { Position = _currentPosition });
         }
         catch (Exception e)
         {
