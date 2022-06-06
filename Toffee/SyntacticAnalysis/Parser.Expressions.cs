@@ -527,16 +527,18 @@ private Expression? ParseDisjunctionPatternExpression(Expression argument) => Su
         if (expression is null)
             return null;
 
+        var comparisonList = new List<ComparisonElement>();
         while (TryConsumeToken(out var comparisonOperator, OperatorMapper.ComparisonTokenTypes))
         {
             var right = ParseConcatenationExpression();
             if (right is null)
                 throw new ParserException(new ExpectedExpression(_lexer.CurrentToken));
-            expression = new BinaryExpression(expression,
-                OperatorMapper.MapComparisonOperator(comparisonOperator.Type),
-                right);
+            comparisonList.Add(new ComparisonElement(OperatorMapper.MapComparisonOperator(comparisonOperator.Type),
+                right));
         }
-        return expression;
+        return comparisonList.Count > 0
+            ? new ComparisonExpression(expression, comparisonList)
+            : expression;
     });
 
     // concatenation

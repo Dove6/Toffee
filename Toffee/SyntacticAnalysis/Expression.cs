@@ -45,3 +45,7 @@ public record TypeCastExpression(DataType Type, Expression Expression)
     : Expression(new Position(), new Position());
 public record TypeCheckExpression(Expression Expression, DataType Type, bool IsInequalityCheck = false)
     : Expression(new Position(), new Position());
+public record ComparisonExpression(Expression Left, IList<ComparisonElement> Comparisons)
+    : Expression(new Position(), new Position());
+
+public record ComparisonElement(Operator Operator, Expression Right);

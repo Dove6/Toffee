@@ -116,7 +116,7 @@ public partial class Runner
         return conditionValue;
     }
 
-    private object? CalculateDynamic(FunctionDefinitionExpression expression)
+    private IFunction CalculateDynamic(FunctionDefinitionExpression expression)
     {
         return new UserFunction(expression, _environmentStack.Clone());
     }
@@ -150,19 +150,6 @@ public partial class Runner
 
         if (expression.Operator == Operator.Concatenation)
             return Character.Concatenate(Casting.ToString(leftResult), Casting.ToString(rightResult));
-
-        if (expression.Operator == Operator.LessThanComparison)
-            return Relational.IsLessThan(leftResult, rightResult);
-        if (expression.Operator == Operator.LessOrEqualComparison)
-            return Relational.IsLessOrEqual(leftResult, rightResult);
-        if (expression.Operator == Operator.GreaterThanComparison)
-            return Relational.IsGreaterThan(leftResult, rightResult);
-        if (expression.Operator == Operator.GreaterOrEqualComparison)
-            return Relational.IsGreaterOrEqual(leftResult, rightResult);
-        if (expression.Operator == Operator.EqualComparison)
-            return Relational.IsEqualTo(leftResult, rightResult);
-        if (expression.Operator == Operator.NotEqualComparison)
-            return Relational.IsNotEqualTo(leftResult, rightResult);
 
         if (expression.Operator == Operator.Disjunction)
             return Logical.Disjoin(Casting.ToBool(leftResult), Casting.ToBool(rightResult));
@@ -259,5 +246,27 @@ public partial class Runner
             bool => expression.Type == DataType.Bool,
             _ => throw new NotImplementedException()
         };
+    }
+
+    private bool? CalculateDynamic(ComparisonExpression expression)
+    {
+        if (expression.Comparisons.Count == 0)
+            throw new NotImplementedException();
+        var operatorList = expression.Comparisons.Select(x => x.Operator);
+        var valueList = expression.Comparisons.Select(x => x.Right).Prepend(expression.Left).Select(x => Calculate(x))
+            .ToList();
+        var resultList = valueList.Zip(valueList.Skip(1), (a, b) => (a, b))
+            .Zip(operatorList,
+                (values, @operator) => @operator switch
+                {
+                    Operator.LessThanComparison => Relational.IsLessThan(values.a, values.b),
+                    Operator.LessOrEqualComparison => Relational.IsLessOrEqual(values.a, values.b),
+                    Operator.GreaterThanComparison => Relational.IsGreaterThan(values.a, values.b),
+                    Operator.GreaterOrEqualComparison => Relational.IsGreaterOrEqual(values.a, values.b),
+                    Operator.EqualComparison => Relational.IsEqualTo(values.a, values.b),
+                    Operator.NotEqualComparison => Relational.IsNotEqualTo(values.a, values.b),
+                    _ => throw new NotImplementedException()
+                }).ToList();
+        return resultList.Aggregate((acc, next) => Logical.Conjoin(acc, next));
     }
 }

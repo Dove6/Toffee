@@ -185,4 +185,15 @@ public partial class AstPrinter
             ? $"is not {expression.Type}" : $"is {expression.Type}");
         Print(expression.Expression, indentLevel + 1);
     }
+
+    private void PrintDynamic(ComparisonExpression expression, int indentLevel)
+    {
+        PrintHeader(expression, indentLevel);
+        Print(expression.Left, indentLevel + 1);
+        foreach (var comparison in expression.Comparisons)
+        {
+            Print(comparison.Operator.Humanize(LetterCasing.LowerCase), indentLevel + 2);
+            Print(comparison.Right, indentLevel + 1);
+        }
+    }
 }

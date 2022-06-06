@@ -18,12 +18,6 @@ public partial class ExpressionParsingTest
     [InlineData(TokenType.OperatorSlash, Operator.Division)]
     [InlineData(TokenType.OperatorPercent, Operator.Remainder)]
     [InlineData(TokenType.OperatorDotDot, Operator.Concatenation)]
-    [InlineData(TokenType.OperatorLess, Operator.LessThanComparison)]
-    [InlineData(TokenType.OperatorLessEquals, Operator.LessOrEqualComparison)]
-    [InlineData(TokenType.OperatorGreater, Operator.GreaterThanComparison)]
-    [InlineData(TokenType.OperatorGreaterEquals, Operator.GreaterOrEqualComparison)]
-    [InlineData(TokenType.OperatorEqualsEquals, Operator.EqualComparison)]
-    [InlineData(TokenType.OperatorBangEquals, Operator.NotEqualComparison)]
     [InlineData(TokenType.OperatorAndAnd, Operator.Conjunction)]
     [InlineData(TokenType.OperatorOrOr, Operator.Disjunction)]
     [InlineData(TokenType.OperatorQueryQuery, Operator.NullCoalescing)]
@@ -61,6 +55,48 @@ public partial class ExpressionParsingTest
         expression!.Left.Should().BeEquivalentTo(expectedLeftExpression, Helpers.ProvideOptions);
         expression.Operator.Should().Be(expectedOperator);
         expression.Right.Should().BeEquivalentTo(expectedRightExpression, Helpers.ProvideOptions);
+
+        Assert.False(errorHandlerMock.HadErrors);
+        Assert.False(errorHandlerMock.HadWarnings);
+    }
+
+    [Trait("Category", "Binary expressions")]
+    [Trait("Category", "Comparison expressions")]
+    [Theory]
+    [InlineData(TokenType.OperatorLess, Operator.LessThanComparison)]
+    [InlineData(TokenType.OperatorLessEquals, Operator.LessOrEqualComparison)]
+    [InlineData(TokenType.OperatorGreater, Operator.GreaterThanComparison)]
+    [InlineData(TokenType.OperatorGreaterEquals, Operator.GreaterOrEqualComparison)]
+    [InlineData(TokenType.OperatorEqualsEquals, Operator.EqualComparison)]
+    [InlineData(TokenType.OperatorBangEquals, Operator.NotEqualComparison)]
+    public void ComparisonExpressionsShouldBeParsedCorrectly(TokenType operatorTokenType, Operator expectedOperator)
+    {
+        const string leftIdentifierName = "a";
+        var leftToken = new Token(TokenType.Identifier, leftIdentifierName);
+        var expectedLeftExpression = new IdentifierExpression(leftIdentifierName);
+
+        var opToken = Helpers.GetDefaultToken(operatorTokenType);
+
+        const string rightIdentifierName = "b";
+        var rightToken = new Token(TokenType.Identifier, rightIdentifierName);
+        var expectedRightExpression = new IdentifierExpression(rightIdentifierName);
+
+        var lexerMock = new LexerMock(leftToken, opToken, rightToken, Helpers.GetDefaultToken(TokenType.Semicolon));
+        var errorHandlerMock = new ParserErrorHandlerMock();
+        IParser parser = new Parser(lexerMock, errorHandlerMock);
+
+        parser.Advance();
+
+        var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
+        expressionStatement.Should().NotBeNull();
+        expressionStatement!.IsTerminated.Should().Be(true);
+
+        var expression = expressionStatement.Expression.As<ComparisonExpression>();
+        expression.Should().NotBeNull();
+        expression!.Left.Should().BeEquivalentTo(expectedLeftExpression, Helpers.ProvideOptions);
+        expression.Comparisons.Count.Should().Be(1);
+        expression.Comparisons[0].Operator.Should().Be(expectedOperator);
+        expression.Comparisons[0].Right.Should().BeEquivalentTo(expectedRightExpression, Helpers.ProvideOptions);
 
         Assert.False(errorHandlerMock.HadErrors);
         Assert.False(errorHandlerMock.HadWarnings);

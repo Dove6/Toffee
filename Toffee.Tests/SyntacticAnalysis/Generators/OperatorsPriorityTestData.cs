@@ -214,13 +214,16 @@ public class OperatorsPriorityTestData : IEnumerable<object[]>
                 new Token(TokenType.Identifier, "c"),
                 Helpers.GetDefaultToken(TokenType.Semicolon)
             },
-            new BinaryExpression(
+            new ComparisonExpression(
                 new IdentifierExpression("a"),
-                Operator.LessThanComparison,
-                new BinaryExpression(
-                    new IdentifierExpression("b"),
-                    Operator.Concatenation,
-                    new IdentifierExpression("c")))
+                new List<ComparisonElement>
+                {
+                    new(Operator.LessThanComparison,
+                        new BinaryExpression(
+                            new IdentifierExpression("b"),
+                            Operator.Concatenation,
+                            new IdentifierExpression("c")))
+                })
         };
         // same priority < <= > >= == !=
         yield return new object[]
@@ -252,40 +255,20 @@ public class OperatorsPriorityTestData : IEnumerable<object[]>
                 new Token(TokenType.Identifier, "l"),
                 Helpers.GetDefaultToken(TokenType.Semicolon)
             },
-            new BinaryExpression(
-                new BinaryExpression(
-                    new BinaryExpression(
-                        new BinaryExpression(
-                            new BinaryExpression(
-                                new BinaryExpression(
-                                    new BinaryExpression(
-                                        new BinaryExpression(
-                                            new BinaryExpression(
-                                                new BinaryExpression(
-                                                    new BinaryExpression(
-                                                        new IdentifierExpression("a"),
-                                                        Operator.LessThanComparison,
-                                                        new IdentifierExpression("b")),
-                                                    Operator.LessOrEqualComparison,
-                                                    new IdentifierExpression("c")),
-                                                Operator.GreaterThanComparison,
-                                                new IdentifierExpression("d")),
-                                            Operator.GreaterOrEqualComparison,
-                                            new IdentifierExpression("e")),
-                                        Operator.EqualComparison,
-                                        new IdentifierExpression("f")),
-                                    Operator.NotEqualComparison,
-                                    new IdentifierExpression("g")),
-                                Operator.EqualComparison,
-                                new IdentifierExpression("h")),
-                            Operator.GreaterOrEqualComparison,
-                            new IdentifierExpression("i")),
-                        Operator.GreaterThanComparison,
-                        new IdentifierExpression("j")),
-                    Operator.LessOrEqualComparison,
-                    new IdentifierExpression("k")),
-                Operator.LessThanComparison,
-                new IdentifierExpression("l"))
+            new ComparisonExpression(new IdentifierExpression("a"), new List<ComparisonElement>
+            {
+                new(Operator.LessThanComparison, new IdentifierExpression("b")),
+                new(Operator.LessOrEqualComparison, new IdentifierExpression("c")),
+                new(Operator.GreaterThanComparison, new IdentifierExpression("d")),
+                new(Operator.GreaterOrEqualComparison, new IdentifierExpression("e")),
+                new(Operator.EqualComparison, new IdentifierExpression("f")),
+                new(Operator.NotEqualComparison, new IdentifierExpression("g")),
+                new(Operator.EqualComparison, new IdentifierExpression("h")),
+                new(Operator.GreaterOrEqualComparison, new IdentifierExpression("i")),
+                new(Operator.GreaterThanComparison, new IdentifierExpression("j")),
+                new(Operator.LessOrEqualComparison, new IdentifierExpression("k")),
+                new(Operator.LessThanComparison, new IdentifierExpression("l")),
+            })
         };
         // < higher than is
         yield return new object[]
@@ -300,11 +283,13 @@ public class OperatorsPriorityTestData : IEnumerable<object[]>
                 Helpers.GetDefaultToken(TokenType.Semicolon)
             },
             new TypeCheckExpression(
-                new BinaryExpression(
+                new ComparisonExpression(
                     new IdentifierExpression("a"),
-                    Operator.LessThanComparison,
-                    new IdentifierExpression("b")
-                ),
+                    new List<ComparisonElement>
+                    {
+                        new(Operator.LessThanComparison,
+                            new IdentifierExpression("b"))
+                    }),
                 DataType.Integer)
         };
         // < higher than is not
@@ -321,11 +306,13 @@ public class OperatorsPriorityTestData : IEnumerable<object[]>
                 Helpers.GetDefaultToken(TokenType.Semicolon)
             },
             new TypeCheckExpression(
-                new BinaryExpression(
+                new ComparisonExpression(
                     new IdentifierExpression("a"),
-                    Operator.LessThanComparison,
-                    new IdentifierExpression("b")
-                ),
+                    new List<ComparisonElement>
+                    {
+                        new(Operator.LessThanComparison,
+                            new IdentifierExpression("b"))
+                    }),
                 DataType.Integer,
                 true)
         };
