@@ -22,9 +22,9 @@ public static class Casting
     public static object? ToNumber(string value)
     {
         // TODO: mimic lexer implementation
-        if (long.TryParse(value, out var integerValue))
+        if (long.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var integerValue))
             return integerValue;
-        if (double.TryParse(value, out var floatValue))
+        if (double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var floatValue))
             return floatValue;
         return null;
     }
