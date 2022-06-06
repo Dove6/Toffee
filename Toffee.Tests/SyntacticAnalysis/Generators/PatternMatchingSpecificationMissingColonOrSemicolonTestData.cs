@@ -38,7 +38,7 @@ public class PatternMatchingSpecificationMissingColonOrSemicolonTestData : IEnum
             new ConditionalExpression(new List<ConditionalElement>
             {
                 new(new FunctionCallExpression(new IdentifierExpression("b"),
-                        new List<Expression> { new IdentifierExpression("a") }),
+                        new List<Expression> { new IdentifierExpression("match") }),
                     new BlockExpression(new List<Statement>(), new IdentifierExpression("c")))
             }),
             new UnexpectedToken(new Position(6, 1, 6), TokenType.Identifier, TokenType.Colon),
@@ -63,7 +63,7 @@ public class PatternMatchingSpecificationMissingColonOrSemicolonTestData : IEnum
             new ConditionalExpression(new List<ConditionalElement>
             {
                 new(new FunctionCallExpression(new IdentifierExpression("b"),
-                        new List<Expression> { new IdentifierExpression("a") }),
+                        new List<Expression> { new IdentifierExpression("match") }),
                     new BlockExpression(new List<Statement>(), new IdentifierExpression("c")))
             }),
             new UnexpectedToken(new Position(8, 1, 8), TokenType.Identifier, TokenType.Semicolon),

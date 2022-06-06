@@ -289,9 +289,12 @@ public partial class Parser
         var argument = ParseParenthesizedExpression();
         InterceptParserError(() => ConsumeToken(TokenType.LeftBrace));
 
+        // TODO: come up with a less hacky solution
+        var internalArgument = new IdentifierExpression("match");
+
         var patternSpecificationList = new List<ConditionalElement>();
         var defaultConsequent = (Expression?)null;
-        while (TryParsePatternSpecification(argument, out var specification))
+        while (TryParsePatternSpecification(internalArgument, out var specification))
         {
             if (defaultConsequent is not null)
                 if (specification!.Condition is null)
@@ -311,7 +314,14 @@ public partial class Parser
         if (blockDefaultConsequent is null && defaultConsequent is not null)
             blockDefaultConsequent = new BlockExpression(new List<Statement>(), defaultConsequent);
 
-        return new ConditionalExpression(patternSpecificationList, blockDefaultConsequent);
+        return new BlockExpression(new List<Statement>
+            {
+                new VariableInitializationListStatement(new List<VariableInitialization>
+                {
+                    new(internalArgument.Name, argument, true)
+                })
+            },
+            new ConditionalExpression(patternSpecificationList, blockDefaultConsequent));
     });
 
     // pattern_specification

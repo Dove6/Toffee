@@ -79,7 +79,8 @@ public partial class ExpressionParsingTest
         expressionStatement.Should().NotBeNull();
         expressionStatement!.IsTerminated.Should().Be(true);
 
-        var patternMatchingExpression = expressionStatement.Expression.As<ConditionalExpression>();
+        var wrappingBlock = expressionStatement.Expression.As<BlockExpression>();
+        var patternMatchingExpression = wrappingBlock.ResultExpression.As<ConditionalExpression>();
         patternMatchingExpression.Should().NotBeNull();
         patternMatchingExpression.Branches.Should().HaveCount(1);
 

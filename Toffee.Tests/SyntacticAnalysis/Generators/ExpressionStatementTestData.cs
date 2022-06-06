@@ -45,7 +45,7 @@ public class ExpressionStatementTestData : IEnumerable<object[]>
         yield return new object[]
         {
             (Token[])new PatternMatchingExpressionTestData().First()[0],
-            typeof(ConditionalExpression),
+            typeof(BlockExpression),
             true
         };
         // binary

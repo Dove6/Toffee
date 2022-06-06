@@ -54,7 +54,7 @@ public class PatternMatchingExpressionTestData : IEnumerable<object[]>
             new ConditionalExpression(new List<ConditionalElement>
             {
                 new(new FunctionCallExpression(new IdentifierExpression("b"),
-                        new List<Expression> { new IdentifierExpression("a") }),
+                        new List<Expression> { new IdentifierExpression("match") }),
                     new BlockExpression(new List<Statement>(), new IdentifierExpression("c")))
             }),
             typeof(DefaultBranchMissing)
@@ -103,10 +103,10 @@ public class PatternMatchingExpressionTestData : IEnumerable<object[]>
             new ConditionalExpression(new List<ConditionalElement>
             {
                 new(new FunctionCallExpression(new IdentifierExpression("b"),
-                        new List<Expression> { new IdentifierExpression("a") }),
+                        new List<Expression> { new IdentifierExpression("match") }),
                     new BlockExpression(new List<Statement>(), new IdentifierExpression("c"))),
                 new(new FunctionCallExpression(new IdentifierExpression("d"),
-                        new List<Expression> { new IdentifierExpression("a") }),
+                        new List<Expression> { new IdentifierExpression("match") }),
                     new BlockExpression(new List<Statement>(), new IdentifierExpression("e")))
             }),
             typeof(DefaultBranchMissing)
@@ -135,7 +135,7 @@ public class PatternMatchingExpressionTestData : IEnumerable<object[]>
             new ConditionalExpression(new List<ConditionalElement>
                 {
                     new(new FunctionCallExpression(new IdentifierExpression("b"),
-                            new List<Expression> { new IdentifierExpression("a") }),
+                            new List<Expression> { new IdentifierExpression("match") }),
                         new BlockExpression(new List<Statement>(), new IdentifierExpression("c")))
                 },
                 new BlockExpression(new List<Statement>(), new IdentifierExpression("d")))

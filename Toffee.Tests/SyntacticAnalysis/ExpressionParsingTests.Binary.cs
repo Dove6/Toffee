@@ -130,9 +130,9 @@ public partial class ExpressionParsingTest
         };
 
         var expectedLeftExpression = new FunctionCallExpression(new IdentifierExpression(leftIdentifierName),
-            new List<Expression> { new IdentifierExpression("a") });
+            new List<Expression> { new IdentifierExpression("match") });
         var expectedRightExpression = new FunctionCallExpression(new IdentifierExpression(rightIdentifierName),
-            new List<Expression> { new IdentifierExpression("a") });
+            new List<Expression> { new IdentifierExpression("match") });
 
         var lexerMock = new LexerMock(tokenSequence);
         var errorHandlerMock = new ParserErrorHandlerMock();
@@ -144,7 +144,8 @@ public partial class ExpressionParsingTest
         expressionStatement.Should().NotBeNull();
         expressionStatement!.IsTerminated.Should().Be(true);
 
-        var patternMatchingExpression = expressionStatement.Expression.As<ConditionalExpression>();
+        var wrappingExpression = expressionStatement.Expression.As<BlockExpression>();
+        var patternMatchingExpression = wrappingExpression.ResultExpression.As<ConditionalExpression>();
         patternMatchingExpression.Should().NotBeNull();
         patternMatchingExpression.Branches.Should().HaveCount(1);
 

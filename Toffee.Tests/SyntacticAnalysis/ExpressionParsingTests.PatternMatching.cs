@@ -27,7 +27,9 @@ public partial class ExpressionParsingTest
         expressionStatement.Should().NotBeNull();
         expressionStatement!.IsTerminated.Should().Be(true);
 
-        expressionStatement.Expression.Should().BeEquivalentTo(expectedExpression, Helpers.ProvideOptions);
+        var wrappingBlock = expressionStatement.Expression.As<BlockExpression>();
+        var patternMatchingExpression = wrappingBlock.ResultExpression.As<ConditionalExpression>();
+        patternMatchingExpression.Should().BeEquivalentTo(expectedExpression, Helpers.ProvideOptions);
 
         Assert.False(errorHandlerMock.HadErrors);
 
@@ -56,7 +58,8 @@ public partial class ExpressionParsingTest
         expressionStatement.Should().NotBeNull();
         expressionStatement!.IsTerminated.Should().Be(true);
 
-        var patternMatchingExpression = expressionStatement.Expression.As<ConditionalExpression>();
+        var wrappingBlock = expressionStatement.Expression.As<BlockExpression>();
+        var patternMatchingExpression = wrappingBlock.ResultExpression.As<ConditionalExpression>();
         patternMatchingExpression.Should().BeEquivalentTo(expectedExpression, Helpers.ProvideOptions);
 
         for (var i = 0; i < expectedErrors.Length; i++)
@@ -87,7 +90,8 @@ public partial class ExpressionParsingTest
         expressionStatement.Should().NotBeNull();
         expressionStatement!.IsTerminated.Should().Be(true);
 
-        var patternMatchingExpression = expressionStatement.Expression.As<ConditionalExpression>();
+        var wrappingBlock = expressionStatement.Expression.As<BlockExpression>();
+        var patternMatchingExpression = wrappingBlock.ResultExpression.As<ConditionalExpression>();
         patternMatchingExpression.Should().BeEquivalentTo(expectedExpression, Helpers.ProvideOptions);
 
         errorHandlerMock.HandledErrors[0].Should().BeEquivalentTo(expectedError);
@@ -145,7 +149,7 @@ public partial class ExpressionParsingTest
         var expectedExpression = new ConditionalExpression(new List<ConditionalElement>
         {
             new(new GroupingExpression(new FunctionCallExpression(new IdentifierExpression("b"),
-                    new List<Expression> { new IdentifierExpression("a") })),
+                    new List<Expression> { new IdentifierExpression("match") })),
                 new BlockExpression(new List<Statement>(), new IdentifierExpression("c")))
         });
 
@@ -161,7 +165,8 @@ public partial class ExpressionParsingTest
         expressionStatement.Should().NotBeNull();
         expressionStatement!.IsTerminated.Should().Be(true);
 
-        expressionStatement.Expression.Should().BeEquivalentTo(expectedExpression, Helpers.ProvideOptions);
+        var wrappingBlock = expressionStatement.Expression.As<BlockExpression>();
+        wrappingBlock.ResultExpression.Should().BeEquivalentTo(expectedExpression, Helpers.ProvideOptions);
 
         errorHandlerMock.HandledErrors[0].Should().BeEquivalentTo(expectedError);
 

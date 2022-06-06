@@ -139,7 +139,7 @@ public partial class ExpressionParsingTest
             Helpers.GetDefaultToken(TokenType.Semicolon)
         }).ToArray();
 
-        var expectedExpression = new TypeCheckExpression(new IdentifierExpression("a"), expectedType, expectedIsInequalityCheck);
+        var expectedExpression = new TypeCheckExpression(new IdentifierExpression("match"), expectedType, expectedIsInequalityCheck);
 
         var lexerMock = new LexerMock(tokenSequence);
         var errorHandlerMock = new ParserErrorHandlerMock();
@@ -151,7 +151,8 @@ public partial class ExpressionParsingTest
         expressionStatement.Should().NotBeNull();
         expressionStatement!.IsTerminated.Should().Be(true);
 
-        var patternMatchingExpression = expressionStatement.Expression.As<ConditionalExpression>();
+        var wrappingBlock = expressionStatement.Expression.As<BlockExpression>();
+        var patternMatchingExpression = wrappingBlock.ResultExpression.As<ConditionalExpression>();
         patternMatchingExpression.Should().NotBeNull();
         patternMatchingExpression.Branches.Should().HaveCount(1);
 
