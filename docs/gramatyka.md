@@ -53,7 +53,7 @@ for_loop_range
 while_loop_expression
     = KW_WHILE, parenthesized_expression, unterminated_statement;
 function_definition
-    = KW_FUNCTI, LEFT_PARENTHESIS, parameter_list, RIGHT_PARENTHESIS, block;
+    = KW_FUNCTI, LEFT_PARENTHESIS, parameter_list, RIGHT_PARENTHESIS, unterminated_statement;
 parameter_list
     = [ parameter, { COMMA, parameter } ];
 parameter

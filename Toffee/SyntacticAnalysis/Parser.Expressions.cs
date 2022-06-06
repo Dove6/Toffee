@@ -229,11 +229,15 @@ public partial class Parser
         var parameterList = ParseParameterList();
         InterceptParserError(() => ConsumeToken(TokenType.RightParenthesis));
 
-        var body = ParseBlockExpression();
-        if (body is null)
-            throw new ParserException(new ExpectedBlockExpression(_lexer.CurrentToken));
+        var body = ParseStatement();
+        BlockExpression blockBody;
+        if (body is ExpressionStatement expressionStatement)
+            blockBody = expressionStatement.Expression as BlockExpression
+                        ?? new BlockExpression(new List<Statement>(), expressionStatement.Expression);
+        else
+            blockBody = new BlockExpression(new List<Statement> { body });
 
-        return new FunctionDefinitionExpression(parameterList, (BlockExpression)body);
+        return new FunctionDefinitionExpression(parameterList, blockBody);
     });
 
     // parameter_list
