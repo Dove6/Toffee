@@ -185,6 +185,35 @@ public class IntegrationRunnerTests
     }
 
     [Fact]
+    public void PatternMatchingShouldWork()
+    {
+        var testText = Join(new[]
+        {
+            "init const matchingExample = functi(var) {",
+            "    match(var) {",
+            "        is null:        \"null value\";",
+            "        == 5:           \"exactly five\";",
+            "        is int and > 8: \"integer greater than 8\";",
+            "        default:        \"no match\";",
+            "    }",
+            "};",
+            "print(matchingExample(5));",
+            "print(matchingExample(10));",
+            "print(matchingExample(null));",
+            "print(matchingExample(\"5\"));"
+        });
+        var expectedOutput = Join(new[]
+        {
+            "exactly five",
+            "integer greater than 8",
+            "null value",
+            "no match"
+        });
+        var output = RunText(testText);
+        output.Should().Be(expectedOutput);
+    }
+
+    [Fact]
     public void CommentsShouldBeIgnored()
     {
         var testText = Join(new[]
