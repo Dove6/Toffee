@@ -45,5 +45,3 @@ public record TypeCastExpression(DataType Type, Expression Expression)
     : Expression(new Position(), new Position());
 public record TypeCheckExpression(Expression Expression, DataType Type, bool IsInequalityCheck = false)
     : Expression(new Position(), new Position());
-public record PatternTypeCheckExpression(DataType Type, bool IsInequalityCheck = false)
-    : Expression(new Position(), new Position());

@@ -260,9 +260,4 @@ public partial class Runner
             _ => throw new NotImplementedException()
         };
     }
-
-    private object? CalculateDynamic(PatternTypeCheckExpression expression)
-    {
-        throw new NotImplementedException();
-    }
 }

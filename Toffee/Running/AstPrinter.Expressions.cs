@@ -185,10 +185,4 @@ public partial class AstPrinter
             ? $"is not {expression.Type}" : $"is {expression.Type}");
         Print(expression.Expression, indentLevel + 1);
     }
-
-    private void PrintDynamic(PatternTypeCheckExpression expression, int indentLevel)
-    {
-        PrintHeader(expression, indentLevel, expression.IsInequalityCheck
-            ? $"is not {expression.Type}" : $"is {expression.Type}");
-    }
 }

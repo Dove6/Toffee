@@ -139,7 +139,7 @@ public partial class ExpressionParsingTest
             Helpers.GetDefaultToken(TokenType.Semicolon)
         }).ToArray();
 
-        var expectedExpression = new PatternTypeCheckExpression(expectedType, expectedIsInequalityCheck);
+        var expectedExpression = new TypeCheckExpression(new IdentifierExpression("a"), expectedType, expectedIsInequalityCheck);
 
         var lexerMock = new LexerMock(tokenSequence);
         var errorHandlerMock = new ParserErrorHandlerMock();
