@@ -1,4 +1,5 @@
-﻿using Toffee.SyntacticAnalysis;
+﻿using Toffee.Running.Operations;
+using Toffee.SyntacticAnalysis;
 
 namespace Toffee.Running;
 
@@ -47,13 +48,11 @@ public partial class Runner
 
     private void RunDynamic(BreakStatement statement)
     {
-        _environmentStack.RegisterBreak();
-    }
-
-    private void RunDynamic(BreakIfStatement statement)
-    {
-        // TODO: desugar
-        throw new NotImplementedException();
+        var conditionValue = statement.Condition is not null
+            ? Casting.ToBool(Calculate(statement.Condition))
+            : true;
+        if (conditionValue is true)
+            _environmentStack.RegisterBreak();
     }
 
     private void RunDynamic(ReturnStatement statement)

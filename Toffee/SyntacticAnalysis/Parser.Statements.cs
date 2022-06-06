@@ -124,7 +124,7 @@ public partial class Parser
             return null;
 
         var condition = ParseParenthesizedExpression();
-        return new BreakIfStatement(condition);
+        return new BreakStatement(condition);
     });
 
     // return

@@ -91,9 +91,6 @@
       <Compile Update="SyntacticAnalysis\StatementParsingTests.Break.cs">
         <DependentUpon>StatementParsingTests.cs</DependentUpon>
       </Compile>
-      <Compile Update="SyntacticAnalysis\StatementParsingTests.BreakIf.cs">
-        <DependentUpon>StatementParsingTests.cs</DependentUpon>
-      </Compile>
       <Compile Update="SyntacticAnalysis\StatementParsingTests.Return.cs">
         <DependentUpon>StatementParsingTests.cs</DependentUpon>
       </Compile>

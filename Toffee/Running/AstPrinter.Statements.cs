@@ -39,9 +39,10 @@ public partial class AstPrinter
             Print(initialization, indentLevel);
     }
 
-    private void PrintDynamic(BreakIfStatement statement, int indentLevel)
+    private void PrintDynamic(BreakStatement statement, int indentLevel)
     {
-        Print(statement.Condition, indentLevel);
+        if (statement.Condition is not null)
+            Print(statement.Condition, indentLevel);
     }
 
     private void PrintDynamic(ReturnStatement statement, int indentLevel)

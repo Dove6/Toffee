@@ -8,9 +8,7 @@ public record NamespaceImportStatement(IList<string> NamespaceLevels)
     : Statement(new Position(), new Position());
 public record VariableInitializationListStatement(IList<VariableInitialization> Items)
     : Statement(new Position(), new Position());
-public record BreakStatement()
-    : Statement(new Position(), new Position());
-public record BreakIfStatement(Expression Condition)
+public record BreakStatement(Expression? Condition = null)
     : Statement(new Position(), new Position());
 public record ReturnStatement(Expression? Value = null)
     : Statement(new Position(), new Position());
