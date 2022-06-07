@@ -15,7 +15,7 @@ public static class Casting
             double floatValue => floatValue,
             string stringValue => ToNumber(stringValue),
             bool boolValue => boolValue ? 1L : 0L,
-            _ => throw new RunnerException(new BadCast(DataType.Integer, DataType.Float))
+            _ => null
         };
     }
 
@@ -37,7 +37,7 @@ public static class Casting
             DataType.Float => ToFloat(value),
             DataType.String => ToString(value),
             DataType.Bool => ToBool(value),
-            _ => throw new RunnerException(new BadCast(type))
+            _ => null
         };
     }
 
@@ -55,7 +55,7 @@ public static class Casting
                 out var parsedStringValue)
                 ? parsedStringValue
                 : null,
-            _ => throw new RunnerException(new BadCast(DataType.Integer))
+            _ => null
         };
     }
 
@@ -73,7 +73,7 @@ public static class Casting
                 out var parsedStringValue)
                 ? parsedStringValue
                 : null,
-            _ => throw new RunnerException(new BadCast(DataType.Float))
+            _ => null
         };
     }
 
@@ -86,7 +86,7 @@ public static class Casting
             double floatValue => floatValue.ToString(CultureInfo.InvariantCulture),
             bool boolValue => boolValue.ToString(CultureInfo.InvariantCulture).ToLowerInvariant(),
             string stringValue => stringValue,
-            _ => throw new RunnerException(new BadCast(DataType.String))
+            _ => null
         };
     }
 
@@ -104,7 +104,7 @@ public static class Casting
                 "false" => false,
                 _ => null
             },
-            _ => throw new RunnerException(new BadCast(DataType.Bool))
+            _ => null
         };
     }
 

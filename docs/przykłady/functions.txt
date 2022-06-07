@@ -17,10 +17,11 @@ init printRequired = functi(x!) {
     print(x);
 };
 printRequired(5);  // 5 - OK
-printRequired(null);  // błąd!
+// printRequired(null);  // błąd!
 
 // przykład funkcji z niemutowalnym oraz z mutowalnym parametrem
 init const recursiveFactorial = functi(const n) { if (n > 0) n * recursiveFactorial(n - 1) else 1 };
+print(recursiveFactorial(5));
 
 init const iterativeFactorial = functi(n) {
     init result = 1;
@@ -28,7 +29,9 @@ init const iterativeFactorial = functi(n) {
         result *= n;
         n -= 1;
     };
-    return(n);
+    return(result);
 };
+print(iterativeFactorial(5));
 
-init const dontDoThis = functi(const n) { n = 5 };  // błąd
+init const dontDoThis = functi(const n) { n = 5 };
+// dontDoThis(6);  // błąd

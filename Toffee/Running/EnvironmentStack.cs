@@ -182,7 +182,8 @@ public class Environment
         (value, isConst) = (null, null);
         if (!_variables.ContainsKey(identifier))
             return false;
-        (value, isConst) = _variables[identifier];
+        var variable = _variables[identifier];
+        (value, isConst) = (variable.Value, variable.IsConst);
         return true;
     }
 

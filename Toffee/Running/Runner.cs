@@ -28,8 +28,6 @@ public partial class Runner : IRunner
         }));
     }
 
-    private event Action ErrorEmitted;
-
     private void EmitError(RunnerError error)
     {
         _errorHandler?.Handle(error);

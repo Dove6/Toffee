@@ -11,10 +11,10 @@ init const matchingExample = functi(var) {
     }
 };
 
-print(a);  // "Dokładnie pięć"
-print(b);  // "Liczba całkowita większa od 8"
-print(c);  // "Wartość null"
-print("5");  // "Brak dopasowania"
+print(matchingExample(a));  // "Dokładnie pięć"
+print(matchingExample(b));  // "Liczba całkowita większa od 8"
+print(matchingExample(c));  // "Wartość null"
+print(matchingExample("5"));  // "Brak dopasowania"
 
 
 // konstrukcja match pozwala również na skorzystanie z predykatu - funkcji jednoargumentowej, której wynik będzie rzutowany do typu bool
@@ -28,7 +28,7 @@ init const predicateMatchingExample = functi(var) {
     }
 };
 
-print(5);  // "Liczba nieparzysta"
-print(7);  // "Liczba nieparzysta"
-print(4);  // "Liczba"
-print("osiem");  // "???"
+print(predicateMatchingExample(5));  // "Liczba nieparzysta"
+print(predicateMatchingExample(7));  // "Liczba nieparzysta"
+print(predicateMatchingExample(4));  // "Liczba"
+print(predicateMatchingExample("osiem"));  // "???"

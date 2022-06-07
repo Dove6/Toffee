@@ -6,24 +6,24 @@ five = 0b101;  // Binary
 five = 5.0;
 five = 0.5e1;
 five = 0.5e+1;
-five = 50e-1;
+five = 50.0e-1;
 
-init three = 3, fifteen = a + 10;
+init three = 3, fifteen = five + 10;
 
 // ewaluacja od lewej do prawej, więc możliwe użycie zmiennej/stałej utworzonej wcześniej w tej samej linii
 init eight = 8, twentyFour = three * eight;
 
 init const one = 1;
-one = 5;  // błąd!
+// one = 5;  // błąd!
 
 init j;  // domyślnie null
-init const ten;  // błąd - brak wymaganej wartości
+// init const ten;  // błąd - brak wymaganej wartości
 init const nil = null;  // OK, chociaż podejrzane
 
 // const łączy się z nazwą zmiennej, więc możliwa jest inicjalizacja w tej samej linii kilku zmiennych i stałych
 init const seven = 7, theAnswerToTheUltimateQuestionOfLifeTheUniverseAndEverything = 42, i = 0, const nine = 9;
 i = 1234567890;  // OK
-nine = 45;  // błąd
+// nine = 45;  // błąd
 
 i = one + three;  // dodawanie
 i = one - three;  // odejmowanie
@@ -31,8 +31,8 @@ i = one * three;  // mnożenie
 i = three / one;  // dzielenie -> int
 i = one / three;  // dzielenie -> float
 i = one % three;  // reszta z dzielenia (rem)
-i = one / 0;  // błąd!
-i = one % 0;  // błąd!
+// i = one / 0;  // błąd!
+// i = one % 0;  // błąd!
 i = nine ^ three;  // potęgowanie
 i = -three;  // wartość przeciwna
 i = seven + three * three;  // 16

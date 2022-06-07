@@ -1,5 +1,3 @@
-pull std.io;
-
 init const one = 1, const two = 2, const three = 3, i, j;;;;;;;;;;  // postawienie kilku średników nie jest błędem
 
 if (one + two == three) {
@@ -41,7 +39,7 @@ for (5) {
 for (i, 0:5) print(i);  // pętla wypisuje w kolejnych liniach cyfry 0, 1, 2, 3, i 4
 //   ^ licznik przykrywa deklarację i z przestrzeni globalnej
 for (outer, 4:-1:-1) {
-    outer = 5;  // błąd - licznik jest stałą w danej iteracji
+    // outer = 5;  // błąd - licznik jest stałą w danej iteracji
     for (inner, 3) {
         print("Liczniki:");
         print(outer .. "/" .. inner);
