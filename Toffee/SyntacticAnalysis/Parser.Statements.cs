@@ -80,16 +80,12 @@ public partial class Parser
 
         var list = new List<VariableInitialization>
         {
-            ParseVariableInitialization()
+            ValidateVariableInitialization(ParseVariableInitialization())
         };
         while (TryConsumeToken(out _, TokenType.Comma))
         {
-            var initialization = ParseVariableInitialization();
+            var initialization = ValidateVariableInitialization(ParseVariableInitialization());
             list.Add(initialization);
-            if (initialization.IsConst)
-                EmitError(new ImplicitConstInitialization(initialization));
-            else if (initialization.InitialValue is LiteralExpression { Type: DataType.Null })
-                EmitWarning(new SuperfluousNullInitialValue(initialization));
         }
 
         return new VariableInitializationListStatement(list);
@@ -117,6 +113,18 @@ public partial class Parser
             return new VariableInitialization(variableName, initialValue, isConst, position);
         EmitError(new UnexpectedToken(assignmentToken, TokenType.OperatorEquals));
         return new VariableInitialization(variableName, initialValue, isConst, position);
+    }
+
+    private VariableInitialization ValidateVariableInitialization(VariableInitialization initialization)
+    {
+        if (initialization.IsConst)
+        {
+            if (initialization.InitialValue is null)
+                EmitError(new ImplicitConstInitialization(initialization));
+        }
+        else if (initialization.InitialValue is LiteralExpression { Type: DataType.Null })
+            EmitWarning(new SuperfluousNullInitialValue(initialization));
+        return initialization;
     }
 
     // break
