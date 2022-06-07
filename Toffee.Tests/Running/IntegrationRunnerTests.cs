@@ -29,9 +29,9 @@ public class IntegrationRunnerTests
         {
             { "print", new Variable(new PrintFunction(writer), false) }
         })));
-        while (!runner.ShouldQuit && (!parser.TryAdvance(out var statement) || statement is not null))
-            if (statement is not null)
-                runner.Run(statement);
+        while (!runner.ShouldQuit && parser.TryAdvance(out var statement, out var hadError))
+            if (!hadError)
+                runner.Run(statement!);
         return writer.ToString();
     }
 

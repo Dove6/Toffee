@@ -10,8 +10,7 @@ public partial class Parser : IParser
     private readonly IParserErrorHandler? _errorHandler;
 
     private Position _lastTokenEndPosition = new();
-
-    public Statement? CurrentStatement { get; private set; }
+    private bool _hadErrorInCurrentStatement;
 
     private delegate Statement? ParseStatementDelegate();
     private delegate Expression? ParseExpressionDelegate();
@@ -50,7 +49,11 @@ public partial class Parser : IParser
         return matchedToken;
     }
 
-    private void EmitError(ParserError error) => _errorHandler?.Handle(error);
+    private void EmitError(ParserError error)
+    {
+        _hadErrorInCurrentStatement = true;
+        _errorHandler?.Handle(error);
+    }
 
     private void EmitWarning(ParserWarning warning) => _errorHandler?.Handle(warning);
 
@@ -91,23 +94,26 @@ public partial class Parser : IParser
             _lastTokenEndPosition = _lexer.Advance().EndPosition;
     }
 
-    public bool TryAdvance(out Statement? parsedStatement)
+    public bool TryAdvance(out Statement? parsedStatement, out bool hadError)
     {
         parsedStatement = null;
+        hadError = _hadErrorInCurrentStatement = false;
 
         SkipSemicolons();
         if (_lexer.CurrentToken.Type == TokenType.EndOfText)
-            return true;
+            return false;
 
         parsedStatement = InterceptParserError(ParseStatement);
         if (parsedStatement is null)
         {
             SkipUntilNextStatement();
-            return false;
+            hadError = true;
+            return true;
         }
 
         if (!parsedStatement.IsTerminated)
             EmitError(new ExpectedSemicolon(_lexer.CurrentToken));
+        hadError = _hadErrorInCurrentStatement;
         return true;
     }
 }

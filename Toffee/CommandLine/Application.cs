@@ -62,30 +62,29 @@ public class Application
     private void RunAstPrinter(IStandardOut console)
     {
         var printer = new AstPrinter(_sourceName!, console.Out);
-        while (_parser!.TryAdvance(out var statement) && statement is not null)
-            printer.Print(statement);
+        while (_parser!.TryAdvance(out var statement, out var hadError))
+            if (hadError)
+                printer.Print(statement!);
     }
 
     private void RunRunner(bool isInteractive, IStandardOut console)
     {
         var runner = new Runner(_logger, writer: console.Out);
 
-        bool successfullyParsed;
         while (!runner.ShouldQuit)
         {
-            successfullyParsed = _parser!.TryAdvance(out var statement);
-            if (successfullyParsed && statement is null)
+            if (!_parser!.TryAdvance(out var statement, out var hadError))
                 return;
-            if (!successfullyParsed && !isInteractive)
-                break;
-            if (successfullyParsed)
+            if (!hadError)
                 runner.Run(statement!);
+            else if (!isInteractive)
+                break;
         }
 
         if (isInteractive || runner.ShouldQuit)
             return;
 
-        while (!_parser!.TryAdvance(out var statement) || statement is not null)
+        while (_parser!.TryAdvance(out _, out _))
         { }
     }
 }

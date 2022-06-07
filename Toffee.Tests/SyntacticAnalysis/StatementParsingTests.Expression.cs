@@ -18,7 +18,8 @@ public partial class StatementParsingTests
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.TryAdvance(out var statement).Should().BeTrue();
+        parser.TryAdvance(out var statement, out var hadError);
+hadError.Should().BeFalse();
 
         var expressionStatement = statement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();

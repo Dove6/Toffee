@@ -20,7 +20,8 @@ public partial class StatementParsingTests
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.TryAdvance(out var statement).Should().BeTrue();
+        parser.TryAdvance(out var statement, out var hadError);
+        hadError.Should().BeFalse();
 
         var variableInitializationStatement = statement.As<VariableInitializationListStatement>();
         variableInitializationStatement.Should().NotBeNull();
@@ -35,15 +36,17 @@ public partial class StatementParsingTests
     [Trait("Category", "Negative")]
     [Theory]
     [ClassData(typeof(VariableInitializationListStatementMissingVariableTestData))]
-    public void MissingVariableInVariableInitializationListStatementsShouldBeDetectedProperly(Token[] tokenSequence, ParserError expectedError)
+    public void MissingVariableInVariableInitializationListStatementsShouldBeDetectedProperly(Token[] tokenSequence, params ParserError[] expectedErrors)
     {
         var lexerMock = new LexerMock(tokenSequence);
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.TryAdvance(out var statement).Should().BeFalse();
+        parser.TryAdvance(out _, out var hadError);
+        hadError.Should().BeTrue();
 
-        errorHandlerMock.HandledErrors[0].Should().BeEquivalentTo(expectedError);
+        for (var i = 0; i < expectedErrors.Length; i++)
+            errorHandlerMock.HandledErrors[i].Should().BeEquivalentTo(expectedErrors[i]);
 
         Assert.False(errorHandlerMock.HadWarnings);
     }
@@ -72,7 +75,8 @@ public partial class StatementParsingTests
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.TryAdvance(out var statement).Should().BeFalse();
+        parser.TryAdvance(out var statement, out var hadError);
+hadError.Should().BeTrue();
 
         errorHandlerMock.HandledErrors[0].Should().BeEquivalentTo(expectedError);
 
@@ -122,7 +126,8 @@ public partial class StatementParsingTests
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.TryAdvance(out var statement).Should().BeTrue();
+        parser.TryAdvance(out var statement, out var hadError);
+        hadError.Should().BeTrue();
 
         var variableInitializationStatement = statement.As<VariableInitializationListStatement>();
         variableInitializationStatement.Should().BeEquivalentTo(expectedStatement, Helpers.ProvideOptions);

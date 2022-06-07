@@ -15,13 +15,10 @@ public class EnvironmentStack
     public bool BreakEncountered { get; private set; }
 
     private bool _isInFunction;
-    private bool _isInLoop;
+    public bool IsInLoop { get; private set; }
     private EnvironmentType? _currentNonBlockType;
 
     private Environment GetEnvironmentAt(int indexFromTop) => _stack[new Index(indexFromTop + 1, true)];
-
-    private void SetEnvironmentAt(int indexFromTop, Environment environment) =>
-        _stack[new Index(indexFromTop + 1, true)] = environment;
 
     private int? LocateOnStack(string identifier) => _stack.Reverse()
         .Select((environment, index) => (index, environment))
@@ -52,24 +49,28 @@ public class EnvironmentStack
     public object? Access(string identifier)
     {
         var environmentIndex = LocateOnStack(identifier);
-        if (environmentIndex is null)
+        if (environmentIndex is null ||
+                !GetEnvironmentAt(environmentIndex.Value).TryAccess(identifier, out var value, out _))
             throw new RunnerException(new VariableUndefined(identifier));
-        return GetEnvironmentAt(environmentIndex.Value).Access(identifier);
+        return value;
     }
 
-    public void Assign(string identifier, object? value)
+    public void Assign(string identifier, object? value, bool ignoreImmutability = false)
     {
         var environmentIndex = LocateOnStack(identifier);
-        if (environmentIndex is null)
+        if (environmentIndex is null
+                || !GetEnvironmentAt(environmentIndex.Value).TryAccess(identifier, out _, out var isConst))
             throw new RunnerException(new VariableUndefined(identifier));
-        GetEnvironmentAt(environmentIndex.Value).Assign(identifier, value);
+        if (isConst!.Value && !ignoreImmutability)
+            throw new RunnerException(new AssignmentToConst(identifier));
+        GetEnvironmentAt(environmentIndex.Value).TryAssign(identifier, value);
     }
 
     public void Initialize(string identifier, object? initialValue = null, bool isConst = false)
     {
         if (CurrentEnvironment.Has(identifier))
             throw new RunnerException(new VariableAlreadyDefined(identifier));
-        CurrentEnvironment.Initialize(identifier, initialValue, isConst);
+        CurrentEnvironment.TryInitialize(identifier, initialValue, isConst);
     }
 
     public void FinalizeInitializationList()
@@ -90,7 +91,7 @@ public class EnvironmentStack
         if (type == EnvironmentType.Loop)
         {
             _currentNonBlockType = EnvironmentType.Loop;
-            _isInLoop = true;
+            IsInLoop = true;
             BreakEncountered = false;
         }
     }
@@ -112,15 +113,15 @@ public class EnvironmentStack
         if (removedEnvironment.Type == EnvironmentType.Loop)
         {
             BreakEncountered = false;
-            _isInLoop = _isInLoop
+            IsInLoop = IsInLoop
                 ? _stack.Reverse().FirstOrDefault(x => x.Type == EnvironmentType.Loop) is not null
-                : _isInLoop;
+                : IsInLoop;
         }
         _currentNonBlockType = _isInFunction switch
         {
-            true when !_isInLoop => EnvironmentType.Function,
-            false when _isInLoop => EnvironmentType.Loop,
-            false when !_isInLoop => null,
+            true when !IsInLoop => EnvironmentType.Function,
+            false when IsInLoop => EnvironmentType.Loop,
+            false when !IsInLoop => null,
             _ => _stack.Reverse().FirstOrDefault(x => x.Type != EnvironmentType.Block)?.Type
         };
     }
@@ -171,26 +172,26 @@ public class Environment
 
     public bool Has(string identifier) => _variables.ContainsKey(identifier);
 
-    public void Initialize(string identifier, object? value, bool isConst)
+    public bool TryInitialize(string identifier, object? value, bool isConst)
     {
-        _variables.Add(identifier, new Variable(value, isConst));
+        return _variables.TryAdd(identifier, new Variable(value, isConst));
     }
 
-    public object? Access(string identifier)
+    public bool TryAccess(string identifier, out object? value, out bool? isConst)
     {
+        (value, isConst) = (null, null);
         if (!_variables.ContainsKey(identifier))
-            throw new RunnerException(new VariableUndefined(identifier));
-        return _variables[identifier].Value;
+            return false;
+        (value, isConst) = _variables[identifier];
+        return true;
     }
 
-    public void Assign(string identifier, object? value)
+    public bool TryAssign(string identifier, object? value)
     {
         if (!_variables.ContainsKey(identifier))
-            throw new RunnerException(new VariableUndefined(identifier));
-        var variable = _variables[identifier];
-        if (variable.IsConst)
-            throw new RunnerException(new AssignmentToConst(identifier));
+            return false;
         _variables[identifier].Value = value;
+        return true;
     }
 
     public Environment Clone() => new() { _variables = new Dictionary<string, Variable>(_variables) };

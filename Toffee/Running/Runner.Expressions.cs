@@ -47,6 +47,20 @@ public partial class Runner
         return result;
     }
 
+    private object? CalculateWithoutPushingEnvironment(BlockExpression expression)
+    {
+        foreach (var statement in expression.Statements)
+        {
+            Run(statement);
+            if (ExecutionInterrupted)
+                return null;
+        }
+        var result = expression.ResultExpression is not null
+            ? Calculate(expression.ResultExpression)
+            : null;
+        return result;
+    }
+
     private object? CalculateDynamic(ConditionalExpression expression)
     {
         var consequentToRun = expression.Branches.FirstOrDefault(x =>
@@ -92,13 +106,13 @@ public partial class Runner
         using var environmentGuard = _environmentStack.PushGuard(EnvironmentType.Loop);
 
         if (expression.CounterName is not null)
-            _environmentStack.Initialize(expression.CounterName);
+            _environmentStack.Initialize(expression.CounterName, isConst: true);
 
         while (rangePredicate(counter, stopValue) is true)
         {
             if (expression.CounterName is not null)
-                _environmentStack.Assign(expression.CounterName, counter);
-            Calculate(expression.Body);
+                _environmentStack.Assign(expression.CounterName, counter, true);
+            CalculateWithoutPushingEnvironment(expression.Body);
             if (ExecutionInterrupted)
                 return counter;
             counter = Arithmetical.Add(counter, stepValue);
@@ -113,7 +127,7 @@ public partial class Runner
         using var environmentGuard = _environmentStack.PushGuard(EnvironmentType.Loop);
         while (Casting.ToBool(conditionValue = Calculate(expression.Condition)) is true)
         {
-            Calculate(expression.Body);
+            CalculateWithoutPushingEnvironment(expression.Body);
             if (ExecutionInterrupted)
                 return conditionValue;
         }

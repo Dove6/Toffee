@@ -36,11 +36,13 @@ public class VariableInitializationListStatementTestData : IEnumerable<object[]>
                 initToken,
                 constToken,
                 new(TokenType.Identifier, "a"),
+                Helpers.GetDefaultToken(TokenType.OperatorEquals),
+                Helpers.GetDefaultToken(TokenType.KeywordNull),
                 semicolonToken
             },
             new VariableInitialization[]
             {
-                new(IsConst: true, Name: "a")
+                new(IsConst: true, Name: "a", InitialValue: new LiteralExpression(DataType.Null, null))
             }
         };
         // with initialization

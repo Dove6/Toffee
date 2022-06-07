@@ -48,7 +48,8 @@ public partial class ExpressionParsingTest
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.TryAdvance(out var statement).Should().BeTrue();
+        parser.TryAdvance(out var statement, out var hadError);
+hadError.Should().BeFalse();
 
         var expressionStatement = statement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
@@ -70,7 +71,8 @@ public partial class ExpressionParsingTest
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.TryAdvance(out var statement).Should().BeTrue();
+        parser.TryAdvance(out var statement, out var hadError);
+hadError.Should().BeFalse();
 
         var expressionStatement = statement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
@@ -92,7 +94,8 @@ public partial class ExpressionParsingTest
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.TryAdvance(out var statement).Should().BeTrue();
+        parser.TryAdvance(out var statement, out var hadError);
+hadError.Should().BeFalse();
 
         var expressionStatement = statement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
@@ -115,7 +118,8 @@ public partial class ExpressionParsingTest
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.TryAdvance(out var statement).Should().BeTrue();
+        parser.TryAdvance(out var statement, out var hadError);
+        hadError.Should().BeTrue();
 
         var expressionStatement = statement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
@@ -150,7 +154,8 @@ public partial class ExpressionParsingTest
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.TryAdvance(out var statement).Should().BeFalse();
+        parser.TryAdvance(out _, out var hadError);
+        hadError.Should().BeTrue();
 
         errorHandlerMock.HandledErrors[0].Should().BeEquivalentTo(expectedError);
 

@@ -28,7 +28,14 @@ public partial class Runner : IRunner
         }));
     }
 
-    private void EmitError(RunnerError error) => _errorHandler?.Handle(error);
+    private event Action ErrorEmitted;
+
+    private void EmitError(RunnerError error)
+    {
+        _errorHandler?.Handle(error);
+        if (_environmentStack.IsInLoop)
+            _environmentStack.RegisterBreak();
+    }
 
     private void EmitWarning(RunnerWarning warning) => _errorHandler?.Handle(warning);
 }
