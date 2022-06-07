@@ -25,9 +25,10 @@ public partial class ExpressionParsingTest
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.Advance();
+        parser.TryAdvance(out var statement, out var hadError);
+hadError.Should().BeFalse();
 
-        var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
+        var expressionStatement = statement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
         expressionStatement!.IsTerminated.Should().Be(true);
 
@@ -73,9 +74,10 @@ public partial class ExpressionParsingTest
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.Advance();
+        parser.TryAdvance(out var statement, out var hadError);
+hadError.Should().BeFalse();
 
-        var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
+        var expressionStatement = statement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
         expressionStatement!.IsTerminated.Should().Be(true);
 
@@ -84,10 +86,12 @@ public partial class ExpressionParsingTest
         patternMatchingExpression.Should().NotBeNull();
         patternMatchingExpression.Branches.Should().HaveCount(1);
 
-        var binaryExpression = patternMatchingExpression.Branches[0].Condition.As<BinaryExpression>();
-        binaryExpression.Should().NotBeNull();
-        binaryExpression.Operator.Should().Be(expectedOperator);
-        binaryExpression.Right.Should().BeEquivalentTo(expectedExpression, Helpers.ProvideOptions);
+        var comparisonExpression = patternMatchingExpression.Branches[0].Condition.As<ComparisonExpression>();
+        comparisonExpression.Should().NotBeNull();
+        comparisonExpression.Left.Should().BeEquivalentTo(new IdentifierExpression("match"), Helpers.ProvideOptions);
+        comparisonExpression.Comparisons.Count.Should().Be(1);
+        comparisonExpression.Comparisons[0].Operator.Should().Be(expectedOperator);
+        comparisonExpression.Comparisons[0].Right.Should().BeEquivalentTo(expectedExpression, Helpers.ProvideOptions);
 
         Assert.False(errorHandlerMock.HadErrors);
         errorHandlerMock.HandledWarnings.Count.Should().Be(1);
@@ -114,9 +118,8 @@ public partial class ExpressionParsingTest
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.Advance();
-
-        parser.CurrentStatement.Should().BeNull();
+        parser.TryAdvance(out var statement, out var hadError);
+hadError.Should().BeTrue();
 
         errorHandlerMock.HandledErrors[0].Should().BeEquivalentTo(expectedError);
 
@@ -156,9 +159,8 @@ public partial class ExpressionParsingTest
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.Advance();
-
-        parser.CurrentStatement.Should().BeNull();
+        parser.TryAdvance(out var statement, out var hadError);
+hadError.Should().BeTrue();
 
         errorHandlerMock.HandledErrors[0].Should().BeEquivalentTo(expectedError);
 
@@ -199,9 +201,13 @@ public partial class ExpressionParsingTest
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.Advance();
+        parser.TryAdvance(out var statement, out var hadError);
+        if (shouldEmitError)
+            hadError.Should().BeTrue();
+        else
+            hadError.Should().BeFalse();
 
-        var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
+        var expressionStatement = statement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
         expressionStatement!.IsTerminated.Should().Be(true);
 

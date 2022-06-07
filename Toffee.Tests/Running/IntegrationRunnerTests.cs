@@ -1,6 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using CommandDotNet.TestTools;
 using FluentAssertions;
+using Microsoft.VisualStudio.TestPlatform.TestHost;
 using Toffee.ErrorHandling;
 using Toffee.LexicalAnalysis;
 using Toffee.Running;
@@ -16,6 +19,7 @@ public class IntegrationRunnerTests
     private string RunText(string text)
     {
         var writer = new StringWriter();
+        writer.NewLine = "\n";
         using var reader = new StringReader(text);
         IScanner scanner = new Scanner(reader);
         var logger = new ConsoleErrorHandler("test");
@@ -25,63 +29,76 @@ public class IntegrationRunnerTests
         {
             { "print", new Variable(new PrintFunction(writer), false) }
         })));
-        while (!runner.ShouldQuit && parser.Advance() is not null)
-            runner.Run(parser.CurrentStatement!);
+        while (!runner.ShouldQuit && parser.TryAdvance(out var statement, out var hadError))
+            if (!hadError)
+                runner.Run(statement!);
         return writer.ToString();
     }
+
+    private static string Join(IEnumerable<string> textLines) =>
+        string.Join("", textLines.SelectMany(x => new[] { x, "\n" }));
 
     [Fact]
     public void VariablesShouldBeMutableByDefault()
     {
-        var testText = new[]
+        var testText = Join(new[]
         {
             "init a = 5;",
             "print(a);",
             "a = 6;",
             "print(a);"
-        };
-        var testTextWithNewlines = string.Join("\n", testText);
-        var expectedOutput = "5\r\n6\r\n";
-        var output = RunText(testTextWithNewlines);
+        });
+        var expectedOutput = Join(new[]
+        {
+            "5",
+            "6"
+        });
+        var output = RunText(testText);
         output.Should().Be(expectedOutput);
     }
 
     [Fact]
     public void VariablesShouldBeImmutableUsingConst()
     {
-        var testText = new[]
+        var testText = Join(new[]
         {
             "init const a = 5;",
             "print(a);",
             "a = 6;",
             "print(a);"
-        };
-        var testTextWithNewlines = string.Join("\n", testText);
-        var expectedOutput = "5\r\n5\r\n";
-        var output = RunText(testTextWithNewlines);
+        });
+        var expectedOutput = Join(new[]
+        {
+            "5",
+            "5"
+        });
+        var output = RunText(testText);
         output.Should().Be(expectedOutput);
     }
 
     [Fact]
     public void VariablesShouldBeOptional()
     {
-        var testText = new[]
+        var testText = Join(new[]
         {
             "init a = 5;",
             "print(a);",
             "a = null;",
             "print(a);"
-        };
-        var testTextWithNewlines = string.Join("\n", testText);
-        var expectedOutput = "5\r\nnull\r\n";
-        var output = RunText(testTextWithNewlines);
+        });
+        var expectedOutput = Join(new[]
+        {
+            "5",
+            "null"
+        });
+        var output = RunText(testText);
         output.Should().Be(expectedOutput);
     }
 
     [Fact]
     public void VariablesShouldBeAccessibleFromInsideBlocks()
     {
-        var testText = new[]
+        var testText = Join(new[]
         {
             "init a = 5;",
             "{",
@@ -90,17 +107,21 @@ public class IntegrationRunnerTests
             "    print(a);",
             "};",
             "print(a);"
-        };
-        var testTextWithNewlines = string.Join("\n", testText);
-        var expectedOutput = "5\r\n6\r\n6\r\n";
-        var output = RunText(testTextWithNewlines);
+        });
+        var expectedOutput = Join(new[]
+        {
+            "5",
+            "6",
+            "6"
+        });
+        var output = RunText(testText);
         output.Should().Be(expectedOutput);
     }
 
     [Fact]
     public void VariablesShouldBeAccessibleFromInsideFunctions()
     {
-        var testText = new[]
+        var testText = Join(new[]
         {
             "init a = 5;",
             "(functi() {",
@@ -109,17 +130,21 @@ public class IntegrationRunnerTests
             "    print(a);",
             "})();",
             "print(a);"
-        };
-        var testTextWithNewlines = string.Join("\n", testText);
-        var expectedOutput = "5\r\n6\r\n6\r\n";
-        var output = RunText(testTextWithNewlines);
+        });
+        var expectedOutput = Join(new[]
+        {
+            "5",
+            "6",
+            "6"
+        });
+        var output = RunText(testText);
         output.Should().Be(expectedOutput);
     }
 
     [Fact]
-    public void ExtendingCapturedScopeShoulNotBePossible()
+    public void ExtendingCapturedScopeShouldNotBePossible()
     {
-        var testText = new[]
+        var testText = Join(new[]
         {
             "init a = \"global\";",
             "{",
@@ -128,17 +153,20 @@ public class IntegrationRunnerTests
             "    init a = \"block\";",
             "    show();",
             "};"
-        };
-        var testTextWithNewlines = string.Join("\n", testText);
-        var expectedOutput = "global\r\nglobal\r\n";
-        var output = RunText(testTextWithNewlines);
+        });
+        var expectedOutput = Join(new[]
+        {
+            "global",
+            "global"
+        });
+        var output = RunText(testText);
         output.Should().Be(expectedOutput);
     }
 
     [Fact]
     public void CreatingClosureCounterShouldBePossible()
     {
-        var testText = new[]
+        var testText = Join(new[]
         {
             "init makeCounter = functi() {",
             "    init i = 0;",
@@ -148,24 +176,128 @@ public class IntegrationRunnerTests
             "print(counter());",
             "print(counter());",
             "print(makeCounter()());"
-        };
-        var testTextWithNewlines = string.Join("\n", testText);
-        var expectedOutput = "1\r\n2\r\n1\r\n";
-        var output = RunText(testTextWithNewlines);
+        });
+        var expectedOutput = Join(new[]
+        {
+            "1",
+            "2",
+            "1"
+        });
+        var output = RunText(testText);
+        output.Should().Be(expectedOutput);
+    }
+
+    [Fact]
+    public void PatternMatchingShouldWork()
+    {
+        var testText = Join(new[]
+        {
+            "init const matchingExample = functi(var) {",
+            "    match(var) {",
+            "        is null:        \"null value\";",
+            "        == 5:           \"exactly five\";",
+            "        is int and > 8: \"integer greater than 8\";",
+            "        default:        \"no match\";",
+            "    }",
+            "};",
+            "print(matchingExample(5));",
+            "print(matchingExample(10));",
+            "print(matchingExample(null));",
+            "print(matchingExample(\"5\"));"
+        });
+        var expectedOutput = Join(new[]
+        {
+            "exactly five",
+            "integer greater than 8",
+            "null value",
+            "no match"
+        });
+        var output = RunText(testText);
+        output.Should().Be(expectedOutput);
+    }
+
+    [Fact]
+    public void RecursionShouldWork()
+    {
+        var testText = Join(new[]
+        {
+            "init const factorial = functi(n) {",
+            "    if (n > 1)",
+            "        n * factorial(n - 1)",
+            "    else",
+            "        1",
+            "};",
+            "print(factorial(1));",
+            "print(factorial(5));",
+        });
+        var expectedOutput = Join(new[]
+        {
+            "1",
+            "120"
+        });
+        var output = RunText(testText);
+        output.Should().Be(expectedOutput);
+    }
+
+    [Fact]
+    public void ReturnShouldExitOnlyCurrentFunction()
+    {
+        var testText = Join(new[]
+        {
+            "init c = functi() {",
+            "    init inner = (functi() {",
+            "        return 5;",
+            "        6",
+            "    })();",
+            "    return inner + 2;",
+            "    10",
+            "};",
+            "print(c());"
+        });
+        var expectedOutput = Join(new[]
+        {
+            "7"
+        });
+        var output = RunText(testText);
+        output.Should().Be(expectedOutput);
+    }
+
+    [Fact]
+    public void BreakShouldExitOnlyCurrentLoop()
+    {
+        var testText = Join(new[]
+        {
+            "for(i, 2) {",
+            "    init inner;",
+            "    for(j, 9:-1:-1) {",
+            "        inner = j;",
+            "        break_if(j == 2);",
+            "    };",
+            "    print(i, inner);",
+            "};"
+        });
+        var expectedOutput = Join(new[]
+        {
+            "0",
+            "2",
+            "1",
+            "2"
+        });
+        var output = RunText(testText);
         output.Should().Be(expectedOutput);
     }
 
     [Fact]
     public void CommentsShouldBeIgnored()
     {
-        var testText = new[]
+        var testText = Join(new[]
         {
             "// line comment",
             "/* block",
             "   comment */"
-        };
-        var testTextWithNewlines = string.Join("\n", testText);
+        });
         var expectedOutput = "";
-        RunText(testTextWithNewlines).Should().Be(expectedOutput);
+        var output = RunText(testText);
+        output.Should().Be(expectedOutput);
     }
 }

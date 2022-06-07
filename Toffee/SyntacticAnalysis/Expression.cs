@@ -23,7 +23,7 @@ public record FunctionDefinitionExpression(IList<FunctionParameter> Parameters, 
 
 public record ConditionalElement(Expression? Condition, BlockExpression Consequent);
 public record ForLoopRange(Expression PastTheEnd, Expression? Start = null, Expression? Step = null);
-public record FunctionParameter(string Name, bool IsConst = false, bool IsNullAllowed = true);
+public record FunctionParameter(string Name, bool IsConst = false, bool IsNullAllowed = true, Position? Position = null);
 
 public record GroupingExpression(Expression Expression)
     : Expression(new Position(), new Position());

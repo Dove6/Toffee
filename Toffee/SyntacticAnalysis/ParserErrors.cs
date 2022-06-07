@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+using System.Text;
 using Toffee.ErrorHandling;
 using Toffee.LexicalAnalysis;
 using Toffee.Scanning;
@@ -13,6 +14,23 @@ public record UnexpectedToken(Position Position, TokenType ActualType, params To
     public UnexpectedToken(Token actualToken, params TokenType[] expectedType)
         : this(actualToken.StartPosition, actualToken.Type, expectedType)
     { }
+    protected override bool PrintMembers(StringBuilder stringBuilder)
+    {
+        if (base.PrintMembers(stringBuilder))
+            stringBuilder.Append(", ");
+        stringBuilder.Append($"{nameof(ActualType)} = {ActualType}, {nameof(ExpectedType)} = ");
+        if (ExpectedType.Length > 1)
+            stringBuilder.Append("[ ");
+        if (ExpectedType.Length > 0)
+            stringBuilder.Append($"{ExpectedType[0]}");
+        else
+            stringBuilder.Append($"[]");
+        foreach (var type in ExpectedType.Skip(1))
+            stringBuilder.Append($", {type}");
+        if (ExpectedType.Length > 1)
+            stringBuilder.Append(" ]");
+        return true;
+    }
 }
 public record ExpectedStatement(Position Position, TokenType ActualType) : ParserError(Position)
 {
@@ -43,6 +61,16 @@ public record ExpectedSemicolon(Position Position, TokenType? ActualTokenType = 
     public ExpectedSemicolon(Statement actualStatement)
         : this(actualStatement.StartPosition, null, actualStatement.GetType())
     { }
+    protected override bool PrintMembers(StringBuilder stringBuilder)
+    {
+        if (!base.PrintMembers(stringBuilder))
+            return true;
+        if (ActualTokenType is not null)
+            stringBuilder.Append($", {nameof(ActualTokenType)} = {ActualTokenType}");
+        if (ActualType is not null)
+            stringBuilder.Append($", {nameof(ActualType)} = {ActualType.Name}");
+        return true;
+    }
 }
 public record IntegerOutOfRange(Position Position, ulong Value, bool Negative = false) : ParserError(Position)
 {
@@ -65,6 +93,24 @@ public record DuplicatedDefaultPattern(Position Position) : ParserError(Position
     public DuplicatedDefaultPattern(Expression consequent) : this(consequent.StartPosition)
     { }
 }
+public record ImplicitConstInitialization(Position Position, string Name) : ParserError(Position)
+{
+    public ImplicitConstInitialization(VariableInitialization initialization)
+        : this(initialization.Position ?? new Position(), initialization.Name)
+    { }
+}
+public record DuplicatedParameterName (Position Position, string Name, int ParameterIndex, int PreviousIndex)
+    : ParserError(Position)
+{
+    public DuplicatedParameterName(FunctionParameter parameter, int parameterIndex, int previousIndex)
+        : this(parameter.Position ?? new Position(), parameter.Name, parameterIndex, previousIndex)
+    { }
+}
+public record LexicalError(Position Position) : ParserError(Position)
+{
+    public LexicalError(LexerError error) : this(error.Position)
+    { }
+}
 
 public static class ParserErrorExtensions
 {
@@ -79,7 +125,10 @@ public static class ParserErrorExtensions
         { typeof(IntegerOutOfRange), "Literal integer above maximum (positive) value or below minimum (negative) value" },
         { typeof(ExpectedParameter), "Expected parameter in parameter list" },
         { typeof(BranchAfterDefaultPattern), "No branches should follow the default pattern" },
-        { typeof(DuplicatedDefaultPattern), "Default pattern cannot be used more than once" }
+        { typeof(DuplicatedDefaultPattern), "Default pattern cannot be used more than once" },
+        { typeof(ImplicitConstInitialization), "Const requires an initial value" },
+        { typeof(DuplicatedParameterName), "Function parameters should have unique names" },
+        { typeof(LexicalError), "Lexical error" }
     }.ToImmutableDictionary();
 
     public static string ToMessage(this ParserError error) =>

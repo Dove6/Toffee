@@ -65,7 +65,7 @@ bool(null);  // --> null
 +"39d";  // --> null
 +"5";  // --> 5
 +"5.0e5";  // --> 500000.0
-+functi(a) { a + 2 };  // --> null
++(functi(a) { a + 2 });  // --> null
 +null;  // --> null
 
 // unarny -
@@ -76,7 +76,7 @@ bool(null);  // --> null
 --"39d";  // --> null
 --"5";  // --> 5
 --"5.0e5";  // --> 500000.0
---functi(a) { a + 2 };  // --> null
+--(functi(a) { a + 2 });  // --> null
 --null;  // --> null
 
 // binarny .. (konkatenacja)
@@ -84,7 +84,7 @@ bool(null);  // --> null
 "" .. false;  // --> "false"
 "" .. 3.14;  // --> "3.14"
 "" .. 5;  // --> "5"
-"" .. functi(a) { a + 2 };  // --> null
+"" .. (functi(a) { a + 2 });  // --> null
 "" .. null;  // --> null
 
 // unarny !
@@ -100,5 +100,5 @@ bool(null);  // --> null
 !!"true";  // --> true
 !!"false";  // --> false
 !!"TRUE";  // --> null
-!!functi(a) { a + 2 };  // --> null
+!!(functi(a) { a + 2 });  // --> null
 !!null;  // --> null

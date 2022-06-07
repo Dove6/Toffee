@@ -71,10 +71,18 @@ public static class Arithmetical
         if (value is not (long or double) || exponent is not (long or double))
             return null;
         // TODO: describe promotion rules
-        var result = Math.Pow(Casting.ToFloat(value)!.Value, Casting.ToFloat(exponent)!.Value);
-        if (value is double || exponent is double)
-            return result;
-        // TODO: better handling for integers
-        return Casting.ToInt(result);
+        if (value is double || exponent is double || Casting.ToInt(exponent)!.Value < 0)
+            return Math.Pow(Casting.ToFloat(value)!.Value, Casting.ToFloat(exponent)!.Value);
+        return ExponentiateInternal(Casting.ToInt(value)!.Value, Casting.ToInt(exponent)!.Value);
+    }
+
+    private static long ExponentiateInternal(long value, long exponent)
+    {
+        if (exponent <= 0)
+            return 1;
+        var result = value;
+        while (exponent-- > 1)
+            result = unchecked(result * value);
+        return result;
     }
 }

@@ -8,6 +8,7 @@ public partial class Runner
 {
     public object? Calculate(Expression expression, EnvironmentStack? environmentStack = null)
     {
+        _currentPosition = expression.StartPosition;
         var environmentStackBackup = _environmentStack;
         if (environmentStack is not null)
             _environmentStack = environmentStack;
@@ -18,11 +19,11 @@ public partial class Runner
         }
         catch (RunnerException e)
         {
-            Console.WriteLine(e.Error);
+            EmitError(e.Error with { Position = _currentPosition });
         }
         catch (Exception e)
         {
-            Console.WriteLine(e.Message);
+            EmitError(new ExceptionThrown(e.Message) { Position = _currentPosition });
         }
         finally
         {
@@ -34,6 +35,20 @@ public partial class Runner
     private object? CalculateDynamic(BlockExpression expression)
     {
         using var environmentGuard = _environmentStack.PushGuard();
+        foreach (var statement in expression.Statements)
+        {
+            Run(statement);
+            if (ExecutionInterrupted)
+                return null;
+        }
+        var result = expression.ResultExpression is not null
+            ? Calculate(expression.ResultExpression)
+            : null;
+        return result;
+    }
+
+    private object? CalculateWithoutPushingEnvironment(BlockExpression expression)
+    {
         foreach (var statement in expression.Statements)
         {
             Run(statement);
@@ -77,7 +92,11 @@ public partial class Runner
         }
 
         if (startValue is null || stepValue is null || stopValue is null)
-            throw new RunnerException(new NullInForLoopRange());
+            throw new RunnerException(new NullInForLoopRange(startValue is null
+                ? nameof(expression.Range.Start)
+                : stopValue is null
+                    ? nameof(expression.Range.PastTheEnd)
+                    : nameof(expression.Range.Step)));
 
         var counter = startValue;
         Func<object?, object?, bool?> rangePredicate = Relational.IsGreaterThan(stepValue, 0L) is true
@@ -87,13 +106,13 @@ public partial class Runner
         using var environmentGuard = _environmentStack.PushGuard(EnvironmentType.Loop);
 
         if (expression.CounterName is not null)
-            _environmentStack.Initialize(expression.CounterName);
+            _environmentStack.Initialize(expression.CounterName, isConst: true);
 
         while (rangePredicate(counter, stopValue) is true)
         {
             if (expression.CounterName is not null)
-                _environmentStack.Assign(expression.CounterName, counter);
-            Calculate(expression.Body);
+                _environmentStack.Assign(expression.CounterName, counter, true);
+            CalculateWithoutPushingEnvironment(expression.Body);
             if (ExecutionInterrupted)
                 return counter;
             counter = Arithmetical.Add(counter, stepValue);
@@ -108,7 +127,7 @@ public partial class Runner
         using var environmentGuard = _environmentStack.PushGuard(EnvironmentType.Loop);
         while (Casting.ToBool(conditionValue = Calculate(expression.Condition)) is true)
         {
-            Calculate(expression.Body);
+            CalculateWithoutPushingEnvironment(expression.Body);
             if (ExecutionInterrupted)
                 return conditionValue;
         }
@@ -155,13 +174,9 @@ public partial class Runner
         if (expression.Operator == Operator.NullCoalescing)
             return leftResult ?? rightResult;
         if (expression.Operator == Operator.NullSafePipe)
-        {
-            var value = Calculate(expression.Left);
-            var callee = Casting.ToFunction(expression.Right);
-            return value is not null
-                ? callee!.Call(this, new List<object?> { value })
+            return leftResult is not null
+                ? Casting.ToFunction(rightResult).Call(this, new List<object?> { leftResult })
                 : null;
-        }
 
         if (expression.Operator is Operator.Assignment or Operator.AdditionAssignment or Operator.SubtractionAssignment
                 or Operator.MultiplicationAssignment or Operator.DivisionAssignment or Operator.RemainderAssignment)
@@ -173,7 +188,7 @@ public partial class Runner
     private object? PerformAssignment(Expression left, object? right, Operator assignmentOperator)
     {
         if (left is not IdentifierExpression identifierExpression)
-            throw new RunnerException(new InvalidLvalue());
+            throw new RunnerException(new InvalidLvalue(left.GetType()));
 
         var valueToAssign = assignmentOperator switch
         {
