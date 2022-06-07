@@ -99,12 +99,16 @@ public record ImplicitConstInitialization(Position Position, string Name) : Pars
         : this(initialization.Position ?? new Position(), initialization.Name)
     { }
 }
-
 public record DuplicatedParameterName (Position Position, string Name, int ParameterIndex, int PreviousIndex)
     : ParserError(Position)
 {
     public DuplicatedParameterName(FunctionParameter parameter, int parameterIndex, int previousIndex)
         : this(parameter.Position ?? new Position(), parameter.Name, parameterIndex, previousIndex)
+    { }
+}
+public record LexicalError(Position Position) : ParserError(Position)
+{
+    public LexicalError(LexerError error) : this(error.Position)
     { }
 }
 
@@ -123,7 +127,8 @@ public static class ParserErrorExtensions
         { typeof(BranchAfterDefaultPattern), "No branches should follow the default pattern" },
         { typeof(DuplicatedDefaultPattern), "Default pattern cannot be used more than once" },
         { typeof(ImplicitConstInitialization), "Const requires an initial value" },
-        { typeof(DuplicatedParameterName), "Function parameters should have unique names" }
+        { typeof(DuplicatedParameterName), "Function parameters should have unique names" },
+        { typeof(LexicalError), "Lexical error" }
     }.ToImmutableDictionary();
 
     public static string ToMessage(this ParserError error) =>

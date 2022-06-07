@@ -37,6 +37,8 @@ public partial class Parser : IParser
         if (!TryEnsureToken(expectedType))
             return false;
         matchedToken = _lexer.Advance();
+        if (_lexer.CurrentError is not null)
+            throw new ParserException(new LexicalError(_lexer.CurrentError));
         _lastTokenEndPosition = matchedToken.EndPosition;
         return true;
     }
