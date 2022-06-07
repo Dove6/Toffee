@@ -2,7 +2,6 @@
 
 public enum Operator
 {
-    NamespaceAccess,
     Exponentiation,
     NumberPromotion,
     ArithmeticNegation,
