@@ -1,4 +1,0 @@
-﻿dokumentacja (+budowanie)
-trace (parsingobjectstack and environmentstack)
-testy
-Ctrl-C (async)
