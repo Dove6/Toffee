@@ -99,7 +99,10 @@ public partial class Parser : IParser
 
         parsedStatement = InterceptParserError(ParseStatement);
         if (parsedStatement is null)
+        {
+            SkipUntilNextStatement();
             return false;
+        }
 
         if (!parsedStatement.IsTerminated)
             EmitError(new ExpectedSemicolon(_lexer.CurrentToken));

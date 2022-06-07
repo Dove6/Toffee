@@ -160,13 +160,9 @@ public partial class Runner
         if (expression.Operator == Operator.NullCoalescing)
             return leftResult ?? rightResult;
         if (expression.Operator == Operator.NullSafePipe)
-        {
-            var value = Calculate(expression.Left);
-            var callee = Casting.ToFunction(expression.Right);
-            return value is not null
-                ? callee.Call(this, new List<object?> { value })
+            return leftResult is not null
+                ? Casting.ToFunction(rightResult).Call(this, new List<object?> { leftResult })
                 : null;
-        }
 
         if (expression.Operator is Operator.Assignment or Operator.AdditionAssignment or Operator.SubtractionAssignment
                 or Operator.MultiplicationAssignment or Operator.DivisionAssignment or Operator.RemainderAssignment)
