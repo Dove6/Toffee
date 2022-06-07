@@ -45,20 +45,11 @@ public partial class AstPrinter
         Print(range.Step, indentLevel + 1);
     }
 
-    private static void Print(FunctionParameter parameter, int indentLevel)
+    private void Print(FunctionParameter parameter, int indentLevel)
     {
         var mutability = parameter.IsConst ? "immutable" : "mutable";
         var optionality = parameter.IsNullAllowed ? "nullable" : "not nullable";
         Print($"{parameter.Name} ({mutability}, {optionality})", indentLevel);
-    }
-
-    private static void Print(DataType type, int indentLevel)
-    {
-        Print($"type: {type.Humanize(LetterCasing.LowerCase)}", indentLevel);
-    }
-
-    private static void PrintDynamic(Expression expression, int indentLevel)
-    {
     }
 
     private void PrintDynamic(BlockExpression expression, int indentLevel)

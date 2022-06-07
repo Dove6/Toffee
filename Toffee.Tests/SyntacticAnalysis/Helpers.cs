@@ -11,7 +11,7 @@ public static class Helpers
     public static EquivalencyAssertionOptions<T> ProvideOptions<T>(EquivalencyAssertionOptions<T> options) =>
         options.RespectingRuntimeTypes()
             .AllowingInfiniteRecursion()
-            .Excluding(info => info.Name == "StartPosition" || info.Name == "EndPosition");
+            .Excluding(info => info.Name == "StartPosition" || info.Name == "EndPosition" || info.Name == "Position");
 
     public static Token GetDefaultToken(TokenType type) => new(type, MapTokenTypeToContent(type));
 

@@ -1,0 +1,8 @@
+init a = "global";
+{
+  init showA = functi() print(a);
+
+  showA();
+  init a = "block";
+  showA();
+};  // "global"

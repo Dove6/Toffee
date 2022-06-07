@@ -37,6 +37,7 @@ public enum TokenType
     OperatorAsteriskEquals,
     OperatorSlashEquals,
     OperatorPercentEquals,
+    // TODO: ..=
 
     LeftParenthesis,
     RightParenthesis,

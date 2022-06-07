@@ -23,11 +23,7 @@ public partial class AstPrinter
         Print(initialization.InitialValue, indentLevel + 1);
     }
 
-    private static void PrintDynamic(Statement statement, int indentLevel)
-    {
-    }
-
-    private static void PrintDynamic(NamespaceImportStatement statement, int indentLevel)
+    private void PrintDynamic(NamespaceImportStatement statement, int indentLevel)
     {
         foreach (var level in statement.NamespaceLevels)
             Print(level, indentLevel);

@@ -27,9 +27,10 @@ public partial class StatementParsingTests
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.Advance();
+        parser.TryAdvance(out var statement, out var hadError);
+hadError.Should().BeFalse();
 
-        var namespaceImportStatement = parser.CurrentStatement.As<NamespaceImportStatement>();
+        var namespaceImportStatement = statement.As<NamespaceImportStatement>();
         namespaceImportStatement.Should().NotBeNull();
         namespaceImportStatement!.IsTerminated.Should().Be(true);
         namespaceImportStatement.NamespaceLevels.ToArray().Should().BeEquivalentTo(namespaceSegments, Helpers.ProvideOptions);
@@ -48,9 +49,8 @@ public partial class StatementParsingTests
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.Advance();
-
-        parser.CurrentStatement.Should().BeNull();
+        parser.TryAdvance(out var statement, out var hadError);
+hadError.Should().BeTrue();
 
         errorHandlerMock.HandledErrors[0].Should().BeEquivalentTo(expectedError);
 

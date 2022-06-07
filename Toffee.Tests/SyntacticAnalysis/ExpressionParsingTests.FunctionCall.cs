@@ -19,9 +19,10 @@ public partial class ExpressionParsingTest
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.Advance();
+        parser.TryAdvance(out var statement, out var hadError);
+hadError.Should().BeFalse();
 
-        var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
+        var expressionStatement = statement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
         expressionStatement!.IsTerminated.Should().Be(true);
 
@@ -44,9 +45,10 @@ public partial class ExpressionParsingTest
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.Advance();
+        parser.TryAdvance(out var statement, out var hadError);
+        hadError.Should().BeTrue();
 
-        var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
+        var expressionStatement = statement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
         expressionStatement!.IsTerminated.Should().Be(true);
 
@@ -84,9 +86,8 @@ public partial class ExpressionParsingTest
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.Advance();
-
-        parser.CurrentStatement.Should().BeNull();
+        parser.TryAdvance(out var statement, out var hadError);
+hadError.Should().BeTrue();
 
         errorHandlerMock.HandledErrors[0].Should().BeEquivalentTo(expectedError);
 

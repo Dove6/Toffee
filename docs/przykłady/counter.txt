@@ -1,0 +1,8 @@
+init makeCounter = functi() {
+    init i = 0;
+    functi() { i += 1 }
+};
+init counter = makeCounter();
+print(counter());  // 1
+print(counter());  // 2
+print(makeCounter()());  // 1
