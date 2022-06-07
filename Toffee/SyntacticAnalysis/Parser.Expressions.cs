@@ -359,7 +359,7 @@ public partial class Parser
         BlockExpression blockConsequent;
         if (consequent is ExpressionStatement expressionStatement)
             blockConsequent = expressionStatement.Expression as BlockExpression
-                              ?? new BlockExpression(new List<Statement>(), expressionStatement.Expression);
+                ?? new BlockExpression(new List<Statement>(), expressionStatement.Expression);
         else
             blockConsequent = new BlockExpression(new List<Statement> { consequent });
         specification = new ConditionalElement(condition, blockConsequent);
@@ -407,7 +407,8 @@ private Expression? ParseDisjunctionPatternExpression(Expression argument) => Su
     // pattern_expression_non_associative
     //     = OP_COMPARISON, LITERAL
     //     | OP_TYPE_CHECK, TYPE
-    //     | expression
+    //     | function_definition
+    //     | assignment
     //     | LEFT_PARENTHESIS, pattern_expression_disjunction, RIGHT_PARENTHESIS;
     private Expression? ParseNonAssociativePatternExpression(Expression argument) => SupplyPosition(() =>
     {
@@ -432,6 +433,10 @@ private Expression? ParseDisjunctionPatternExpression(Expression argument) => Su
 
         if (!TryConsumeToken(out _, TokenType.LeftParenthesis))
         {
+            var functionDefinition = ParseFunctionDefinitionExpression();
+            if (functionDefinition is not null)
+                return new FunctionCallExpression(functionDefinition, new List<Expression> { argument });
+
             var assignmentExpression = ParseAssignmentExpression();
             return assignmentExpression is not null
                 ? new FunctionCallExpression(assignmentExpression, new List<Expression> { argument })
