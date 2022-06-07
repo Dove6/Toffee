@@ -148,39 +148,39 @@ public partial class Runner
     {
         // TODO: describe order of evaluation
         var leftResult = Calculate(expression.Left);
-        var rightResult = Calculate(expression.Right);
+        var rightResult = new Lazy<object?>(() => Calculate(expression.Right));
 
         if (expression.Operator == Operator.Addition)
-            return Arithmetical.Add(Casting.ToNumber(leftResult), Casting.ToNumber(rightResult));
+            return Arithmetical.Add(Casting.ToNumber(leftResult), Casting.ToNumber(rightResult.Value));
         if (expression.Operator == Operator.Subtraction)
-            return Arithmetical.Subtract(Casting.ToNumber(leftResult), Casting.ToNumber(rightResult));
+            return Arithmetical.Subtract(Casting.ToNumber(leftResult), Casting.ToNumber(rightResult.Value));
         if (expression.Operator == Operator.Multiplication)
-            return Arithmetical.Multiply(Casting.ToNumber(leftResult), Casting.ToNumber(rightResult));
+            return Arithmetical.Multiply(Casting.ToNumber(leftResult), Casting.ToNumber(rightResult.Value));
         if (expression.Operator == Operator.Division)
-            return Arithmetical.Divide(Casting.ToNumber(leftResult), Casting.ToNumber(rightResult));
+            return Arithmetical.Divide(Casting.ToNumber(leftResult), Casting.ToNumber(rightResult.Value));
         if (expression.Operator == Operator.Remainder)
-            return Arithmetical.Remainder(Casting.ToNumber(leftResult), Casting.ToNumber(rightResult));
+            return Arithmetical.Remainder(Casting.ToNumber(leftResult), Casting.ToNumber(rightResult.Value));
         if (expression.Operator == Operator.Exponentiation)
-            return Arithmetical.Exponentiate(Casting.ToNumber(leftResult), Casting.ToNumber(rightResult));
+            return Arithmetical.Exponentiate(Casting.ToNumber(leftResult), Casting.ToNumber(rightResult.Value));
 
         if (expression.Operator == Operator.Concatenation)
-            return Character.Concatenate(Casting.ToString(leftResult), Casting.ToString(rightResult));
+            return Character.Concatenate(Casting.ToString(leftResult), Casting.ToString(rightResult.Value));
 
         if (expression.Operator == Operator.Disjunction)
-            return Logical.Disjoin(Casting.ToBool(leftResult), Casting.ToBool(rightResult));
+            return Logical.Disjoin(Casting.ToBool(leftResult), new Lazy<bool?>(() => Casting.ToBool(rightResult.Value)));
         if (expression.Operator == Operator.Conjunction)
-            return Logical.Conjoin(Casting.ToBool(leftResult), Casting.ToBool(rightResult));
+            return Logical.Conjoin(Casting.ToBool(leftResult), new Lazy<bool?>(() => Casting.ToBool(rightResult.Value)));
 
         if (expression.Operator == Operator.NullCoalescing)
-            return leftResult ?? rightResult;
+            return leftResult ?? rightResult.Value;
         if (expression.Operator == Operator.NullSafePipe)
             return leftResult is not null
-                ? Casting.ToFunction(rightResult).Call(this, new List<object?> { leftResult })
+                ? Casting.ToFunction(rightResult.Value).Call(this, new List<object?> { leftResult })
                 : null;
 
         if (expression.Operator is Operator.Assignment or Operator.AdditionAssignment or Operator.SubtractionAssignment
                 or Operator.MultiplicationAssignment or Operator.DivisionAssignment or Operator.RemainderAssignment)
-            return PerformAssignment(expression.Left, rightResult, expression.Operator);
+            return PerformAssignment(expression.Left, rightResult.Value, expression.Operator);
 
         throw new ArgumentOutOfRangeException(nameof(expression.Operator), expression.Operator, "Invalid operator");
     }
@@ -280,6 +280,6 @@ public partial class Runner
                     Operator.EqualComparison => Relational.IsEqualTo(values.a, values.b),
                     Operator.NotEqualComparison => Relational.IsNotEqualTo(values.a, values.b)
                 }).ToList();
-        return resultList.Aggregate((acc, next) => Logical.Conjoin(acc, next));
+        return resultList.Aggregate((acc, next) => Logical.Conjoin(acc, new Lazy<bool?>(next)));
     }
 }

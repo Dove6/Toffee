@@ -19,7 +19,7 @@ public class UserFunction : IFunction
             throw new RunnerException(new BadArgumentCount(arguments.Count, _source.Parameters.Count));
 
         using var closureGuard = _closure.PushGuard(EnvironmentType.Function);
-        // TODO: make sure parameters have unique names
+        // TODO: make parameter list an ordered set
         for (var i = 0; i < _source.Parameters.Count; i++)
         {
             _closure.Initialize(_source.Parameters[i].Name, arguments[i], _source.Parameters[i].IsConst);

@@ -2,24 +2,26 @@
 
 public static class Logical
 {
-    public static bool? Negate(object? value)
+    public static bool? Negate(bool? value)
     {
-        if (value is not bool)
-            return null;
-        return !Casting.ToBool(value);
+        return !value;
     }
 
-    public static bool? Disjoin(object? first, object? second)
+    public static bool? Disjoin(bool? first, Lazy<bool?> second)
     {
-        if (first is not bool || second is not bool)
+        if (first is true or null)
+            return first;
+        if (second.Value is null)
             return null;
-        return Casting.ToBool(first)!.Value || Casting.ToBool(second)!.Value;
+        return first.Value || second.Value.Value;
     }
 
-    public static bool? Conjoin(object? first, object? second)
+    public static bool? Conjoin(bool? first, Lazy<bool?> second)
     {
-        if (first is not bool || second is not bool)
+        if (first is false or null)
+            return first;
+        if (second.Value is null)
             return null;
-        return Casting.ToBool(first)!.Value && Casting.ToBool(second)!.Value;
+        return first.Value && second.Value.Value;
     }
 }
