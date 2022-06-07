@@ -20,9 +20,9 @@ public partial class StatementParsingTests
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.Advance();
+        parser.TryAdvance(out var statement).Should().BeTrue();
 
-        var variableInitializationStatement = parser.CurrentStatement.As<VariableInitializationListStatement>();
+        var variableInitializationStatement = statement.As<VariableInitializationListStatement>();
         variableInitializationStatement.Should().NotBeNull();
         variableInitializationStatement!.IsTerminated.Should().Be(true);
         variableInitializationStatement.Items.Should().BeEquivalentTo(expectedVariableList, Helpers.ProvideOptions);
@@ -41,9 +41,7 @@ public partial class StatementParsingTests
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.Advance();
-
-        parser.CurrentStatement.Should().BeNull();
+        parser.TryAdvance(out var statement).Should().BeFalse();
 
         errorHandlerMock.HandledErrors[0].Should().BeEquivalentTo(expectedError);
 
@@ -74,9 +72,7 @@ public partial class StatementParsingTests
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.Advance();
-
-        parser.CurrentStatement.Should().BeNull();
+        parser.TryAdvance(out var statement).Should().BeFalse();
 
         errorHandlerMock.HandledErrors[0].Should().BeEquivalentTo(expectedError);
 
@@ -126,9 +122,9 @@ public partial class StatementParsingTests
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.Advance();
+        parser.TryAdvance(out var statement).Should().BeTrue();
 
-        var variableInitializationStatement = parser.CurrentStatement.As<VariableInitializationListStatement>();
+        var variableInitializationStatement = statement.As<VariableInitializationListStatement>();
         variableInitializationStatement.Should().BeEquivalentTo(expectedStatement, Helpers.ProvideOptions);
 
         errorHandlerMock.HandledErrors[0].Should().BeEquivalentTo(expectedError);

@@ -41,6 +41,7 @@ public record NullInForLoopRange(string Part) : RunnerError(new Position());
 public record InvalidLvalue(Type Type) : RunnerError(new Position());
 public record BadArgumentCount(int ActualCount, int ExpectedCount) : RunnerError(new Position());
 public record NonNullArgumentRequired(string Name, int ParameterIndex) : RunnerError(new Position());
+public record ExceptionThrown(string Message) : RunnerError(new Position());
 
 public static class RunnerErrorExtensions
 {

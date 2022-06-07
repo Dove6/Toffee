@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using CommandDotNet.TestTools;
 using FluentAssertions;
+using Microsoft.VisualStudio.TestPlatform.TestHost;
 using Toffee.ErrorHandling;
 using Toffee.LexicalAnalysis;
 using Toffee.Running;
@@ -27,8 +29,9 @@ public class IntegrationRunnerTests
         {
             { "print", new Variable(new PrintFunction(writer), false) }
         })));
-        while (!runner.ShouldQuit && parser.Advance() is not null)
-            runner.Run(parser.CurrentStatement!);
+        while (!runner.ShouldQuit && (!parser.TryAdvance(out var statement) || statement is not null))
+            if (statement is not null)
+                runner.Run(statement);
         return writer.ToString();
     }
 

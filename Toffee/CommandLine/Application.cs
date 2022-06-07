@@ -1,5 +1,5 @@
-﻿using System.Globalization;
-using CommandDotNet;
+﻿using CommandDotNet;
+using CommandDotNet.Rendering;
 using Toffee.ErrorHandling;
 using Toffee.LexicalAnalysis;
 using Toffee.Running;
@@ -19,23 +19,26 @@ public class Application
 
     [DefaultCommand]
     public void Execute(
+        IConsole console,
         [Named(Description = "Length limit for strings, identifiers and comments")]
         int? maxLexemeLength,
         [Positional(Description = "Path to interpreter input")]
         FileInfo? scriptFilename)
     {
-        _reader = scriptFilename is null
-            ? Console.In
-            : new StreamReader(scriptFilename.Name);
+        var isFile = scriptFilename is not null;
+        var isInteractiveConsole = !(isFile || console.IsInputRedirected);
+        _reader = isFile
+            ? new StreamReader(scriptFilename!.Name)
+            : console.In;
         _sourceName = scriptFilename?.Name ?? "STDIN";
         _scanner = new Scanner(_reader);
-        _logger = new ConsoleErrorHandler(_sourceName);
+        _logger = new ConsoleErrorHandler(_sourceName, console.Error);
         _lexer = new Lexer(_scanner, _logger, maxLexemeLength);
         _parser = new Parser(_lexer, _logger);
-        RunParser();
+        RunRunner(isInteractiveConsole, console);
     }
 
-    private void RunLexer()
+    private void RunLexer(IStandardOut console)
     {
         static string FormatPosition(Position position) =>
             $"[{position.Character}] {position.Line}:{position.Column}";
@@ -48,7 +51,7 @@ public class Application
                 null => "null",
                 _ => _lexer.CurrentToken.Content.ToString()
             };
-            Console.WriteLine(
+            console.Out.WriteLine(
                 $"type: {_lexer.CurrentToken.Type.ToString()}, " +
                 $"content: {contentDescription}, " +
                 $"position: {positionDescription}");
@@ -56,17 +59,33 @@ public class Application
         }
     }
 
-    private void RunParserAst()
+    private void RunAstPrinter(IStandardOut console)
     {
-        var printer = new AstPrinter(_sourceName!);
-        while (_parser!.Advance() is not null)
-            printer.Print(_parser.CurrentStatement!);
+        var printer = new AstPrinter(_sourceName!, console.Out);
+        while (_parser!.TryAdvance(out var statement) && statement is not null)
+            printer.Print(statement);
     }
 
-    private void RunParser()
+    private void RunRunner(bool isInteractive, IStandardOut console)
     {
-        var runner = new Runner(_logger);
-        while (!runner.ShouldQuit && _parser!.Advance() is not null)
-            runner.Run(_parser.CurrentStatement!);
+        var runner = new Runner(_logger, writer: console.Out);
+
+        bool successfullyParsed;
+        while (!runner.ShouldQuit)
+        {
+            successfullyParsed = _parser!.TryAdvance(out var statement);
+            if (successfullyParsed && statement is null)
+                return;
+            if (!successfullyParsed && !isInteractive)
+                break;
+            if (successfullyParsed)
+                runner.Run(statement!);
+        }
+
+        if (isInteractive || runner.ShouldQuit)
+            return;
+
+        while (!_parser!.TryAdvance(out var statement) || statement is not null)
+        { }
     }
 }

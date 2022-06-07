@@ -89,25 +89,20 @@ public partial class Parser : IParser
             _lastTokenEndPosition = _lexer.Advance().EndPosition;
     }
 
-    public Statement? Advance()
+    public bool TryAdvance(out Statement? parsedStatement)
     {
+        parsedStatement = null;
+
         SkipSemicolons();
         if (_lexer.CurrentToken.Type == TokenType.EndOfText)
-            return CurrentStatement = null;
+            return true;
 
-        Statement? parsedStatement;
-        while ((parsedStatement = InterceptParserError(ParseStatement)) is null)
-        {
-            SkipUntilNextStatement();
-            SkipSemicolons();
-            if (_lexer.CurrentToken.Type == TokenType.EndOfText)
-                return CurrentStatement = null;
-        }
+        parsedStatement = InterceptParserError(ParseStatement);
+        if (parsedStatement is null)
+            return false;
 
-        CurrentStatement = parsedStatement;
-        if (!CurrentStatement.IsTerminated)
+        if (!parsedStatement.IsTerminated)
             EmitError(new ExpectedSemicolon(_lexer.CurrentToken));
-
-        return CurrentStatement;
+        return true;
     }
 }

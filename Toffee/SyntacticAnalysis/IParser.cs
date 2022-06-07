@@ -3,14 +3,9 @@
 public interface IParser  // TODO: implement IEnumerable?
 {
     /// <summary>
-    /// Current top-level statement.
-    /// If null, there are no statements left to parse.
+    /// Tries to parse a statement.
     /// </summary>
-    Statement? CurrentStatement { get; }
-
-    /// <summary>
-    /// Advances the position of the parser in the statement stream.
-    /// </summary>
-    /// <returns>Parsed statement - the current one after the method was called</returns>
-    Statement? Advance();
+    /// <param name="parsedStatement">Parsed statement</param>
+    /// <returns>if parsing was successful</returns>
+    bool TryAdvance(out Statement? parsedStatement);
 }

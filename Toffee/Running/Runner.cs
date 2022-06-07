@@ -7,6 +7,7 @@ namespace Toffee.Running;
 public partial class Runner : IRunner
 {
     private readonly IRunnerErrorHandler? _errorHandler;
+    private readonly TextWriter _writer;
     private EnvironmentStack _environmentStack;
 
     private Position _currentPosition = new();
@@ -16,12 +17,13 @@ public partial class Runner : IRunner
     public bool ExecutionInterrupted =>
         _environmentStack.ReturnEncountered || _environmentStack.BreakEncountered || ShouldQuit;
 
-    public Runner(IRunnerErrorHandler? errorHandler = null, EnvironmentStack? environmentStack = null)
+    public Runner(IRunnerErrorHandler? errorHandler = null, EnvironmentStack? environmentStack = null, TextWriter? writer = null)
     {
         _errorHandler = errorHandler;
+        _writer = writer ?? Console.Out;
         _environmentStack = environmentStack ?? new EnvironmentStack(new Environment(new Dictionary<string, Variable>
         {
-            { "print", new Variable(new PrintFunction(Console.Out), false) },
+            { "print", new Variable(new PrintFunction(_writer), false) },
             { "quit", new Variable(new QuitFunction(), false) }
         }));
     }

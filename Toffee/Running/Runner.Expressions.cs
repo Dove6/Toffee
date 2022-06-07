@@ -19,11 +19,11 @@ public partial class Runner
         }
         catch (RunnerException e)
         {
-            Console.WriteLine(e.Error with { Position = _currentPosition });
+            EmitError(e.Error with { Position = _currentPosition });
         }
         catch (Exception e)
         {
-            Console.WriteLine(e.Message);
+            EmitError(new ExceptionThrown(e.Message) { Position = _currentPosition });
         }
         finally
         {

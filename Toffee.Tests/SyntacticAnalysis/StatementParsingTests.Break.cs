@@ -17,9 +17,9 @@ public partial class StatementParsingTests
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.Advance();
+        parser.TryAdvance(out var statement).Should().BeTrue();
 
-        var breakStatement = parser.CurrentStatement.As<BreakStatement>();
+        var breakStatement = statement.As<BreakStatement>();
         breakStatement.Should().NotBeNull();
         breakStatement!.IsTerminated.Should().Be(true);
 
@@ -48,9 +48,9 @@ public partial class StatementParsingTests
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.Advance();
+        parser.TryAdvance(out var statement).Should().BeTrue();
 
-        var breakStatement = parser.CurrentStatement.As<BreakStatement>();
+        var breakStatement = statement.As<BreakStatement>();
         breakStatement.Should().NotBeNull();
         breakStatement!.IsTerminated.Should().Be(true);
 

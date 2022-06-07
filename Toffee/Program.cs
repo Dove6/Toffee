@@ -2,6 +2,13 @@
 using CommandDotNet.NameCasing;
 using Toffee.CommandLine;
 
-return new AppRunner<Application>()
-    .UseNameCasing(Case.KebabCase)
-    .Run(args);
+namespace Toffee;
+
+public static class Program
+{
+    private static int Main(string[] args) => AppRunner.Run(args);
+
+    public static AppRunner AppRunner =>
+        new AppRunner<Application>()
+            .UseNameCasing(Case.KebabCase);
+}
