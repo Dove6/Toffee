@@ -7,8 +7,8 @@ public partial class Runner
 {
     public void Run(Statement statement, EnvironmentStack? environmentStack = null)
     {
-        using var recursionGuard = IncrementRecursionGuarded();
         _currentPosition = statement.StartPosition;
+        using var recursionGuard = IncrementRecursionGuarded();
         using var stackBackupGuard = OverwriteEnvironmentStackGuarded(environmentStack);
         try
         {

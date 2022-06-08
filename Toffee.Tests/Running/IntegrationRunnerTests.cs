@@ -18,6 +18,8 @@ public class IntegrationRunnerTests
 {
     private string RunText(string text)
     {
+        // TODO: use CommandDotNet testing
+        // TODO: check stderr
         var writer = new StringWriter();
         writer.NewLine = "\n";
         using var reader = new StringReader(text);

@@ -8,8 +8,8 @@ public partial class Runner
 {
     public object? Calculate(Expression expression, EnvironmentStack? environmentStack = null)
     {
-        using var recursionGuard = IncrementRecursionGuarded();
         _currentPosition = expression.StartPosition;
+        using var recursionGuard = IncrementRecursionGuarded();
         using var stackBackupGuard = OverwriteEnvironmentStackGuarded(environmentStack);
         try
         {
@@ -97,15 +97,12 @@ public partial class Runner
             ? Relational.IsLessThan
             : Relational.IsGreaterThan;
 
-        using var environmentGuard = _environmentStack.PushGuard(EnvironmentType.Loop);
-
-        if (expression.CounterName is not null)
-            _environmentStack.Initialize(expression.CounterName, isConst: true);
-
         while (rangePredicate(counter, stopValue) is true)
         {
+            using var environmentGuard = _environmentStack.PushGuard(EnvironmentType.Loop);
             if (expression.CounterName is not null)
-                _environmentStack.Assign(expression.CounterName, counter, true);
+                _environmentStack.Initialize(expression.CounterName, counter, isConst: true);
+
             CalculateWithoutPushingEnvironment(expression.Body);
             if (ExecutionInterrupted)
                 return counter;
@@ -118,9 +115,9 @@ public partial class Runner
     private object? CalculateDynamic(WhileLoopExpression expression)
     {
         object? conditionValue;
-        using var environmentGuard = _environmentStack.PushGuard(EnvironmentType.Loop);
         while (Casting.ToBool(conditionValue = Calculate(expression.Condition)) is true)
         {
+            using var environmentGuard = _environmentStack.PushGuard(EnvironmentType.Loop);
             CalculateWithoutPushingEnvironment(expression.Body);
             if (ExecutionInterrupted)
                 return conditionValue;
