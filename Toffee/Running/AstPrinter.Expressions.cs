@@ -25,7 +25,7 @@ public partial class AstPrinter
     private void Print(ConditionalElement conditional, int indentLevel)
     {
         Print("condition", indentLevel);
-        Print(conditional.Condition, indentLevel + 1);
+        Print(conditional.Condition!, indentLevel + 1);
         Print("consequent", indentLevel);
         Print(conditional.Consequent, indentLevel + 1);
     }
@@ -45,31 +45,11 @@ public partial class AstPrinter
         Print(range.Step, indentLevel + 1);
     }
 
-    private static void Print(FunctionParameter parameter, int indentLevel)
+    private void Print(FunctionParameter parameter, int indentLevel)
     {
         var mutability = parameter.IsConst ? "immutable" : "mutable";
         var optionality = parameter.IsNullAllowed ? "nullable" : "not nullable";
         Print($"{parameter.Name} ({mutability}, {optionality})", indentLevel);
-    }
-
-    private void Print(PatternMatchingBranch branch, int indentLevel)
-    {
-        Print("pattern", indentLevel);
-        if (branch.Pattern is null)
-            Print("default", indentLevel + 1);
-        else
-            Print(branch.Pattern, indentLevel + 1);
-        Print("consequent", indentLevel);
-        Print(branch.Consequent, indentLevel + 1);
-    }
-
-    private static void Print(DataType type, int indentLevel)
-    {
-        Print($"type: {type.Humanize(LetterCasing.LowerCase)}", indentLevel);
-    }
-
-    private static void PrintDynamic(Expression expression, int indentLevel)
-    {
     }
 
     private void PrintDynamic(BlockExpression expression, int indentLevel)
@@ -90,23 +70,21 @@ public partial class AstPrinter
     {
         PrintHeader(expression, indentLevel);
         Print("if", indentLevel + 1);
-        Print(expression.IfPart, indentLevel + 2);
-        foreach (var elifPart in expression.ElifParts)
+        Print(expression.Branches[0], indentLevel + 2);
+        foreach (var elifPart in expression.Branches.Skip(1))
         {
             Print("elif", indentLevel + 1);
             Print(elifPart, indentLevel + 2);
         }
-        if (expression.ElsePart is null)
+        if (expression.ElseBranch is null)
             return;
         Print("else", indentLevel + 1);
-        Print(expression.ElsePart, indentLevel + 2);
+        Print(expression.ElseBranch, indentLevel + 2);
     }
 
     private void PrintDynamic(ForLoopExpression expression, int indentLevel)
     {
         PrintHeader(expression, indentLevel);
-        Print(expression.CounterName is not null ? $"counter: {expression.CounterName}" : "no counter",
-            indentLevel + 1);
         Print("range", indentLevel + 1);
         Print(expression.Range, indentLevel + 2);
         Print("body", indentLevel + 1);
@@ -132,22 +110,6 @@ public partial class AstPrinter
         Print(expression.Body, indentLevel + 2);
     }
 
-    private void PrintDynamic(PatternMatchingExpression expression, int indentLevel)
-    {
-        PrintHeader(expression, indentLevel);
-        Print("argument", indentLevel + 1);
-        Print(expression.Argument, indentLevel + 2);
-        foreach (var branch in expression.Branches)
-        {
-            Print("branch", indentLevel + 1);
-            Print(branch, indentLevel + 2);
-        }
-        if (expression.Default is null)
-            return;
-        Print("default", indentLevel + 1);
-        Print(expression.Default, indentLevel + 2);
-    }
-
     private void PrintDynamic(GroupingExpression expression, int indentLevel)
     {
         PrintHeader(expression, indentLevel);
@@ -171,7 +133,7 @@ public partial class AstPrinter
     {
         PrintHeader(expression, indentLevel);
         Print("expression", indentLevel + 1);
-        Print(expression.Expression, indentLevel + 2);
+        Print(expression.Callee, indentLevel + 2);
         foreach (var argument in expression.Arguments)
         {
             Print("argument", indentLevel + 1);
@@ -182,6 +144,8 @@ public partial class AstPrinter
     private void PrintDynamic(IdentifierExpression expression, int indentLevel)
     {
         PrintHeader(expression, indentLevel, expression.Name);
+        if (expression.NamespaceLevels.Count > 0)
+            Print($"namespace: {string.Join('.', expression.NamespaceLevels)}", indentLevel + 1);
     }
 
     private void PrintDynamic(LiteralExpression expression, int indentLevel)
@@ -202,13 +166,25 @@ public partial class AstPrinter
 
     private void PrintDynamic(TypeCastExpression expression, int indentLevel)
     {
-        PrintHeader(expression, indentLevel);
-        Print(expression.Type, indentLevel + 1);
+        PrintHeader(expression, indentLevel, expression.Type.ToString());
         Print(expression.Expression, indentLevel + 1);
     }
 
-    private void PrintDynamic(TypeExpression expression, int indentLevel)
+    private void PrintDynamic(TypeCheckExpression expression, int indentLevel)
     {
-        PrintHeader(expression, indentLevel, expression.Type.Humanize(LetterCasing.LowerCase));
+        PrintHeader(expression, indentLevel, expression.IsInequalityCheck
+            ? $"is not {expression.Type}" : $"is {expression.Type}");
+        Print(expression.Expression, indentLevel + 1);
+    }
+
+    private void PrintDynamic(ComparisonExpression expression, int indentLevel)
+    {
+        PrintHeader(expression, indentLevel);
+        Print(expression.Left, indentLevel + 1);
+        foreach (var comparison in expression.Comparisons)
+        {
+            Print(comparison.Operator.Humanize(LetterCasing.LowerCase), indentLevel + 2);
+            Print(comparison.Right, indentLevel + 1);
+        }
     }
 }

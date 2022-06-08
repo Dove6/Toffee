@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using FluentAssertions;
+﻿using FluentAssertions;
 using Toffee.LexicalAnalysis;
 using Toffee.Scanning;
 using Toffee.SyntacticAnalysis;
@@ -49,9 +48,10 @@ public partial class ExpressionParsingTest
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.Advance();
+        parser.TryAdvance(out var statement, out var hadError);
+hadError.Should().BeFalse();
 
-        var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
+        var expressionStatement = statement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
         expressionStatement!.IsTerminated.Should().Be(true);
 
@@ -71,9 +71,10 @@ public partial class ExpressionParsingTest
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.Advance();
+        parser.TryAdvance(out var statement, out var hadError);
+hadError.Should().BeFalse();
 
-        var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
+        var expressionStatement = statement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
         expressionStatement!.IsTerminated.Should().Be(true);
 
@@ -87,22 +88,22 @@ public partial class ExpressionParsingTest
     [Trait("Category", "Nesting")]
     [Theory]
     [ClassData(typeof(OperatorsPriorityTestData))]
-    public void ExpressionsShouldBeParsedWithRespectToOperatorsPriority(Token[] tokenSequence, Expression expectedExpression, bool shouldIgnoreErrors = false)
+    public void ExpressionsShouldBeParsedWithRespectToOperatorsPriority(Token[] tokenSequence, Expression expectedExpression)
     {
         var lexerMock = new LexerMock(tokenSequence);
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.Advance();
+        parser.TryAdvance(out var statement, out var hadError);
+hadError.Should().BeFalse();
 
-        var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
+        var expressionStatement = statement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
         expressionStatement!.IsTerminated.Should().Be(true);
 
         expressionStatement.Expression.Should().BeEquivalentTo(expectedExpression, Helpers.ProvideOptions);
 
-        if (!shouldIgnoreErrors)
-            Assert.False(errorHandlerMock.HadErrors);
+        Assert.False(errorHandlerMock.HadErrors);
         Assert.False(errorHandlerMock.HadWarnings);
     }
 
@@ -117,9 +118,10 @@ public partial class ExpressionParsingTest
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.Advance();
+        parser.TryAdvance(out var statement, out var hadError);
+        hadError.Should().BeTrue();
 
-        var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
+        var expressionStatement = statement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
         expressionStatement!.IsTerminated.Should().Be(true);
 
@@ -143,7 +145,6 @@ public partial class ExpressionParsingTest
             Helpers.GetDefaultToken(TokenType.KeywordIf),
             Helpers.GetDefaultToken(TokenType.LeftParenthesis),
             Helpers.GetDefaultToken(TokenType.RightParenthesis),
-            new(TokenType.Identifier, "a"),
             Helpers.GetDefaultToken(TokenType.Semicolon)
         };
 
@@ -153,9 +154,8 @@ public partial class ExpressionParsingTest
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.Advance();
-
-        parser.CurrentStatement.Should().BeNull();
+        parser.TryAdvance(out _, out var hadError);
+        hadError.Should().BeTrue();
 
         errorHandlerMock.HandledErrors[0].Should().BeEquivalentTo(expectedError);
 

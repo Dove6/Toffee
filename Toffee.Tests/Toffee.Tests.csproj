@@ -8,6 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="CommandDotNet.TestTools" Version="5.0.1" />
         <PackageReference Include="FluentAssertions" Version="6.6.0" />
         <PackageReference Include="JunitXml.TestLogger" Version="3.0.110" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.11.0" />
@@ -79,19 +80,16 @@
       <Compile Update="SyntacticAnalysis\ExpressionParsingTests.Literal.cs">
         <DependentUpon>ExpressionParsingTests.cs</DependentUpon>
       </Compile>
-      <Compile Update="SyntacticAnalysis\ExpressionParsingTests.TypeCast.cs">
+      <Compile Update="SyntacticAnalysis\ExpressionParsingTests.TypeCheckingCast.cs">
         <DependentUpon>ExpressionParsingTests.cs</DependentUpon>
       </Compile>
       <Compile Update="SyntacticAnalysis\ExpressionParsingTests.Identifier.cs">
         <DependentUpon>ExpressionParsingTests.cs</DependentUpon>
       </Compile>
-      <Compile Update="SyntacticAnalysis\ExpressionParsingTests.Type.cs">
+      <Compile Update="SyntacticAnalysis\ExpressionParsingTests.TypeChecking.cs">
         <DependentUpon>ExpressionParsingTests.cs</DependentUpon>
       </Compile>
       <Compile Update="SyntacticAnalysis\StatementParsingTests.Break.cs">
-        <DependentUpon>StatementParsingTests.cs</DependentUpon>
-      </Compile>
-      <Compile Update="SyntacticAnalysis\StatementParsingTests.BreakIf.cs">
         <DependentUpon>StatementParsingTests.cs</DependentUpon>
       </Compile>
       <Compile Update="SyntacticAnalysis\StatementParsingTests.Return.cs">

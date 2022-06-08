@@ -25,8 +25,11 @@ public class ParenthesizedExpressionMissingParenthesesTestData : IEnumerable<obj
                 new(TokenType.Identifier, "b"),
                 semicolonToken
             },
-            new ConditionalExpression(new ConditionalElement(new IdentifierExpression("a"),
-                new IdentifierExpression("b")), new List<ConditionalElement>()),
+            new ConditionalExpression(new List<ConditionalElement>
+            {
+                new(new IdentifierExpression("a"),
+                    new BlockExpression(new List<Statement>(), new IdentifierExpression("b")))
+            }),
             new UnexpectedToken(new Position(1, 1, 1), TokenType.Identifier, TokenType.LeftParenthesis)
         };
         // right parenthesis
@@ -40,8 +43,11 @@ public class ParenthesizedExpressionMissingParenthesesTestData : IEnumerable<obj
                 new(TokenType.Identifier, "b"),
                 semicolonToken
             },
-            new ConditionalExpression(new ConditionalElement(new IdentifierExpression("a"),
-                new IdentifierExpression("b")), new List<ConditionalElement>()),
+            new ConditionalExpression(new List<ConditionalElement>
+            {
+                new(new IdentifierExpression("a"),
+                    new BlockExpression(new List<Statement>(), new IdentifierExpression("b")))
+            }),
             new UnexpectedToken(new Position(3, 1, 3), TokenType.Identifier, TokenType.RightParenthesis)
         };
         // both parentheses
@@ -54,8 +60,11 @@ public class ParenthesizedExpressionMissingParenthesesTestData : IEnumerable<obj
                 new(TokenType.Identifier, "b"),
                 semicolonToken
             },
-            new ConditionalExpression(new ConditionalElement(new IdentifierExpression("a"),
-                new IdentifierExpression("b")), new List<ConditionalElement>()),
+            new ConditionalExpression(new List<ConditionalElement>
+            {
+                new(new IdentifierExpression("a"),
+                    new BlockExpression(new List<Statement>(), new IdentifierExpression("b")))
+            }),
             new UnexpectedToken(new Position(1, 1, 1), TokenType.Identifier, TokenType.LeftParenthesis),
             new UnexpectedToken(new Position(2, 1, 2), TokenType.Identifier, TokenType.RightParenthesis)
         };

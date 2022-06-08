@@ -39,21 +39,21 @@ block
 conditional_expression
     = conditional_if_part, { conditional_elif_part }, [ conditional_else_part ];
 conditional_if_part
-    = KW_IF, parenthesized_expression, expression;
+    = KW_IF, parenthesized_expression, unterminated_statement;
 conditional_elif_part
-    = KW_ELIF, parenthesized_expression, expression;
+    = KW_ELIF, parenthesized_expression, unterminated_statement;
 conditional_else_part
-    = KW_ELSE, expression;
+    = KW_ELSE, unterminated_statement;
 for_loop_expression
-    = KW_FOR, for_loop_specification, expression;
+    = KW_FOR, for_loop_specification, unterminated_statement;
 for_loop_specification
     = LEFT_PARENTHESIS, [ IDENTIFIER, COMMA ], for_loop_range, RIGHT_PARENTHESIS;
 for_loop_range
     = expression, [ COLON, expression, [ COLON, expression ] ];
 while_loop_expression
-    = KW_WHILE, parenthesized_expression, expression;
+    = KW_WHILE, parenthesized_expression, unterminated_statement;
 function_definition
-    = KW_FUNCTI, LEFT_PARENTHESIS, parameter_list, RIGHT_PARENTHESIS, block;
+    = KW_FUNCTI, LEFT_PARENTHESIS, parameter_list, RIGHT_PARENTHESIS, unterminated_statement;
 parameter_list
     = [ parameter, { COMMA, parameter } ];
 parameter
@@ -63,9 +63,9 @@ pattern_matching
 parenthesized_expression
     = LEFT_PARENTHESIS, expression, RIGHT_PARENTHESIS;
 pattern_specification
-    = pattern_expression, COLON, expression, SEMICOLON;
+    = pattern_expression, COLON, unterminated_statement, SEMICOLON;
 default_pattern_specification
-    = KW_DEFAULT, COLON, expression, SEMICOLON;
+    = KW_DEFAULT, COLON, unterminated_statement, SEMICOLON;
 pattern_expression
     = pattern_expression_disjunction;
 pattern_expression_disjunction
@@ -102,8 +102,8 @@ unary_prefixed
     | exponentiation;
 exponentiation
     = namespace_access_or_function_call, { OP_CARET, exponentiation };
-namespace_access_or_function_call
-    = primary_expression, { function_call_part } { OP_DOT, primary_expression, { function_call_part } };
+function_call
+    = primary_expression, { function_call_part };
 function_call_part
     = LEFT_PARENTHESIS, arguments_list, RIGHT_PARENTHESIS;
 arguments_list
@@ -112,7 +112,7 @@ argument
     = expression;
 primary_expression
     = LITERAL
-    | IDENTIFIER
+    | IDENTIFIER, { OP_DOT, IDENTIFIER }
     | [ CASTING_TYPE ], LEFT_PARENTHESIS, expression, RIGHT_PARENTHESIS;
 ```
 

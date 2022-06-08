@@ -23,14 +23,10 @@ public partial class AstPrinter
         Print(initialization.InitialValue, indentLevel + 1);
     }
 
-    private static void PrintDynamic(Statement statement, int indentLevel)
-    {
-    }
-
-    private static void PrintDynamic(NamespaceImportStatement statement, int indentLevel)
+    private void PrintDynamic(NamespaceImportStatement statement, int indentLevel)
     {
         foreach (var level in statement.NamespaceLevels)
-            Print(level.Name, indentLevel);
+            Print(level, indentLevel);
     }
 
     private void PrintDynamic(VariableInitializationListStatement statement, int indentLevel)
@@ -39,9 +35,10 @@ public partial class AstPrinter
             Print(initialization, indentLevel);
     }
 
-    private void PrintDynamic(BreakIfStatement statement, int indentLevel)
+    private void PrintDynamic(BreakStatement statement, int indentLevel)
     {
-        Print(statement.Condition, indentLevel);
+        if (statement.Condition is not null)
+            Print(statement.Condition, indentLevel);
     }
 
     private void PrintDynamic(ReturnStatement statement, int indentLevel)

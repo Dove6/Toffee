@@ -12,23 +12,20 @@ public partial class ExpressionParsingTest
     [Trait("Category", "Conditional expressions")]
     [Theory]
     [ClassData(typeof(ConditionalExpressionTestData))]
-    public void ConditionalExpressionsShouldBeParsedCorrectly(Token[] tokenSequence, ConditionalElement expectedIfPart, ConditionalElement[] expectedElifParts, Expression? expectedElsePart)
+    public void ConditionalExpressionsShouldBeParsedCorrectly(Token[] tokenSequence, Expression expectedExpression)
     {
         var lexerMock = new LexerMock(tokenSequence);
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.Advance();
+        parser.TryAdvance(out var statement, out var hadError);
+hadError.Should().BeFalse();
 
-        var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
+        var expressionStatement = statement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
         expressionStatement!.IsTerminated.Should().Be(true);
 
-        var conditionalExpression = expressionStatement.Expression.As<ConditionalExpression>();
-        conditionalExpression.Should().NotBeNull();
-        conditionalExpression.IfPart.Should().BeEquivalentTo(expectedIfPart, Helpers.ProvideOptions);
-        conditionalExpression.ElifParts.ToArray().Should().BeEquivalentTo(expectedElifParts, Helpers.ProvideOptions);
-        conditionalExpression.ElsePart.Should().BeEquivalentTo(expectedElsePart, Helpers.ProvideOptions);
+        expressionStatement.Expression.Should().BeEquivalentTo(expectedExpression, Helpers.ProvideOptions);
 
         Assert.False(errorHandlerMock.HadErrors);
         Assert.False(errorHandlerMock.HadWarnings);
@@ -44,9 +41,8 @@ public partial class ExpressionParsingTest
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.Advance();
-
-        parser.CurrentStatement.Should().BeNull();
+        parser.TryAdvance(out var statement, out var hadError);
+hadError.Should().BeTrue();
 
         errorHandlerMock.HandledErrors[0].Should().BeEquivalentTo(expectedError);
 

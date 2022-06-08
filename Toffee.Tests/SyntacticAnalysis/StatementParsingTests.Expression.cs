@@ -12,20 +12,23 @@ public partial class StatementParsingTests
     [Trait("Category", "Expression statements")]
     [Theory]
     [ClassData(typeof(ExpressionStatementTestData))]
-    public void ExpressionStatementsShouldBeParsedCorrectly(Token[] tokenSequence, Type expectedExpressionType)
+    public void ExpressionStatementsShouldBeParsedCorrectly(Token[] tokenSequence, Type expectedExpressionType, params Type[] expectedWarnings)
     {
         var lexerMock = new LexerMock(tokenSequence);
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.Advance();
+        parser.TryAdvance(out var statement, out var hadError);
+hadError.Should().BeFalse();
 
-        var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
+        var expressionStatement = statement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
         expressionStatement!.IsTerminated.Should().Be(true);
         expressionStatement.Expression.Should().BeOfType(expectedExpressionType);
 
         Assert.False(errorHandlerMock.HadErrors);
-        Assert.False(errorHandlerMock.HadWarnings);
+
+        for (var i = 0; i < expectedWarnings.Length; i++)
+            errorHandlerMock.HandledWarnings[i].Should().BeOfType(expectedWarnings[i]);
     }
 }

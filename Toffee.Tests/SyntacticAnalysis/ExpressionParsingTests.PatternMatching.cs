@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using FluentAssertions;
@@ -14,75 +15,97 @@ public partial class ExpressionParsingTest
     [Trait("Category", "Pattern matching expressions")]
     [Theory]
     [ClassData(typeof(PatternMatchingExpressionTestData))]
-    public void PatternMatchingExpressionsShouldBeParsedCorrectly(Token[] tokenSequence, Expression expectedArgument, PatternMatchingBranch[] expectedBranches, Expression? expectedDefault)
+    public void PatternMatchingExpressionsShouldBeParsedCorrectly(Token[] tokenSequence, Expression expectedExpression, Type? expectedWarningType = null)
     {
         var lexerMock = new LexerMock(tokenSequence);
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.Advance();
+        parser.TryAdvance(out var statement, out var hadError);
+hadError.Should().BeFalse();
 
-        var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
+        var expressionStatement = statement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
         expressionStatement!.IsTerminated.Should().Be(true);
 
-        var patternMatchingExpression = expressionStatement.Expression.As<PatternMatchingExpression>();
-        patternMatchingExpression.Should().NotBeNull();
-        patternMatchingExpression.Argument.Should().BeEquivalentTo(expectedArgument, Helpers.ProvideOptions);
-        patternMatchingExpression.Branches.ToArray().Should().BeEquivalentTo(expectedBranches, Helpers.ProvideOptions);
-        patternMatchingExpression.Default.Should().BeEquivalentTo(expectedDefault, Helpers.ProvideOptions);
+        var wrappingBlock = expressionStatement.Expression.As<BlockExpression>();
+        var patternMatchingExpression = wrappingBlock.ResultExpression.As<ConditionalExpression>();
+        patternMatchingExpression.Should().BeEquivalentTo(expectedExpression, Helpers.ProvideOptions);
 
         Assert.False(errorHandlerMock.HadErrors);
-        Assert.False(errorHandlerMock.HadWarnings);
+
+        if (expectedWarningType is not null)
+        {
+            errorHandlerMock.HandledWarnings.Count.Should().Be(1);
+            errorHandlerMock.HandledWarnings[0].Should().BeOfType(expectedWarningType);
+        }
+        else
+            Assert.False(errorHandlerMock.HadWarnings);
     }
 
     [Trait("Category", "Pattern matching expressions")]
     [Trait("Category", "Negative")]
     [Theory]
     [ClassData(typeof(PatternMatchingExpressionMissingParenthesesTestData))]
-    public void MissingParenthesesInPatternMatchingExpressionsShouldBeDetectedProperly(Token[] tokenSequence, Expression expectedExpression, params ParserError[] expectedErrors)
+    public void MissingParenthesesInPatternMatchingExpressionsShouldBeDetectedProperly(Token[] tokenSequence, Expression expectedExpression, ParserError[] expectedErrors, Type? expectedWarningType = null)
     {
         var lexerMock = new LexerMock(tokenSequence);
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.Advance();
+        parser.TryAdvance(out var statement, out var hadError);
+        hadError.Should().BeTrue();
 
-        var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
+        var expressionStatement = statement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
         expressionStatement!.IsTerminated.Should().Be(true);
 
-        var patternMatchingExpression = expressionStatement.Expression.As<PatternMatchingExpression>();
+        var wrappingBlock = expressionStatement.Expression.As<BlockExpression>();
+        var patternMatchingExpression = wrappingBlock.ResultExpression.As<ConditionalExpression>();
         patternMatchingExpression.Should().BeEquivalentTo(expectedExpression, Helpers.ProvideOptions);
 
         for (var i = 0; i < expectedErrors.Length; i++)
             errorHandlerMock.HandledErrors[i].Should().BeEquivalentTo(expectedErrors[i]);
 
-        Assert.False(errorHandlerMock.HadWarnings);
+        if (expectedWarningType is not null)
+        {
+            errorHandlerMock.HandledWarnings.Count.Should().Be(1);
+            errorHandlerMock.HandledWarnings[0].Should().BeOfType(expectedWarningType);
+        }
+        else
+            Assert.False(errorHandlerMock.HadWarnings);
     }
 
     [Trait("Category", "Pattern matching expressions")]
     [Trait("Category", "Negative")]
     [Theory]
     [ClassData(typeof(PatternMatchingSpecificationMissingColonOrSemicolonTestData))]
-    public void MissingColonOrSemicolonInPatternMatchingSpecificationsShouldBeDetectedProperly(Token[] tokenSequence, Expression expectedExpression, ParserError expectedError)
+    public void MissingColonOrSemicolonInPatternMatchingSpecificationsShouldBeDetectedProperly(Token[] tokenSequence, Expression expectedExpression, ParserError expectedError, Type? expectedWarningType = null)
     {
         var lexerMock = new LexerMock(tokenSequence);
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.Advance();
+        parser.TryAdvance(out var statement, out var hadError);
+        hadError.Should().BeTrue();
 
-        var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
+        var expressionStatement = statement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
         expressionStatement!.IsTerminated.Should().Be(true);
 
-        var patternMatchingExpression = expressionStatement.Expression.As<PatternMatchingExpression>();
+        var wrappingBlock = expressionStatement.Expression.As<BlockExpression>();
+        var patternMatchingExpression = wrappingBlock.ResultExpression.As<ConditionalExpression>();
         patternMatchingExpression.Should().BeEquivalentTo(expectedExpression, Helpers.ProvideOptions);
 
         errorHandlerMock.HandledErrors[0].Should().BeEquivalentTo(expectedError);
 
-        Assert.False(errorHandlerMock.HadWarnings);
+        if (expectedWarningType is not null)
+        {
+            errorHandlerMock.HandledWarnings.Count.Should().Be(1);
+            errorHandlerMock.HandledWarnings[0].Should().BeOfType(expectedWarningType);
+        }
+        else
+            Assert.False(errorHandlerMock.HadWarnings);
     }
 
     [Trait("Category", "Pattern matching expressions")]
@@ -95,9 +118,8 @@ public partial class ExpressionParsingTest
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.Advance();
-
-        parser.CurrentStatement.Should().BeNull();
+        parser.TryAdvance(out var statement, out var hadError);
+hadError.Should().BeTrue();
 
         errorHandlerMock.HandledErrors[0].Should().BeEquivalentTo(expectedError);
 
@@ -126,9 +148,12 @@ public partial class ExpressionParsingTest
             Helpers.GetDefaultToken(TokenType.Semicolon)
         };
 
-        var expectedExpression = new PatternMatchingExpression(new IdentifierExpression("a"),
-            new List<PatternMatchingBranch> { new(new GroupingExpression(new IdentifierExpression("b")),
-                new IdentifierExpression("c")) });
+        var expectedExpression = new ConditionalExpression(new List<ConditionalElement>
+        {
+            new(new GroupingExpression(new FunctionCallExpression(new IdentifierExpression("b"),
+                    new List<Expression> { new IdentifierExpression("match") })),
+                new BlockExpression(new List<Statement>(), new IdentifierExpression("c")))
+        });
 
         var expectedError = new UnexpectedToken(new Position(7, 1, 7), TokenType.Colon, TokenType.RightParenthesis);
 
@@ -136,16 +161,21 @@ public partial class ExpressionParsingTest
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.Advance();
+        parser.TryAdvance(out var statement, out var hadError);
+        hadError.Should().BeTrue();
 
-        var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
+        var expressionStatement = statement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
         expressionStatement!.IsTerminated.Should().Be(true);
 
-        expressionStatement.Expression.Should().BeEquivalentTo(expectedExpression, Helpers.ProvideOptions);
+        var wrappingBlock = expressionStatement.Expression.As<BlockExpression>();
+        wrappingBlock.ResultExpression.Should().BeEquivalentTo(expectedExpression, Helpers.ProvideOptions);
 
         errorHandlerMock.HandledErrors[0].Should().BeEquivalentTo(expectedError);
 
-        Assert.False(errorHandlerMock.HadWarnings);
+        errorHandlerMock.HandledWarnings.Count.Should().Be(1);
+        errorHandlerMock.HandledWarnings[0].Should().BeOfType<DefaultBranchMissing>();
     }
+
+    // TODO: default being not last, occuring more than once, being missing
 }

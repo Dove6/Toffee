@@ -27,13 +27,15 @@ public class ExpressionStatementTestData : IEnumerable<object[]>
         yield return new object[]
         {
             (Token[])new ForLoopExpressionTestData().First()[0],
-            typeof(ForLoopExpression)
+            typeof(ForLoopExpression),
+            typeof(IgnoredResultExpression)
         };
         // while
         yield return new object[]
         {
             (Token[])new WhileLoopExpressionTestData().First()[0],
-            typeof(WhileLoopExpression)
+            typeof(WhileLoopExpression),
+            typeof(IgnoredResultExpression)
         };
         // functi
         yield return new object[]
@@ -45,7 +47,7 @@ public class ExpressionStatementTestData : IEnumerable<object[]>
         yield return new object[]
         {
             (Token[])new PatternMatchingExpressionTestData().First()[0],
-            typeof(PatternMatchingExpression)
+            typeof(BlockExpression)
         };
         // binary
         yield return new object[]

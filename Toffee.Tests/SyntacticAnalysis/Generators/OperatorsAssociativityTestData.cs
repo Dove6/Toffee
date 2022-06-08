@@ -81,17 +81,33 @@ public class OperatorsAssociativityTestData : IEnumerable<object[]>
                     x.Type == TokenType.KeywordIs
                         ? isNegated ? new[] { x, Helpers.GetDefaultToken(TokenType.KeywordNot) } : new[] { x }
                         : new[] { x }).ToArray(),
-                new BinaryExpression(
-                    new BinaryExpression(
+                new TypeCheckExpression(
+                    new TypeCheckExpression(
                         new IdentifierExpression("a"),
-                        isNegated ? Operator.NotEqualTypeCheck : Operator.EqualTypeCheck,
-                        new TypeExpression(DataType.Integer)),
-                    isNegated ? Operator.NotEqualTypeCheck : Operator.EqualTypeCheck,
-                    new TypeExpression(DataType.Integer))
+                        DataType.Integer,
+                        isNegated),
+                    DataType.Integer,
+                    isNegated)
+            };
+        static object[] GenerateComparison(TokenType tokenType, Operator @operator) =>
+            new object[]
+            {
+                new[]
+                {
+                    new Token(TokenType.Identifier, "a"),
+                    Helpers.GetDefaultToken(tokenType),
+                    new Token(TokenType.Identifier, "b"),
+                    Helpers.GetDefaultToken(tokenType),
+                    new Token(TokenType.Identifier, "c"),
+                    Helpers.GetDefaultToken(TokenType.Semicolon)
+                },
+                new ComparisonExpression(new IdentifierExpression("a"), new List<ComparisonElement>
+                {
+                    new(@operator, new IdentifierExpression("b")),
+                    new(@operator, new IdentifierExpression("c"))
+                })
             };
 
-        // .
-        yield return GenerateLeftBinary(TokenType.OperatorDot, Operator.NamespaceAccess);
         // ()
         yield return new object[]
         {
@@ -133,17 +149,17 @@ public class OperatorsAssociativityTestData : IEnumerable<object[]>
         // ..
         yield return GenerateLeftBinary(TokenType.OperatorDotDot, Operator.Concatenation);
         // <
-        yield return GenerateLeftBinary(TokenType.OperatorLess, Operator.LessThanComparison);
+        yield return GenerateComparison(TokenType.OperatorLess, Operator.LessThanComparison);
         // <=
-        yield return GenerateLeftBinary(TokenType.OperatorLessEquals, Operator.LessOrEqualComparison);
+        yield return GenerateComparison(TokenType.OperatorLessEquals, Operator.LessOrEqualComparison);
         // >
-        yield return GenerateLeftBinary(TokenType.OperatorGreater, Operator.GreaterThanComparison);
+        yield return GenerateComparison(TokenType.OperatorGreater, Operator.GreaterThanComparison);
         // >=
-        yield return GenerateLeftBinary(TokenType.OperatorGreaterEquals, Operator.GreaterOrEqualComparison);
+        yield return GenerateComparison(TokenType.OperatorGreaterEquals, Operator.GreaterOrEqualComparison);
         // ==
-        yield return GenerateLeftBinary(TokenType.OperatorEqualsEquals, Operator.EqualComparison);
+        yield return GenerateComparison(TokenType.OperatorEqualsEquals, Operator.EqualComparison);
         // !=
-        yield return GenerateLeftBinary(TokenType.OperatorBangEquals, Operator.NotEqualComparison);
+        yield return GenerateComparison(TokenType.OperatorBangEquals, Operator.NotEqualComparison);
         // is
         yield return GenerateTypeCheck();
         // is not

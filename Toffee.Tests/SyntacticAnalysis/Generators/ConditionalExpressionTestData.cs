@@ -28,9 +28,11 @@ public class ConditionalExpressionTestData : IEnumerable<object[]>
                 new(TokenType.Identifier, "b"),
                 semicolonToken
             },
-            new ConditionalElement(new IdentifierExpression("a"), new IdentifierExpression("b")),
-            Array.Empty<ConditionalElement>(),
-            (null as Expression)!
+            new ConditionalExpression(new List<ConditionalElement>
+            {
+                new(new IdentifierExpression("a"),
+                    new BlockExpression(new List<Statement>(), new IdentifierExpression("b")))
+            })
         };
         // with else
         yield return new object[]
@@ -46,9 +48,12 @@ public class ConditionalExpressionTestData : IEnumerable<object[]>
                 new(TokenType.Identifier, "c"),
                 semicolonToken
             },
-            new ConditionalElement(new IdentifierExpression("a"), new IdentifierExpression("b")),
-            Array.Empty<ConditionalElement>(),
-            new IdentifierExpression("c")
+            new ConditionalExpression(new List<ConditionalElement>
+                {
+                    new(new IdentifierExpression("a"),
+                        new BlockExpression(new List<Statement>(), new IdentifierExpression("b")))
+                },
+                new BlockExpression(new List<Statement>(), new IdentifierExpression("c")))
         };
         // with elif
         yield return new object[]
@@ -67,12 +72,13 @@ public class ConditionalExpressionTestData : IEnumerable<object[]>
                 new(TokenType.Identifier, "d"),
                 semicolonToken
             },
-            new ConditionalElement(new IdentifierExpression("a"), new IdentifierExpression("b")),
-            new[]
+            new ConditionalExpression(new List<ConditionalElement>
             {
-                new ConditionalElement(new IdentifierExpression("c"), new IdentifierExpression("d"))
-            },
-            (null as Expression)!
+                new(new IdentifierExpression("a"),
+                    new BlockExpression(new List<Statement>(), new IdentifierExpression("b"))),
+                new(new IdentifierExpression("c"),
+                    new BlockExpression(new List<Statement>(), new IdentifierExpression("d")))
+            })
         };
         // with more than one elif
         yield return new object[]
@@ -96,13 +102,15 @@ public class ConditionalExpressionTestData : IEnumerable<object[]>
                 new(TokenType.Identifier, "f"),
                 semicolonToken
             },
-            new ConditionalElement(new IdentifierExpression("a"), new IdentifierExpression("b")),
-            new[]
+            new ConditionalExpression(new List<ConditionalElement>
             {
-                new ConditionalElement(new IdentifierExpression("c"), new IdentifierExpression("d")),
-                new ConditionalElement(new IdentifierExpression("e"), new IdentifierExpression("f"))
-            },
-            (null as Expression)!
+                new(new IdentifierExpression("a"),
+                    new BlockExpression(new List<Statement>(), new IdentifierExpression("b"))),
+                new(new IdentifierExpression("c"),
+                    new BlockExpression(new List<Statement>(), new IdentifierExpression("d"))),
+                new(new IdentifierExpression("e"),
+                    new BlockExpression(new List<Statement>(), new IdentifierExpression("f")))
+            })
         };
         // with elif and else
         yield return new object[]
@@ -123,12 +131,14 @@ public class ConditionalExpressionTestData : IEnumerable<object[]>
                 new(TokenType.Identifier, "e"),
                 semicolonToken
             },
-            new ConditionalElement(new IdentifierExpression("a"), new IdentifierExpression("b")),
-            new[]
-            {
-                new ConditionalElement(new IdentifierExpression("c"), new IdentifierExpression("d"))
-            },
-            new IdentifierExpression("e")
+            new ConditionalExpression(new List<ConditionalElement>
+                {
+                    new(new IdentifierExpression("a"),
+                        new BlockExpression(new List<Statement>(), new IdentifierExpression("b"))),
+                    new(new IdentifierExpression("c"),
+                        new BlockExpression(new List<Statement>(), new IdentifierExpression("d")))
+                },
+                new BlockExpression(new List<Statement>(), new IdentifierExpression("e")))
         };
     }
 

@@ -17,12 +17,12 @@ public static class OperatorMapper
 
     private static readonly ImmutableDictionary<TokenType, Operator> PatternMatchingComparisonMap = new Dictionary<TokenType, Operator>
     {
-        { TokenType.OperatorLess, Operator.PatternMatchingLessThanComparison },
-        { TokenType.OperatorLessEquals, Operator.PatternMatchingLessOrEqualComparison },
-        { TokenType.OperatorGreater, Operator.PatternMatchingGreaterThanComparison },
-        { TokenType.OperatorGreaterEquals, Operator.PatternMatchingGreaterOrEqualComparison },
-        { TokenType.OperatorEqualsEquals, Operator.PatternMatchingEqualComparison },
-        { TokenType.OperatorBangEquals, Operator.PatternMatchingNotEqualComparison }
+        { TokenType.OperatorLess, Operator.LessThanComparison },
+        { TokenType.OperatorLessEquals, Operator.LessOrEqualComparison },
+        { TokenType.OperatorGreater, Operator.GreaterThanComparison },
+        { TokenType.OperatorGreaterEquals, Operator.GreaterOrEqualComparison },
+        { TokenType.OperatorEqualsEquals, Operator.EqualComparison },
+        { TokenType.OperatorBangEquals, Operator.NotEqualComparison }
     }.ToImmutableDictionary();
 
     private static readonly ImmutableDictionary<TokenType, Operator> AssignmentMap = new Dictionary<TokenType, Operator>

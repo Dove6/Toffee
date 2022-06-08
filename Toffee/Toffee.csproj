@@ -38,6 +38,12 @@
       <Compile Update="Running\AstPrinter.Expressions.cs">
         <DependentUpon>AstPrinter.cs</DependentUpon>
       </Compile>
+      <Compile Update="Running\Runner.Expressions.cs">
+        <DependentUpon>Runner.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Running\Runner.Statements.cs">
+        <DependentUpon>Runner.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 
 </Project>

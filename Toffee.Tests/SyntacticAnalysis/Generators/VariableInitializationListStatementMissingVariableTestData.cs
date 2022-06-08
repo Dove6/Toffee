@@ -48,6 +48,7 @@ public class VariableInitializationListStatementMissingVariableTestData : IEnume
                 commaToken,
                 semicolonToken
             },
+            new ImplicitConstInitialization(new Position(1, 1, 1), "a"),
             new UnexpectedToken(new Position(4, 1, 4), TokenType.Semicolon, TokenType.Identifier)
         };
         // after initialization

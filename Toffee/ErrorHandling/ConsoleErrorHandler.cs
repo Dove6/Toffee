@@ -1,16 +1,21 @@
 ﻿using Toffee.LexicalAnalysis;
+using Toffee.Running;
 using Toffee.Scanning;
 using Toffee.SyntacticAnalysis;
 
 namespace Toffee.ErrorHandling;
 
-public class ConsoleErrorHandler : ILexerErrorHandler, IParserErrorHandler
+public class ConsoleErrorHandler : ILexerErrorHandler, IParserErrorHandler, IRunnerErrorHandler
 {
     private readonly string? _sourceName;
+    private readonly TextWriter _writer;
 
-    public ConsoleErrorHandler(string? sourceName = null)
+    public bool HadError { get; private set; }
+
+    public ConsoleErrorHandler(string? sourceName = null, TextWriter? writer = null)
     {
         _sourceName = sourceName;
+        _writer = writer ?? Console.Error;
     }
 
     public void Handle(LexerError lexerError) =>
@@ -25,12 +30,21 @@ public class ConsoleErrorHandler : ILexerErrorHandler, IParserErrorHandler
     public void Handle(ParserWarning parserWarning) =>
         Log(LogLevel.Warning, parserWarning.Position, parserWarning.ToMessage(), parserWarning);
 
+    public void Handle(RunnerError runnerError) =>
+        Log(LogLevel.Error, runnerError.Position, runnerError.ToMessage(), runnerError);
+
+    public void Handle(RunnerWarning runnerWarning) =>
+        Log(LogLevel.Warning, runnerWarning.Position, runnerWarning.ToMessage(), runnerWarning);
+
     private void Log(LogLevel level, Position position, string message, params object?[] attachments)
     {
+        if (level == LogLevel.Error)
+            HadError = true;
         var (character, line, column) = position;
-        Console.WriteLine($"{level.ToString().ToUpper()} | {_sourceName ?? "input"}:{line}:{column} ({character}) | {message}");
+        _writer.WriteLine(
+            $"{level.ToString().ToUpper()} | {_sourceName ?? "input"}:{line}:{column} ({character}) | {message}");
         foreach (var attachment in attachments)
-            Console.WriteLine($"\t{attachment ?? "null"}");
+            _writer.WriteLine($"\t{attachment ?? "null"}");
     }
 
     private enum LogLevel
