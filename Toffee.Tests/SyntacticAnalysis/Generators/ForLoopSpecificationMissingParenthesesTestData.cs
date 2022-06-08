@@ -25,7 +25,8 @@ public class ForLoopSpecificationMissingParenthesesTestData : IEnumerable<object
                 new(TokenType.Identifier, "b"),
                 semicolonToken
             },
-            new ForLoopExpression(new ForLoopRange(new IdentifierExpression("a")), new IdentifierExpression("b")),
+            new ForLoopExpression(new ForLoopRange(new IdentifierExpression("a")),
+                new BlockExpression(new List<Statement>(), new IdentifierExpression("b"))),
             new UnexpectedToken(new Position(1, 1, 1), TokenType.Identifier, TokenType.LeftParenthesis)
         };
         // right parenthesis
@@ -39,7 +40,8 @@ public class ForLoopSpecificationMissingParenthesesTestData : IEnumerable<object
                 new(TokenType.Identifier, "b"),
                 semicolonToken
             },
-            new ForLoopExpression(new ForLoopRange(new IdentifierExpression("a")), new IdentifierExpression("b")),
+            new ForLoopExpression(new ForLoopRange(new IdentifierExpression("a")),
+                new BlockExpression(new List<Statement>(), new IdentifierExpression("b"))),
             new UnexpectedToken(new Position(3, 1, 3), TokenType.Identifier, TokenType.LeftParenthesis)
         };
         // both parentheses
@@ -52,7 +54,8 @@ public class ForLoopSpecificationMissingParenthesesTestData : IEnumerable<object
                 new(TokenType.Identifier, "b"),
                 semicolonToken
             },
-            new ForLoopExpression(new ForLoopRange(new IdentifierExpression("a")), new IdentifierExpression("b")),
+            new ForLoopExpression(new ForLoopRange(new IdentifierExpression("a")),
+                new BlockExpression(new List<Statement>(), new IdentifierExpression("b"))),
             new UnexpectedToken(new Position(1, 1, 1), TokenType.Identifier, TokenType.LeftParenthesis),
             new UnexpectedToken(new Position(2, 1, 2), TokenType.Identifier, TokenType.LeftParenthesis)
         };

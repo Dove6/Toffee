@@ -1,4 +1,3 @@
-using System.Linq;
 using FluentAssertions;
 using Toffee.LexicalAnalysis;
 using Toffee.Scanning;
@@ -26,9 +25,10 @@ public partial class ExpressionParsingTest
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.Advance();
+        parser.TryAdvance(out var statement, out var hadError);
+hadError.Should().BeFalse();
 
-        var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
+        var expressionStatement = statement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
         expressionStatement!.IsTerminated.Should().Be(true);
 
@@ -44,12 +44,12 @@ public partial class ExpressionParsingTest
     [Trait("Category", "Unary expressions")]
     [Trait("Category", "Pattern matching expressions")]
     [Theory]
-    [InlineData(TokenType.OperatorLess, Operator.PatternMatchingLessThanComparison)]
-    [InlineData(TokenType.OperatorLessEquals, Operator.PatternMatchingLessOrEqualComparison)]
-    [InlineData(TokenType.OperatorGreater, Operator.PatternMatchingGreaterThanComparison)]
-    [InlineData(TokenType.OperatorGreaterEquals, Operator.PatternMatchingGreaterOrEqualComparison)]
-    [InlineData(TokenType.OperatorEqualsEquals, Operator.PatternMatchingEqualComparison)]
-    [InlineData(TokenType.OperatorBangEquals, Operator.PatternMatchingNotEqualComparison)]
+    [InlineData(TokenType.OperatorLess, Operator.LessThanComparison)]
+    [InlineData(TokenType.OperatorLessEquals, Operator.LessOrEqualComparison)]
+    [InlineData(TokenType.OperatorGreater, Operator.GreaterThanComparison)]
+    [InlineData(TokenType.OperatorGreaterEquals, Operator.GreaterOrEqualComparison)]
+    [InlineData(TokenType.OperatorEqualsEquals, Operator.EqualComparison)]
+    [InlineData(TokenType.OperatorBangEquals, Operator.NotEqualComparison)]
     public void UnaryPatternMatchingExpressionsShouldBeParsedCorrectly(TokenType operatorTokenType, Operator expectedOperator)
     {
         var tokenSequence = new[]
@@ -74,72 +74,28 @@ public partial class ExpressionParsingTest
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.Advance();
+        parser.TryAdvance(out var statement, out var hadError);
+hadError.Should().BeFalse();
 
-        var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
+        var expressionStatement = statement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
         expressionStatement!.IsTerminated.Should().Be(true);
 
-        var patternMatchingExpression = expressionStatement.Expression.As<PatternMatchingExpression>();
+        var wrappingBlock = expressionStatement.Expression.As<BlockExpression>();
+        var patternMatchingExpression = wrappingBlock.ResultExpression.As<ConditionalExpression>();
         patternMatchingExpression.Should().NotBeNull();
         patternMatchingExpression.Branches.Should().HaveCount(1);
 
-        var unaryExpression = patternMatchingExpression.Branches[0].Pattern.As<UnaryExpression>();
-        unaryExpression.Should().NotBeNull();
-        unaryExpression.Operator.Should().Be(expectedOperator);
-        unaryExpression.Expression.Should().BeEquivalentTo(expectedExpression, Helpers.ProvideOptions);
+        var comparisonExpression = patternMatchingExpression.Branches[0].Condition.As<ComparisonExpression>();
+        comparisonExpression.Should().NotBeNull();
+        comparisonExpression.Left.Should().BeEquivalentTo(new IdentifierExpression("match"), Helpers.ProvideOptions);
+        comparisonExpression.Comparisons.Count.Should().Be(1);
+        comparisonExpression.Comparisons[0].Operator.Should().Be(expectedOperator);
+        comparisonExpression.Comparisons[0].Right.Should().BeEquivalentTo(expectedExpression, Helpers.ProvideOptions);
 
         Assert.False(errorHandlerMock.HadErrors);
-        Assert.False(errorHandlerMock.HadWarnings);
-    }
-
-    [Trait("Category", "Unary expressions")]
-    [Trait("Category", "Pattern matching expressions")]
-    [Theory]
-    [InlineData(new[] { TokenType.KeywordIs }, TokenType.KeywordInt, Operator.PatternMatchingEqualTypeCheck, DataType.Integer)]
-    [InlineData(new[] { TokenType.KeywordIs, TokenType.KeywordNot }, TokenType.KeywordNull, Operator.PatternMatchingNotEqualTypeCheck, DataType.Null)]
-    public void TypeCheckingUnaryPatternMatchingExpressionsShouldBeParsedCorrectly(TokenType[] operatorTokenTypes, TokenType typeTokenType, Operator expectedOperator, DataType expectedType)
-    {
-        var tokenSequence = new[]
-        {
-            Helpers.GetDefaultToken(TokenType.KeywordMatch),
-            Helpers.GetDefaultToken(TokenType.LeftParenthesis),
-            new Token(TokenType.Identifier, "a"),
-            Helpers.GetDefaultToken(TokenType.RightParenthesis),
-            Helpers.GetDefaultToken(TokenType.LeftBrace)
-        }.Concat(operatorTokenTypes.Select(Helpers.GetDefaultToken)).Concat(new[]
-        {
-            Helpers.GetDefaultToken(typeTokenType),
-            Helpers.GetDefaultToken(TokenType.Colon),
-            new Token(TokenType.Identifier, "d"),
-            Helpers.GetDefaultToken(TokenType.Semicolon),
-            Helpers.GetDefaultToken(TokenType.RightBrace),
-            Helpers.GetDefaultToken(TokenType.Semicolon)
-        }).ToArray();
-
-        var expectedExpression = new TypeExpression(expectedType);
-
-        var lexerMock = new LexerMock(tokenSequence);
-        var errorHandlerMock = new ParserErrorHandlerMock();
-        IParser parser = new Parser(lexerMock, errorHandlerMock);
-
-        parser.Advance();
-
-        var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
-        expressionStatement.Should().NotBeNull();
-        expressionStatement!.IsTerminated.Should().Be(true);
-
-        var patternMatchingExpression = expressionStatement.Expression.As<PatternMatchingExpression>();
-        patternMatchingExpression.Should().NotBeNull();
-        patternMatchingExpression.Branches.Should().HaveCount(1);
-
-        var unaryExpression = patternMatchingExpression.Branches[0].Pattern.As<UnaryExpression>();
-        unaryExpression.Should().NotBeNull();
-        unaryExpression.Operator.Should().Be(expectedOperator);
-        unaryExpression.Expression.Should().BeEquivalentTo(expectedExpression, Helpers.ProvideOptions);
-
-        Assert.False(errorHandlerMock.HadErrors);
-        Assert.False(errorHandlerMock.HadWarnings);
+        errorHandlerMock.HandledWarnings.Count.Should().Be(1);
+        errorHandlerMock.HandledWarnings[0].Should().BeOfType<DefaultBranchMissing>();
     }
 
     [Trait("Category", "Unary expressions")]
@@ -162,9 +118,8 @@ public partial class ExpressionParsingTest
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.Advance();
-
-        parser.CurrentStatement.Should().BeNull();
+        parser.TryAdvance(out var statement, out var hadError);
+hadError.Should().BeTrue();
 
         errorHandlerMock.HandledErrors[0].Should().BeEquivalentTo(expectedError);
 
@@ -204,60 +159,10 @@ public partial class ExpressionParsingTest
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.Advance();
-
-        parser.CurrentStatement.Should().BeNull();
+        parser.TryAdvance(out var statement, out var hadError);
+hadError.Should().BeTrue();
 
         errorHandlerMock.HandledErrors[0].Should().BeEquivalentTo(expectedError);
-
-        Assert.False(errorHandlerMock.HadWarnings);
-    }
-
-    [Trait("Category", "Negative")]
-    [Trait("Category", "Unary expressions")]
-    [Trait("Category", "Pattern matching expressions")]
-    [Trait("Category", "Type expressions")]
-    [Trait("Category", "Negative")]
-    [Theory]
-    [InlineData(new[] { TokenType.KeywordIs })]
-    [InlineData(new[] { TokenType.KeywordIs, TokenType.KeywordNot })]
-    public void MissingTypeInTypeCheckingUnaryPatternMatchingExpressionsShouldBeDetectedProperly(TokenType[] operatorTokenTypes)
-    {
-        var tokenSequence = new[]
-        {
-            Helpers.GetDefaultToken(TokenType.KeywordMatch),
-            Helpers.GetDefaultToken(TokenType.LeftParenthesis),
-            new Token(TokenType.Identifier, "a"),
-            Helpers.GetDefaultToken(TokenType.RightParenthesis),
-            Helpers.GetDefaultToken(TokenType.LeftBrace)
-        }.Concat(operatorTokenTypes.Select(Helpers.GetDefaultToken)).Concat(new[]
-        {
-            Helpers.GetDefaultToken(TokenType.Colon),
-            new Token(TokenType.Identifier, "d"),
-            Helpers.GetDefaultToken(TokenType.Semicolon),
-            Helpers.GetDefaultToken(TokenType.RightBrace),
-            Helpers.GetDefaultToken(TokenType.Semicolon)
-        }).ToArray();
-
-        var errorPosition = (uint)operatorTokenTypes.Length + 5;
-        var expectedError = new UnexpectedToken(new Position(errorPosition, 1, errorPosition), TokenType.Colon);
-
-        var lexerMock = new LexerMock(tokenSequence);
-        var errorHandlerMock = new ParserErrorHandlerMock();
-        IParser parser = new Parser(lexerMock, errorHandlerMock);
-
-        parser.Advance();
-
-        parser.CurrentStatement.Should().BeNull();
-
-        errorHandlerMock.HandledErrors[0].Should()
-            .BeEquivalentTo(expectedError, o => o.Excluding(i => i.Name == "ExpectedType"));
-        errorHandlerMock.HandledErrors[0].As<UnexpectedToken>().ExpectedType.Should().Contain(TokenType.KeywordInt);
-        errorHandlerMock.HandledErrors[0].As<UnexpectedToken>().ExpectedType.Should().Contain(TokenType.KeywordFloat);
-        errorHandlerMock.HandledErrors[0].As<UnexpectedToken>().ExpectedType.Should().Contain(TokenType.KeywordString);
-        errorHandlerMock.HandledErrors[0].As<UnexpectedToken>().ExpectedType.Should().Contain(TokenType.KeywordBool);
-        errorHandlerMock.HandledErrors[0].As<UnexpectedToken>().ExpectedType.Should().Contain(TokenType.KeywordFunction);
-        errorHandlerMock.HandledErrors[0].As<UnexpectedToken>().ExpectedType.Should().Contain(TokenType.KeywordNull);
 
         Assert.False(errorHandlerMock.HadWarnings);
     }
@@ -296,9 +201,13 @@ public partial class ExpressionParsingTest
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.Advance();
+        parser.TryAdvance(out var statement, out var hadError);
+        if (shouldEmitError)
+            hadError.Should().BeTrue();
+        else
+            hadError.Should().BeFalse();
 
-        var expressionStatement = parser.CurrentStatement.As<ExpressionStatement>();
+        var expressionStatement = statement.As<ExpressionStatement>();
         expressionStatement.Should().NotBeNull();
         expressionStatement!.IsTerminated.Should().Be(true);
 

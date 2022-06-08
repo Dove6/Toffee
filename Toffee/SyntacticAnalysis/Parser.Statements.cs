@@ -58,15 +58,14 @@ public partial class Parser
         if (!TryConsumeToken(out _, TokenType.KeywordPull))
             return null;
 
-        var list = new List<IdentifierExpression>();
+        var list = new List<string>();
         var firstIdentifier = ConsumeToken(TokenType.Identifier);
-        list.Add(new IdentifierExpression((string)firstIdentifier.Content!));
+        list.Add((string)firstIdentifier.Content!);
 
-        while (!TryEnsureToken(TokenType.Semicolon))
+        while (TryConsumeToken(out _, TokenType.OperatorDot))
         {
-            ConsumeToken(TokenType.OperatorDot);
             var nextIdentifier = ConsumeToken(TokenType.Identifier);
-            list.Add(new IdentifierExpression((string)nextIdentifier.Content!));
+            list.Add((string)nextIdentifier.Content!);
         }
 
         return new NamespaceImportStatement(list);
@@ -81,10 +80,13 @@ public partial class Parser
 
         var list = new List<VariableInitialization>
         {
-            ParseVariableInitialization()
+            ValidateVariableInitialization(ParseVariableInitialization())
         };
         while (TryConsumeToken(out _, TokenType.Comma))
-            list.Add(ParseVariableInitialization());
+        {
+            var initialization = ValidateVariableInitialization(ParseVariableInitialization());
+            list.Add(initialization);
+        }
 
         return new VariableInitializationListStatement(list);
     });
@@ -93,26 +95,36 @@ public partial class Parser
     //     = [ KW_CONST ], IDENTIFIER, [ OP_EQUALS, expression ];
     private VariableInitialization ParseVariableInitialization()
     {
-        var isConst = TryConsumeToken(out _, TokenType.KeywordConst);
+        var isConst = TryConsumeToken(out var constToken, TokenType.KeywordConst);
         var assignmentLikeTokenTypes =
             OperatorMapper.AssignmentTokenTypes.Append(TokenType.OperatorEqualsEquals).ToArray();
-        var tokenTypesAllowedAfterIdentifier =
-            assignmentLikeTokenTypes.Append(TokenType.Comma).Append(TokenType.Semicolon).ToArray();
 
         if (!TryConsumeToken(out var identifier, TokenType.Identifier))
             throw new ParserException(new UnexpectedToken(_lexer.CurrentToken,
                 isConst ? new[] { TokenType.Identifier } : new[] { TokenType.KeywordConst, TokenType.Identifier }));
         var variableName = (string)identifier.Content!;
 
-        EnsureToken(tokenTypesAllowedAfterIdentifier);
+        var position = isConst ? constToken.StartPosition : identifier.StartPosition;
 
         if (!TryConsumeToken(out var assignmentToken, assignmentLikeTokenTypes))
-            return new VariableInitialization(variableName, null, isConst);
+            return new VariableInitialization(variableName, null, isConst, position);
         var initialValue = ParseExpression();
         if (assignmentToken.Type == TokenType.OperatorEquals)
-            return new VariableInitialization(variableName, initialValue, isConst);
+            return new VariableInitialization(variableName, initialValue, isConst, position);
         EmitError(new UnexpectedToken(assignmentToken, TokenType.OperatorEquals));
-        return new VariableInitialization(variableName, initialValue, isConst);
+        return new VariableInitialization(variableName, initialValue, isConst, position);
+    }
+
+    private VariableInitialization ValidateVariableInitialization(VariableInitialization initialization)
+    {
+        if (initialization.IsConst)
+        {
+            if (initialization.InitialValue is null)
+                EmitError(new ImplicitConstInitialization(initialization));
+        }
+        else if (initialization.InitialValue is LiteralExpression { Type: DataType.Null })
+            EmitWarning(new SuperfluousNullInitialValue(initialization));
+        return initialization;
     }
 
     // break
@@ -128,7 +140,7 @@ public partial class Parser
             return null;
 
         var condition = ParseParenthesizedExpression();
-        return new BreakIfStatement(condition);
+        return new BreakStatement(condition);
     });
 
     // return

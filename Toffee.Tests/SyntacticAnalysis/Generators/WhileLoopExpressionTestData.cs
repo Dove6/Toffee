@@ -25,8 +25,8 @@ public class WhileLoopExpressionTestData : IEnumerable<object[]>
                 new(TokenType.Identifier, "b"),
                 semicolonToken
             },
-            new IdentifierExpression("a"),
-            new IdentifierExpression("b")
+            new WhileLoopExpression(new IdentifierExpression("a"),
+                new BlockExpression(new List<Statement>(), new IdentifierExpression("b")))
         };
     }
 

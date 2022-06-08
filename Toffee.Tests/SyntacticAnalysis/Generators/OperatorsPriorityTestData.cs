@@ -9,7 +9,7 @@ public class OperatorsPriorityTestData : IEnumerable<object[]>
 {
     public IEnumerator<object[]> GetEnumerator()
     {
-        // same priority () .
+        // . higher than ()
         yield return new object[]
         {
             new[]
@@ -17,22 +17,16 @@ public class OperatorsPriorityTestData : IEnumerable<object[]>
                 new Token(TokenType.Identifier, "a"),
                 Helpers.GetDefaultToken(TokenType.OperatorDot),
                 new Token(TokenType.Identifier, "b"),
-                Helpers.GetDefaultToken(TokenType.LeftParenthesis),
-                Helpers.GetDefaultToken(TokenType.RightParenthesis),
                 Helpers.GetDefaultToken(TokenType.OperatorDot),
                 new Token(TokenType.Identifier, "c"),
+                Helpers.GetDefaultToken(TokenType.LeftParenthesis),
+                Helpers.GetDefaultToken(TokenType.RightParenthesis),
                 Helpers.GetDefaultToken(TokenType.Semicolon)
             },
-            new BinaryExpression(
-                new FunctionCallExpression(new BinaryExpression(
-                    new IdentifierExpression("a"),
-                    Operator.NamespaceAccess,
-                    new IdentifierExpression("b")), new List<Expression>()),
-                Operator.NamespaceAccess,
-                new IdentifierExpression("c")),
-            true  // ignore errors (function call cannot be a part of namespace access)
+            new FunctionCallExpression(new IdentifierExpression(new List<string> { "a", "b" }, "c"),
+                new List<Expression>())
         };
-        // . higher than ^
+        // () higher than ^
         yield return new object[]
         {
             new[]
@@ -40,17 +34,12 @@ public class OperatorsPriorityTestData : IEnumerable<object[]>
                 new Token(TokenType.Identifier, "a"),
                 Helpers.GetDefaultToken(TokenType.OperatorCaret),
                 new Token(TokenType.Identifier, "b"),
-                Helpers.GetDefaultToken(TokenType.OperatorDot),
-                new Token(TokenType.Identifier, "c"),
+                Helpers.GetDefaultToken(TokenType.LeftParenthesis),
+                Helpers.GetDefaultToken(TokenType.RightParenthesis),
                 Helpers.GetDefaultToken(TokenType.Semicolon)
             },
-            new BinaryExpression(
-                new IdentifierExpression("a"),
-                Operator.Exponentiation,
-                new BinaryExpression(
-                    new IdentifierExpression("b"),
-                    Operator.NamespaceAccess,
-                    new IdentifierExpression("c")))
+            new BinaryExpression(new IdentifierExpression("a"), Operator.Exponentiation,
+                new FunctionCallExpression(new IdentifierExpression("b"), new List<Expression>()))
         };
         // ^ higher than unary +
         yield return new object[]
@@ -225,13 +214,16 @@ public class OperatorsPriorityTestData : IEnumerable<object[]>
                 new Token(TokenType.Identifier, "c"),
                 Helpers.GetDefaultToken(TokenType.Semicolon)
             },
-            new BinaryExpression(
+            new ComparisonExpression(
                 new IdentifierExpression("a"),
-                Operator.LessThanComparison,
-                new BinaryExpression(
-                    new IdentifierExpression("b"),
-                    Operator.Concatenation,
-                    new IdentifierExpression("c")))
+                new List<ComparisonElement>
+                {
+                    new(Operator.LessThanComparison,
+                        new BinaryExpression(
+                            new IdentifierExpression("b"),
+                            Operator.Concatenation,
+                            new IdentifierExpression("c")))
+                })
         };
         // same priority < <= > >= == !=
         yield return new object[]
@@ -263,40 +255,20 @@ public class OperatorsPriorityTestData : IEnumerable<object[]>
                 new Token(TokenType.Identifier, "l"),
                 Helpers.GetDefaultToken(TokenType.Semicolon)
             },
-            new BinaryExpression(
-                new BinaryExpression(
-                    new BinaryExpression(
-                        new BinaryExpression(
-                            new BinaryExpression(
-                                new BinaryExpression(
-                                    new BinaryExpression(
-                                        new BinaryExpression(
-                                            new BinaryExpression(
-                                                new BinaryExpression(
-                                                    new BinaryExpression(
-                                                        new IdentifierExpression("a"),
-                                                        Operator.LessThanComparison,
-                                                        new IdentifierExpression("b")),
-                                                    Operator.LessOrEqualComparison,
-                                                    new IdentifierExpression("c")),
-                                                Operator.GreaterThanComparison,
-                                                new IdentifierExpression("d")),
-                                            Operator.GreaterOrEqualComparison,
-                                            new IdentifierExpression("e")),
-                                        Operator.EqualComparison,
-                                        new IdentifierExpression("f")),
-                                    Operator.NotEqualComparison,
-                                    new IdentifierExpression("g")),
-                                Operator.EqualComparison,
-                                new IdentifierExpression("h")),
-                            Operator.GreaterOrEqualComparison,
-                            new IdentifierExpression("i")),
-                        Operator.GreaterThanComparison,
-                        new IdentifierExpression("j")),
-                    Operator.LessOrEqualComparison,
-                    new IdentifierExpression("k")),
-                Operator.LessThanComparison,
-                new IdentifierExpression("l"))
+            new ComparisonExpression(new IdentifierExpression("a"), new List<ComparisonElement>
+            {
+                new(Operator.LessThanComparison, new IdentifierExpression("b")),
+                new(Operator.LessOrEqualComparison, new IdentifierExpression("c")),
+                new(Operator.GreaterThanComparison, new IdentifierExpression("d")),
+                new(Operator.GreaterOrEqualComparison, new IdentifierExpression("e")),
+                new(Operator.EqualComparison, new IdentifierExpression("f")),
+                new(Operator.NotEqualComparison, new IdentifierExpression("g")),
+                new(Operator.EqualComparison, new IdentifierExpression("h")),
+                new(Operator.GreaterOrEqualComparison, new IdentifierExpression("i")),
+                new(Operator.GreaterThanComparison, new IdentifierExpression("j")),
+                new(Operator.LessOrEqualComparison, new IdentifierExpression("k")),
+                new(Operator.LessThanComparison, new IdentifierExpression("l")),
+            })
         };
         // < higher than is
         yield return new object[]
@@ -310,14 +282,15 @@ public class OperatorsPriorityTestData : IEnumerable<object[]>
                 Helpers.GetDefaultToken(TokenType.KeywordInt),
                 Helpers.GetDefaultToken(TokenType.Semicolon)
             },
-            new BinaryExpression(
-                new BinaryExpression(
+            new TypeCheckExpression(
+                new ComparisonExpression(
                     new IdentifierExpression("a"),
-                    Operator.LessThanComparison,
-                    new IdentifierExpression("b")
-                ),
-                Operator.EqualTypeCheck,
-                new TypeExpression(DataType.Integer))
+                    new List<ComparisonElement>
+                    {
+                        new(Operator.LessThanComparison,
+                            new IdentifierExpression("b"))
+                    }),
+                DataType.Integer)
         };
         // < higher than is not
         yield return new object[]
@@ -332,14 +305,16 @@ public class OperatorsPriorityTestData : IEnumerable<object[]>
                 Helpers.GetDefaultToken(TokenType.KeywordInt),
                 Helpers.GetDefaultToken(TokenType.Semicolon)
             },
-            new BinaryExpression(
-                new BinaryExpression(
+            new TypeCheckExpression(
+                new ComparisonExpression(
                     new IdentifierExpression("a"),
-                    Operator.LessThanComparison,
-                    new IdentifierExpression("b")
-                ),
-                Operator.NotEqualTypeCheck,
-                new TypeExpression(DataType.Integer))
+                    new List<ComparisonElement>
+                    {
+                        new(Operator.LessThanComparison,
+                            new IdentifierExpression("b"))
+                    }),
+                DataType.Integer,
+                true)
         };
         // is higher than &&
         yield return new object[]
@@ -356,10 +331,9 @@ public class OperatorsPriorityTestData : IEnumerable<object[]>
             new BinaryExpression(
                 new IdentifierExpression("a"),
                 Operator.Conjunction,
-                new BinaryExpression(
+                new TypeCheckExpression(
                     new IdentifierExpression("b"),
-                    Operator.EqualTypeCheck,
-                    new TypeExpression(DataType.Integer)))
+                    DataType.Integer))
         };
         // is not higher than &&
         yield return new object[]
@@ -377,10 +351,10 @@ public class OperatorsPriorityTestData : IEnumerable<object[]>
             new BinaryExpression(
                 new IdentifierExpression("a"),
                 Operator.Conjunction,
-                new BinaryExpression(
+                new TypeCheckExpression(
                     new IdentifierExpression("b"),
-                    Operator.NotEqualTypeCheck,
-                    new TypeExpression(DataType.Integer)))
+                    DataType.Integer,
+                    true))
         };
         // && higher than ||
         yield return new object[]

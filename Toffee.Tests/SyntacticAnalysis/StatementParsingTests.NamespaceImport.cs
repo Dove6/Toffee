@@ -23,18 +23,17 @@ public partial class StatementParsingTests
         var interleavedNamespaceSegments = namespaceSegmentTokens.SelectMany(x => new[] { x, dotToken })
             .Take(2 * namespaceSegments.Length - 1);
 
-        var expectedNamespaceSegments = namespaceSegments.Select(x => new IdentifierExpression(x)).ToArray();
-
         var lexerMock = new LexerMock(interleavedNamespaceSegments.Prepend(pullToken).AppendSemicolon());
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.Advance();
+        parser.TryAdvance(out var statement, out var hadError);
+hadError.Should().BeFalse();
 
-        var namespaceImportStatement = parser.CurrentStatement.As<NamespaceImportStatement>();
+        var namespaceImportStatement = statement.As<NamespaceImportStatement>();
         namespaceImportStatement.Should().NotBeNull();
         namespaceImportStatement!.IsTerminated.Should().Be(true);
-        namespaceImportStatement.NamespaceLevels.ToArray().Should().BeEquivalentTo(expectedNamespaceSegments, Helpers.ProvideOptions);
+        namespaceImportStatement.NamespaceLevels.ToArray().Should().BeEquivalentTo(namespaceSegments, Helpers.ProvideOptions);
 
         Assert.False(errorHandlerMock.HadErrors);
         Assert.False(errorHandlerMock.HadWarnings);
@@ -50,9 +49,8 @@ public partial class StatementParsingTests
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.Advance();
-
-        parser.CurrentStatement.Should().BeNull();
+        parser.TryAdvance(out var statement, out var hadError);
+hadError.Should().BeTrue();
 
         errorHandlerMock.HandledErrors[0].Should().BeEquivalentTo(expectedError);
 

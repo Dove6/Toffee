@@ -52,23 +52,6 @@ public class NamespaceImportStatementNonIdentifiersTestData : IEnumerable<object
             },
             new UnexpectedToken(new Position(1, 1, 1), TokenType.LiteralFloat, TokenType.Identifier)
         };
-        // in the middle
-        yield return new object[]
-        {
-            new[]
-            {
-                pullToken,
-                new(TokenType.Identifier, "a"),
-                dotToken,
-                new(TokenType.Identifier, "b"),
-                leftParenthesisToken,
-                rightParenthesisToken,
-                dotToken,
-                new(TokenType.Identifier, "c"),
-                semicolonToken
-            },
-            new UnexpectedToken(new Position(4, 1, 4), TokenType.LeftParenthesis, TokenType.Identifier)
-        };
     }
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();

@@ -17,11 +17,48 @@ public partial class StatementParsingTests
         var errorHandlerMock = new ParserErrorHandlerMock();
         IParser parser = new Parser(lexerMock, errorHandlerMock);
 
-        parser.Advance();
+        parser.TryAdvance(out var statement, out var hadError);
+hadError.Should().BeFalse();
 
-        var breakStatement = parser.CurrentStatement.As<BreakStatement>();
+        var breakStatement = statement.As<BreakStatement>();
         breakStatement.Should().NotBeNull();
         breakStatement!.IsTerminated.Should().Be(true);
+
+        Assert.False(errorHandlerMock.HadErrors);
+        Assert.False(errorHandlerMock.HadWarnings);
+    }
+
+    [Trait("Category", "Break statements")]
+    [Fact]
+    public void BreakStatementsWithConditionShouldBeParsedCorrectly()
+    {
+        var breakIfToken = Helpers.GetDefaultToken(TokenType.KeywordBreakIf);
+
+        var leftParenthesisToken = Helpers.GetDefaultToken(TokenType.LeftParenthesis);
+
+        const string identifierName = "a";
+        var identifierToken = new Token(TokenType.Identifier, identifierName);
+
+        var rightParenthesisToken = Helpers.GetDefaultToken(TokenType.RightParenthesis);
+
+        var lexerMock = new LexerMock(breakIfToken,
+            leftParenthesisToken,
+            identifierToken,
+            rightParenthesisToken,
+            Helpers.GetDefaultToken(TokenType.Semicolon));
+        var errorHandlerMock = new ParserErrorHandlerMock();
+        IParser parser = new Parser(lexerMock, errorHandlerMock);
+
+        parser.TryAdvance(out var statement, out var hadError);
+hadError.Should().BeFalse();
+
+        var breakStatement = statement.As<BreakStatement>();
+        breakStatement.Should().NotBeNull();
+        breakStatement!.IsTerminated.Should().Be(true);
+
+        var expression = breakStatement.Condition.As<IdentifierExpression>();
+        expression.Should().NotBeNull();
+        expression!.Name.Should().Be(identifierName);
 
         Assert.False(errorHandlerMock.HadErrors);
         Assert.False(errorHandlerMock.HadWarnings);

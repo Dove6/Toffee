@@ -2,31 +2,31 @@
 
 | Priorytet | Operator     | Opis                      | Arność  | Pozycja | Łączność     |
 |-----------|--------------|---------------------------|---------|---------|--------------|
-| 1         | ()           | wywołanie funkcji         | unarny  | sufiks  | lewostronna  |
-|           | .            | dostęp do przestrzeni     | binarny | infiks  | lewostronna  |
-| 2         | ^            | potęgowanie               | binarny | infiks  | prawostronna |
-| 3         | +            | zachowanie znaku          | unarny  | prefiks | prawostronna |
+| 1         | .            | dostęp do przestrzeni     | binarny | infiks  | lewostronna  |
+| 2         | ()           | wywołanie funkcji         | unarny  | sufiks  | lewostronna  |
+| 3         | ^            | potęgowanie               | binarny | infiks  | prawostronna |
+| 4         | +            | zachowanie znaku          | unarny  | prefiks | prawostronna |
 |           | -            | zmiana znaku              | unarny  | prefiks | prawostronna |
 |           | !            | negacja                   | unarny  | prefiks | prawostronna |
-| 4         | *            | mnożenie                  | binarny | infiks  | lewostronna  |
+| 5         | *            | mnożenie                  | binarny | infiks  | lewostronna  |
 |           | &#92;        | dzielenie                 | binarny | infiks  | lewostronna  |
 |           | %            | reszta z dzielenia (rem)  | binarny | infiks  | lewostronna  |
-| 5         | +            | dodawanie                 | binarny | infiks  | lewostronna  |
+| 6         | +            | dodawanie                 | binarny | infiks  | lewostronna  |
 |           | -            | odejmowanie               | binarny | infiks  | lewostronna  |
-| 6         | ..           | konkatenacja              | binarny | infiks  | lewostronna  |
-| 7         | &lt;         | porównanie                | binarny | infiks  | lewostronna  |
+| 7         | ..           | konkatenacja              | binarny | infiks  | lewostronna  |
+| 8         | &lt;         | porównanie                | binarny | infiks  | lewostronna  |
 |           | &lt;=        | porównanie                | binarny | infiks  | lewostronna  |
 |           | &gt;         | porównanie                | binarny | infiks  | lewostronna  |
 |           | &gt;=        | porównanie                | binarny | infiks  | lewostronna  |
 |           | ==           | porównanie                | binarny | infiks  | lewostronna  |
 |           | !=           | porównanie                | binarny | infiks  | lewostronna  |
-| 8         | is           | sprawdzenie typu          | binarny | infiks  | lewostronna  |
+| 9         | is           | sprawdzenie typu          | binarny | infiks  | lewostronna  |
 |           | is not       | sprawdzenie typu          | binarny | infiks  | lewostronna  |
-| 9         | &amp;&amp;   | koniunkcja                | binarny | infiks  | lewostronna  |
-| 10        | &#124;&#124; | alternatywa               | binarny | infiks  | lewostronna  |
-| 11        | ?&gt;        | null-safe pipe            | binarny | infiks  | lewostronna  |
-| 12        | ??           | null coalescing           | binarny | infiks  | lewostronna  |
-| 13        | =            | przypisanie               | binarny | infiks  | prawostronna |
+| 10        | &amp;&amp;   | koniunkcja                | binarny | infiks  | lewostronna  |
+| 11        | &#124;&#124; | alternatywa               | binarny | infiks  | lewostronna  |
+| 12        | ?&gt;        | null-safe pipe            | binarny | infiks  | lewostronna  |
+| 13        | ??           | null coalescing           | binarny | infiks  | lewostronna  |
+| 14        | =            | przypisanie               | binarny | infiks  | prawostronna |
 |           | +=           | przypisanie sumy          | binarny | infiks  | prawostronna |
 |           | -=           | przypisanie różnicy       | binarny | infiks  | prawostronna |
 |           | *=           | przypisanie iloczynu      | binarny | infiks  | prawostronna |
