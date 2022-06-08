@@ -41,6 +41,7 @@ public record NullInForLoopRange(string Part) : RunnerError(new Position());
 public record InvalidLvalue(Type Type) : RunnerError(new Position());
 public record BadArgumentCount(int ActualCount, int ExpectedCount) : RunnerError(new Position());
 public record NonNullArgumentRequired(string Name, int ParameterIndex) : RunnerError(new Position());
+public record RecursionLimitExceeded(uint Limit) : RunnerError(new Position());
 public record ExceptionThrown(string Message) : RunnerError(new Position());
 
 public static class RunnerErrorExtensions
@@ -57,6 +58,7 @@ public static class RunnerErrorExtensions
         { typeof(NullInForLoopRange), "For loop range part evaluated to null" },
         { typeof(InvalidLvalue), "Invalid l-value in assignment" },
         { typeof(BadArgumentCount), "Arguments and parameters mismatch" },
+        { typeof(RecursionLimitExceeded), "Too many nested calls" },
         { typeof(NonNullArgumentRequired), "A non-nullable function argument turned out to be null" }
     }.ToImmutableDictionary();
 

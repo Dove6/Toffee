@@ -153,7 +153,7 @@ public class EnvironmentStack
         {
             if (!disposing)
                 return;
-            if (_environmentStack == null)
+            if (_environmentStack is null)
                 return;
             _environmentStack.Pop();
             _environmentStack = null;

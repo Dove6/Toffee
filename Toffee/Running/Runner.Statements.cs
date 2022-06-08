@@ -7,25 +7,19 @@ public partial class Runner
 {
     public void Run(Statement statement, EnvironmentStack? environmentStack = null)
     {
+        using var recursionGuard = IncrementRecursionGuarded();
         _currentPosition = statement.StartPosition;
-        var environmentStackBackup = _environmentStack;
-        if (environmentStack is not null)
-            _environmentStack = environmentStack;
+        using var stackBackupGuard = OverwriteEnvironmentStackGuarded(environmentStack);
         try
         {
             RunDynamic(statement as dynamic);
         }
-        catch (RunnerException e)
+        catch (Exception e) when (IsEntryPoint(recursionGuard))
         {
-            EmitError(e.Error with { Position = _currentPosition });
-        }
-        catch (Exception e)
-        {
-            EmitError(new ExceptionThrown(e.Message) { Position = _currentPosition });
-        }
-        finally
-        {
-            _environmentStack = environmentStackBackup;
+            var error = e is RunnerException runnerException
+                ? runnerException.Error
+                : new ExceptionThrown(e.Message);
+            EmitError(error with { Position = _currentPosition });
         }
     }
 

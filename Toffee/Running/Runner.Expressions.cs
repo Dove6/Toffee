@@ -8,28 +8,22 @@ public partial class Runner
 {
     public object? Calculate(Expression expression, EnvironmentStack? environmentStack = null)
     {
+        using var recursionGuard = IncrementRecursionGuarded();
         _currentPosition = expression.StartPosition;
-        var environmentStackBackup = _environmentStack;
-        if (environmentStack is not null)
-            _environmentStack = environmentStack;
+        using var stackBackupGuard = OverwriteEnvironmentStackGuarded(environmentStack);
         try
         {
             var result = CalculateDynamic(expression as dynamic);
             return result;
         }
-        catch (RunnerException e)
+        catch (Exception e) when (IsEntryPoint(recursionGuard))
         {
-            EmitError(e.Error with { Position = _currentPosition });
+            var error = e is RunnerException runnerException
+                ? runnerException.Error
+                : new ExceptionThrown(e.Message);
+            EmitError(error with { Position = _currentPosition });
+            return null;
         }
-        catch (Exception e)
-        {
-            EmitError(new ExceptionThrown(e.Message) { Position = _currentPosition });
-        }
-        finally
-        {
-            _environmentStack = environmentStackBackup;
-        }
-        return null;
     }
 
     private object? CalculateDynamic(BlockExpression expression)
